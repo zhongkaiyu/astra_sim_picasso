@@ -6,6 +6,7 @@ LICENSE file in the root directory of this source tree.
 #include "congestion_aware/CongestionAwareNetworkApi.hh"
 #include <astra-network-analytical/congestion_aware/Chunk.h>
 #include <cassert>
+#include <iostream>
 
 using namespace AstraSim;
 using namespace AstraSimAnalyticalCongestionAware;
@@ -47,32 +48,48 @@ int CongestionAwareNetworkApi::sim_send(void* const buffer,
         CongestionAwareNetworkApi::chunk_id_generator.create_send_chunk_id(
             tag, src, dst, count);
 
+    //std::cerr << "[NETWORK-SEND] NPU " << src << " sending to NPU " << dst << "\n";
+    //std::cerr << "[NETWORK-SEND]   ├─ Data size: " << count << " bytes\n";
+    //std::cerr << "[NETWORK-SEND]   ├─ Tag: " << tag << "\n";
+    //std::cerr << "[NETWORK-SEND]   └─ Chunk ID: " << chunk_id << "\n";
+
     // search tracker
     const auto entry =
         callback_tracker.search_entry(tag, src, dst, count, chunk_id);
     if (entry.has_value()) {
         // recv operation already issued.
         // register send callback
+        //std::cerr << "[NETWORK-SEND] Matching receive already issued ✓\n";
         entry.value()->register_send_callback(msg_handler, fun_arg);
     } else {
         // recv operation not issued yet
         // create new entry and insert callback
+        //std::cerr << "[NETWORK-SEND] No matching receive yet, creating entry\n";
         auto* const new_entry =
             callback_tracker.create_new_entry(tag, src, dst, count, chunk_id);
         new_entry->register_send_callback(msg_handler, fun_arg);
     }
 
+    // Query routing information
+    //std::cerr << "[NETWORK-SEND] Querying topology for route...\n";
+    const auto route = topology->route(src, dst);
+    //std::cerr << "[NETWORK-SEND] Route found: " << route.size() << " hops\n";
+    
     // create chunk
     auto chunk_arrival_arg = std::tuple(tag, src, dst, count, chunk_id);
     auto arg = std::make_unique<decltype(chunk_arrival_arg)>(chunk_arrival_arg);
     const auto arg_ptr = static_cast<void*>(arg.release());
-    const auto route = topology->route(src, dst);
+    
+    //std::cerr << "[NETWORK-SEND] Creating chunk and initiating transmission\n";
     auto chunk = std::make_unique<Chunk>(
         count, route, CongestionAwareNetworkApi::process_chunk_arrival,
         arg_ptr);
 
     // initiate transmission from src -> dst.
+    //std::cerr << "[NETWORK-SEND] Sending chunk on network\n";
     topology->send(std::move(chunk));
+    
+    //std::cerr << "[NETWORK-SEND] Send initiated ✓\n\n";
 
     // return
     return 0;

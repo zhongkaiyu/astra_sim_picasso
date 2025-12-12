@@ -15,9 +15,10 @@ EXAMPLE_DIR="${PROJECT_DIR:?}/examples"
 
 # paths
 ASTRA_SIM="${PROJECT_DIR:?}/build/astra_analytical/build/bin/AstraSim_Analytical_Congestion_Aware"
-WORKLOAD="${EXAMPLE_DIR:?}/workload/microbenchmarks/all_gather/16npus_1MB/all_gather"
+WORKLOAD="/tmp/test_outputs/attention_test"
 SYSTEM="${EXAMPLE_DIR:?}/system/native_collectives/Ring_4chunks.json"
-NETWORK="${EXAMPLE_DIR:?}/network/analytical/Ring_16npus.yml"
+COMM_GROUPS="/tmp/test_outputs/attention_test.json"
+NETWORK="/home/ohm/astra-sim/examples/network/analytical/Ring_4npus.yml"
 REMOTE_MEMORY="${EXAMPLE_DIR:?}/remote_memory/analytical/no_memory_expansion.json"
 
 # start
@@ -36,9 +37,10 @@ echo ""
 "${ASTRA_SIM:?}" \
     --workload-configuration="${WORKLOAD}" \
     --system-configuration="${SYSTEM:?}" \
+    --comm-group-configuration="${COMM_GROUPS:?}" \
     --remote-memory-configuration="${REMOTE_MEMORY:?}" \
-    --network-configuration="${NETWORK:?}"
-
+    --network-configuration="${NETWORK:?}" \
+    > simulation_log.txt 2>&1
 # finalize
 echo ""
 echo "[ASTRA-sim] Finished the execution."

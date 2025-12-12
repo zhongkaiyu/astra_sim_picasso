@@ -51,6 +51,21 @@ enum class ComType {
 
 enum class CollectiveOptimization { Baseline = 0, LocalBWAware };
 
+enum class CollectiveImplType {
+    Ring = 0,
+    OneRing,
+    Direct,
+    OneDirect,
+    AllToAll,
+    DoubleBinaryTreeLocalAllToAll,
+    LocalRingNodeA2AGlobalDBT,
+    HierarchicalRing,
+    DoubleBinaryTree,
+    HalvingDoubling,
+    OneHalvingDoubling,
+    CustomCollectiveImpl,
+};
+
 enum class CollectiveBarrier { Blocking = 0, Non_Blocking };
 
 enum class SchedulingPolicy { LIFO = 0, FIFO, EXPLICIT, None };
@@ -114,6 +129,66 @@ enum class EventType {
     MemStoreFinished
 };
 
+class CloneInterface {
+  public:
+    virtual CloneInterface* clone() const = 0;
+    virtual ~CloneInterface() = default;
+};
+
+/*
+ * CollectiveImpl holds the user's description on how a collective algorithm is
+ * implemented, provided in the System layer input.
+ * TODO: Move to astraccl/
+ */
+class CollectiveImpl : public CloneInterface {
+  public:
+    CollectiveImpl(CollectiveImplType type) {
+        this->type = type;
+    };
+    virtual CloneInterface* clone() const {
+        return new CollectiveImpl(*this);
+    }
+
+    CollectiveImplType type;
+};
+
+/*
+ * DirectCollectiveImpl contains user-specified information about Direct
+ * implementation of collective algorithms. We have a separte class for
+ * DirectCollectiveImpl, because of the collective window, which is also defined
+ * in the system layer input.
+ */
+class DirectCollectiveImpl : public CollectiveImpl {
+  public:
+    CloneInterface* clone() const {
+        return new DirectCollectiveImpl(*this);
+    };
+    DirectCollectiveImpl(CollectiveImplType type, int direct_collective_window)
+        : CollectiveImpl(type) {
+        this->direct_collective_window = direct_collective_window;
+    }
+
+    int direct_collective_window;
+};
+
+/*
+ * CustomCollectiveImpl contains information about a collective implementation
+ * represented using the Chakra ET format. It containes the filename of the
+ * Chakra ET which holds the implementation, provided in the System layer input.
+ */
+class CustomCollectiveImpl : public CollectiveImpl {
+  public:
+    CloneInterface* clone() const {
+        return new CustomCollectiveImpl(*this);
+    };
+    CustomCollectiveImpl(CollectiveImplType type, std::string filename)
+        : CollectiveImpl(type) {
+        this->filename = filename;
+    }
+
+    /* The filename of the corresponding Chakra ET file */
+    std::string filename;
+};
 }  // namespace AstraSim
 
 #endif /* __COMMON_HH__ */

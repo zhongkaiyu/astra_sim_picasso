@@ -22,15 +22,16 @@ LICENSE file in the root directory of this source tree.
 #include "astra-sim/system/SimSendCaller.hh"
 #include "astra-sim/system/StreamBaseline.hh"
 #include "astra-sim/system/WorkloadLayerHandlerData.hh"
-#include "astra-sim/system/astraccl/CollectiveImpl.hh"
 #include "astra-sim/system/astraccl/custom_collectives/CustomAlgorithm.hh"
 #include "astra-sim/system/astraccl/native_collectives/collective_algorithm/AllToAll.hh"
 #include "astra-sim/system/astraccl/native_collectives/collective_algorithm/DoubleBinaryTreeAllReduce.hh"
 #include "astra-sim/system/astraccl/native_collectives/collective_algorithm/HalvingDoubling.hh"
+#include "astra-sim/system/astraccl/native_collectives/collective_algorithm/MeshAllGather.hh"
 #include "astra-sim/system/astraccl/native_collectives/collective_algorithm/Ring.hh"
 #include "astra-sim/system/scheduling/OfflineGreedy.hh"
 #include "astra-sim/system/astraccl/native_collectives/logical_topology/BasicLogicalTopology.hh"
 #include "astra-sim/system/astraccl/native_collectives/logical_topology/GeneralComplexTopology.hh"
+#include "astra-sim/system/astraccl/native_collectives/logical_topology/Mesh2DTopology.hh"
 #include <json/json.hpp>
 
 using namespace std;
@@ -199,8 +200,6 @@ Sys::Sys(int id,
     this->communication_delay = 10;
     this->local_reduction_delay = 1;
 
-    collective_impl_lookup = new CollectiveImplLookup(id);
-
     if (initialize_sys(system_configuration) == false) {
         sys_panic("Unable to initialize the system layer because the file can "
                   "not be openned");
@@ -240,13 +239,13 @@ Sys::Sys(int id,
     this->num_streams = 0;
 
     logical_topologies["AllReduce"] = new GeneralComplexTopology(
-        id, physical_dims, collective_impl_lookup->get_collective_impl(ComType::All_Reduce, 0, BypassRule::BYPASS_ALL_CUSTOM));
+        id, physical_dims, all_reduce_implementation_per_dimension);
     logical_topologies["ReduceScatter"] = new GeneralComplexTopology(
-        id, physical_dims, collective_impl_lookup->get_collective_impl(ComType::Reduce_Scatter, 0, BypassRule::BYPASS_ALL_CUSTOM));
+        id, physical_dims, reduce_scatter_implementation_per_dimension);
     logical_topologies["AllGather"] = new GeneralComplexTopology(
-        id, physical_dims, collective_impl_lookup->get_collective_impl(ComType::All_Gather, 0, BypassRule::BYPASS_ALL_CUSTOM));
+        id, physical_dims, all_gather_implementation_per_dimension);
     logical_topologies["AllToAll"] = new GeneralComplexTopology(
-        id, physical_dims, collective_impl_lookup->get_collective_impl(ComType::All_to_All, 0, BypassRule::BYPASS_ALL_CUSTOM));
+        id, physical_dims, all_to_all_implementation_per_dimension);
 
     memBus = new MemBus("NPU", "MA", this, inp_L, inp_o, inp_g, inp_G,
                         model_shared_bus, communication_delay, true);
@@ -259,6 +258,9 @@ Sys::Sys(int id,
             InterDimensionScheduling::OfflineGreedyFlex) {
         offline_greedy = new OfflineGreedy(this);
     }
+
+    this->break_dimension_done = false;
+    this->dimension_to_break = 0;
 
     this->initialized = true;
 }
@@ -275,6 +277,19 @@ Sys::~Sys() {
     }
 
     logical_topologies.clear();
+
+    for (auto ci : all_reduce_implementation_per_dimension) {
+        delete ci;
+    }
+    for (auto ci : reduce_scatter_implementation_per_dimension) {
+        delete ci;
+    }
+    for (auto ci : all_gather_implementation_per_dimension) {
+        delete ci;
+    }
+    for (auto ci : all_to_all_implementation_per_dimension) {
+        delete ci;
+    }
 
     if (scheduler_unit != nullptr) {
         delete scheduler_unit;
@@ -333,6 +348,78 @@ bool Sys::initialize_sys(string name) {
         } else {
             sys_panic("unknown value for scheduling policy in sys input file");
         }
+    }
+    if (j.contains("all-reduce-implementation")) {
+        vector<string> collective_impl_str_vec = j["all-reduce-implementation"];
+        for (auto collective_impl_str : collective_impl_str_vec) {
+            CollectiveImpl* ci =
+                generate_collective_impl_from_input(collective_impl_str);
+            all_reduce_implementation_per_dimension.push_back(ci);
+        }
+    }
+    if (j.contains("reduce-scatter-implementation")) {
+        vector<string> collective_impl_str_vec =
+            j["reduce-scatter-implementation"];
+        for (auto collective_impl_str : collective_impl_str_vec) {
+            CollectiveImpl* ci =
+                generate_collective_impl_from_input(collective_impl_str);
+            reduce_scatter_implementation_per_dimension.push_back(ci);
+        }
+    }
+    if (j.contains("all-gather-implementation")) {
+        vector<string> collective_impl_str_vec = j["all-gather-implementation"];
+        for (auto collective_impl_str : collective_impl_str_vec) {
+            CollectiveImpl* ci =
+                generate_collective_impl_from_input(collective_impl_str);
+            all_gather_implementation_per_dimension.push_back(ci);
+        }
+    }
+    if (j.contains("all-to-all-implementation")) {
+        vector<string> collective_impl_str_vec = j["all-to-all-implementation"];
+        for (auto collective_impl_str : collective_impl_str_vec) {
+            CollectiveImpl* ci =
+                generate_collective_impl_from_input(collective_impl_str);
+            all_to_all_implementation_per_dimension.push_back(ci);
+        }
+    }
+    if (j.contains("all-to-all-implementation-custom")) {
+        vector<string> chakra_filepath_str_vec =
+            j["all-to-all-implementation-custom"];
+        all_to_all_implementation_per_dimension.clear();
+        if (chakra_filepath_str_vec.size() != 1) {
+            throw logic_error(
+                "There should be 1 Chakra ET only. In multi-dim collectives, "
+                "that 1 ET file covers all dimensions");
+        }
+        CollectiveImpl* ci =
+            generate_custom_collective_impl(chakra_filepath_str_vec[0]);
+        all_to_all_implementation_per_dimension.push_back(ci);
+    }
+    if (j.contains("all-gather-implementation-custom")) {
+        vector<string> chakra_filepath_str_vec =
+            j["all-gather-implementation-custom"];
+        all_gather_implementation_per_dimension.clear();
+        if (chakra_filepath_str_vec.size() != 1) {
+            throw logic_error(
+                "There should be 1 Chakra ET only. In multi-dim collectives, "
+                "that 1 ET file covers all dimensions");
+        }
+        CollectiveImpl* ci =
+            generate_custom_collective_impl(chakra_filepath_str_vec[0]);
+        all_gather_implementation_per_dimension.push_back(ci);
+    }
+    if (j.contains("all-reduce-implementation-custom")) {
+        vector<string> chakra_filepath_str_vec =
+            j["all-reduce-implementation-custom"];
+        all_reduce_implementation_per_dimension.clear();
+        if (chakra_filepath_str_vec.size() != 1) {
+            throw logic_error(
+                "There should be 1 Chakra ET only. In multi-dim collectives, "
+                "that 1 ET file covers all dimensions");
+        }
+        CollectiveImpl* ci =
+            generate_custom_collective_impl(chakra_filepath_str_vec[0]);
+        all_reduce_implementation_per_dimension.push_back(ci);
     }
     if (j.contains("collective-optimization")) {
         string inp_collective_optimization = j["collective-optimization"];
@@ -424,10 +511,48 @@ bool Sys::initialize_sys(string name) {
         this->local_mem_trace_filename = j["local-mem-trace-filename"];
     }
 
-    collective_impl_lookup->setup_collective_impl_from_config(j);
-
     inFile.close();
     return true;
+}
+
+CollectiveImpl* Sys::generate_collective_impl_from_input(
+    string collective_impl_str) {
+    if (collective_impl_str == "ring") {
+        return new CollectiveImpl(CollectiveImplType::Ring);
+    } else if (collective_impl_str == "oneRing") {
+        return new CollectiveImpl(CollectiveImplType::OneRing);
+    } else if (collective_impl_str == "doubleBinaryTree") {
+        return new CollectiveImpl(CollectiveImplType::DoubleBinaryTree);
+    } else if (collective_impl_str.rfind("direct", 0) == 0) {
+        int window = -1;
+        if (collective_impl_str != "direct") {
+            window = stoi(collective_impl_str.substr(6, 5));
+        }
+        return new DirectCollectiveImpl(CollectiveImplType::Direct, window);
+    } else if (collective_impl_str.rfind("oneDirect", 0) == 0) {
+        int window = -1;
+        if (collective_impl_str != "oneDirect") {
+            window = stoi(collective_impl_str.substr(9, 5));
+        }
+        return new DirectCollectiveImpl(CollectiveImplType::OneDirect, window);
+    } else if (collective_impl_str == "halvingDoubling") {
+        return new CollectiveImpl(CollectiveImplType::HalvingDoubling);
+    } else if (collective_impl_str == "oneHalvingDoubling") {
+        return new CollectiveImpl(CollectiveImplType::OneHalvingDoubling);
+    } else if (collective_impl_str == "mesh2d") {
+        return new CollectiveImpl(CollectiveImplType::Mesh2D);
+    } else {
+        sys_panic("Cannot interpret collective implementations. Please check "
+                  "the collective implementations in the sys"
+                  "input file");
+        return new CollectiveImpl(CollectiveImplType::Ring);
+    }
+}
+
+CollectiveImpl* Sys::generate_custom_collective_impl(
+    string chakra_filepath) {
+    string filename = chakra_filepath + "." + to_string(id) + ".et";
+    return new CustomCollectiveImpl(CollectiveImplType::CustomCollectiveImpl, filename);
 }
 
 Tick Sys::boostedTick() {
@@ -572,21 +697,34 @@ LogicalTopology* Sys::get_logical_topology(ComType comm_type) {
     }
 }
 
+vector<CollectiveImpl*> Sys::get_collective_implementation(ComType comm_type) {
+    if (comm_type == ComType::All_Reduce) {
+        return all_reduce_implementation_per_dimension;
+    } else if (comm_type == ComType::All_to_All) {
+        return all_to_all_implementation_per_dimension;
+    } else if (comm_type == ComType::Reduce_Scatter) {
+        return reduce_scatter_implementation_per_dimension;
+    } else if (comm_type == ComType::All_Gather) {
+        return all_gather_implementation_per_dimension;
+    } else {
+        sys_panic("no known collective implementation!");
+        vector<CollectiveImpl*> tmp;
+        return tmp;
+    }
+}
+
 DataSet* Sys::generate_all_reduce(uint64_t size,
                                   vector<bool> involved_dimensions,
                                   CommunicatorGroup* communicator_group,
-                                  int explicit_priority,
-                                  uint64_t workload_node_id) {
+                                  int explicit_priority) {
     if (communicator_group == nullptr) {
-        vector<CollectiveImpl*> implementation_per_dimension;
-        implementation_per_dimension = collective_impl_lookup->get_collective_impl(ComType::All_Reduce, workload_node_id);
         return generate_collective(size, logical_topologies["AllReduce"],
-                                   implementation_per_dimension,
+                                   all_reduce_implementation_per_dimension,
                                    involved_dimensions, ComType::All_Reduce,
                                    explicit_priority, communicator_group);
     } else {
         CollectivePlan* plan =
-            communicator_group->get_collective_plan(ComType::All_Reduce, workload_node_id);
+            communicator_group->get_collective_plan(ComType::All_Reduce);
         return generate_collective(
             size, plan->topology, plan->implementation_per_dimension,
             plan->dimensions_involved, ComType::All_Reduce, explicit_priority,
@@ -597,18 +735,15 @@ DataSet* Sys::generate_all_reduce(uint64_t size,
 DataSet* Sys::generate_all_to_all(uint64_t size,
                                   vector<bool> involved_dimensions,
                                   CommunicatorGroup* communicator_group,
-                                  int explicit_priority,
-                                  uint64_t workload_node_id) {
+                                  int explicit_priority) {
     if (communicator_group == nullptr) {
-        vector<CollectiveImpl*> implementation_per_dimension;
-        implementation_per_dimension = collective_impl_lookup->get_collective_impl(ComType::All_to_All, workload_node_id);
         return generate_collective(size, logical_topologies["AllToAll"],
-                                   implementation_per_dimension,
+                                   all_to_all_implementation_per_dimension,
                                    involved_dimensions, ComType::All_to_All,
                                    explicit_priority, communicator_group);
     } else {
         CollectivePlan* plan =
-            communicator_group->get_collective_plan(ComType::All_to_All, workload_node_id);
+            communicator_group->get_collective_plan(ComType::All_to_All);
         return generate_collective(
             size, plan->topology, plan->implementation_per_dimension,
             plan->dimensions_involved, ComType::All_to_All, explicit_priority,
@@ -619,18 +754,15 @@ DataSet* Sys::generate_all_to_all(uint64_t size,
 DataSet* Sys::generate_all_gather(uint64_t size,
                                   vector<bool> involved_dimensions,
                                   CommunicatorGroup* communicator_group,
-                                  int explicit_priority,
-                                  uint64_t workload_node_id) {
+                                  int explicit_priority) {
     if (communicator_group == nullptr) {
-        vector<CollectiveImpl*> implementation_per_dimension;
-        implementation_per_dimension = collective_impl_lookup->get_collective_impl(ComType::All_Gather, workload_node_id);
         return generate_collective(size, logical_topologies["AllGather"],
-                                   implementation_per_dimension,
+                                   all_gather_implementation_per_dimension,
                                    involved_dimensions, ComType::All_Gather,
                                    explicit_priority, communicator_group);
     } else {
         CollectivePlan* plan =
-            communicator_group->get_collective_plan(ComType::All_Gather, workload_node_id);
+            communicator_group->get_collective_plan(ComType::All_Gather);
         return generate_collective(
             size, plan->topology, plan->implementation_per_dimension,
             plan->dimensions_involved, ComType::All_Gather, explicit_priority,
@@ -641,18 +773,15 @@ DataSet* Sys::generate_all_gather(uint64_t size,
 DataSet* Sys::generate_reduce_scatter(uint64_t size,
                                       vector<bool> involved_dimensions,
                                       CommunicatorGroup* communicator_group,
-                                      int explicit_priority,
-                                      uint64_t workload_node_id) {
+                                      int explicit_priority) {
     if (communicator_group == nullptr) {
-        vector<CollectiveImpl*> implementation_per_dimension;
-        implementation_per_dimension = collective_impl_lookup->get_collective_impl(ComType::Reduce_Scatter, workload_node_id);
         return generate_collective(size, logical_topologies["ReduceScatter"],
-                                   implementation_per_dimension,
+                                   reduce_scatter_implementation_per_dimension,
                                    involved_dimensions, ComType::Reduce_Scatter,
                                    explicit_priority, communicator_group);
     } else {
         CollectivePlan* plan =
-            communicator_group->get_collective_plan(ComType::Reduce_Scatter, workload_node_id);
+            communicator_group->get_collective_plan(ComType::Reduce_Scatter);
         return generate_collective(
             size, plan->topology, plan->implementation_per_dimension,
             plan->dimensions_involved, ComType::Reduce_Scatter,
@@ -687,37 +816,6 @@ DataSet* Sys::generate_collective(
             offline_greedy->reset_loads();
             last_scheduled_collective = Sys::boostedTick();
         }
-    }
-
-    if (implementation_per_dimension[0]->type == CollectiveImplType::CustomCollectiveImpl) {
-        // For custom collective, we create a single stream covering the entire data size,
-        // and ignore all the logic below.
-        int pos_in_comm = id;
-        if (communicator_group != nullptr) {
-            pos_in_comm = communicator_group->get_position_in_group();
-        }
-        CollectivePhase phase = generate_collective_phase(
-            collective_type,
-            nullptr,
-            size,
-            // We use the variable queue_id to encode the position of this rank in the communication.
-            pos_in_comm,
-            // Below three are default values.
-            RingTopology::Direction::Clockwise,
-            InjectionPolicy::Normal,
-            implementation_per_dimension[0],
-            communicator_group);
-        list<CollectivePhase> vect;
-        vect.push_back(phase);
-        int stream_id = num_streams++;
-        if (communicator_group != nullptr) {
-            stream_id = communicator_group->num_streams++;
-        }
-        StreamBaseline* newStream =
-            new StreamBaseline(this, dataset, stream_id, vect, pri);
-        newStream->current_queue_id = -1;
-        insert_into_ready_list(newStream);
-        return dataset;
     }
 
     while (size > 0) {
@@ -964,8 +1062,7 @@ CollectivePhase Sys::generate_collective_phase(
     int queue_id,
     RingTopology::Direction direction,
     InjectionPolicy injection_policy,
-    CollectiveImpl* collective_impl,
-    CommunicatorGroup* comm_group) {
+    CollectiveImpl* collective_impl) {
     if (collective_impl->type == CollectiveImplType::Ring ||
         collective_impl->type == CollectiveImplType::OneRing) {
         CollectivePhase vn(this, queue_id,
@@ -995,15 +1092,136 @@ CollectivePhase Sys::generate_collective_phase(
                                                (RingTopology*)topology,
                                                data_size));
         return vn;
+    } else if (collective_impl->type == CollectiveImplType::Mesh2D) {
+        CollectivePhase vn(this, queue_id,
+                           new MeshAllGather(collective_type, id,
+                                             (Mesh2DTopology*)topology, data_size));
+        return vn;
     } else if (collective_impl->type == CollectiveImplType::CustomCollectiveImpl) {
         string filename = ((CustomCollectiveImpl*)collective_impl)->filename;
-        CollectivePhase vn(this, 0, new CustomAlgorithm(filename, id, queue_id, comm_group));
+        CollectivePhase vn(this, queue_id, new CustomAlgorithm(filename, id));
         return vn;
     } else {
         LoggerFactory::get_logger("system")->critical(
             "Error: No known collective implementation for collective phase");
         exit(1);
     }
+}
+
+int Sys::break_dimension(int model_parallel_npu_group) {
+    if (break_dimension_done) {
+        return dimension_to_break;
+    }
+
+    dimension_to_break = 0;
+    if (model_parallel_npu_group == 1) {
+        break_dimension_done = true;
+        return -1;
+    }
+    int all_npus = 1;
+    for (; dimension_to_break < physical_dims.size(); dimension_to_break++) {
+        if (all_npus * physical_dims[dimension_to_break] <
+            model_parallel_npu_group) {
+            all_npus *= physical_dims[dimension_to_break];
+        } else if (all_npus * physical_dims[dimension_to_break] >
+                   model_parallel_npu_group) {
+            for (auto lt : logical_topologies) {
+                delete lt.second;
+            }
+            logical_topologies.clear();
+
+            delete scheduler_unit;
+            delete vLevels;
+            std::vector<int>::iterator levelIterator = queues_per_dim.begin();
+            std::advance(levelIterator, dimension_to_break);
+            queues_per_dim.insert(levelIterator,
+                                  queues_per_dim[dimension_to_break]);
+            scheduler_unit =
+                new SchedulerUnit(this, queues_per_dim, max_running,
+                                  active_first_phase, concurrent_streams);
+            vLevels =
+                new QueueLevels(queues_per_dim, 0, comm_NI->get_backend_type());
+
+            int first_subdim = model_parallel_npu_group / all_npus;
+            int second_subdim =
+                physical_dims[dimension_to_break] / first_subdim;
+            std::vector<int> logical_dims;
+
+            for (uint64_t dim = 0; dim < physical_dims.size(); dim++) {
+                if (dim != static_cast<uint64_t>(dimension_to_break)) {
+                    logical_dims.push_back(physical_dims[dim]);
+                } else {
+                    logical_dims.push_back(first_subdim);
+                    logical_dims.push_back(second_subdim);
+                }
+            }
+
+            std::vector<CollectiveImpl*>::iterator it =
+                all_reduce_implementation_per_dimension.begin();
+            if (all_reduce_implementation_per_dimension.size() >
+                dimension_to_break) {
+                std::advance(it, dimension_to_break);
+            } else {
+                std::advance(it,
+                             all_reduce_implementation_per_dimension.size());
+            }
+            CollectiveImpl* replicate = (CollectiveImpl*)(*it)->clone();
+            all_reduce_implementation_per_dimension.insert(it, replicate);
+
+            it = reduce_scatter_implementation_per_dimension.begin();
+            if (reduce_scatter_implementation_per_dimension.size() >
+                dimension_to_break) {
+                std::advance(it, dimension_to_break);
+            } else {
+                std::advance(
+                    it, reduce_scatter_implementation_per_dimension.size());
+            }
+            replicate = (CollectiveImpl*)(*it)->clone();
+            reduce_scatter_implementation_per_dimension.insert(it, replicate);
+
+            it = all_gather_implementation_per_dimension.begin();
+            if (all_gather_implementation_per_dimension.size() >
+                dimension_to_break) {
+                std::advance(it, dimension_to_break);
+            } else {
+                std::advance(it,
+                             all_gather_implementation_per_dimension.size());
+            }
+            replicate = (CollectiveImpl*)(*it)->clone();
+            all_gather_implementation_per_dimension.insert(it, replicate);
+
+            it = all_to_all_implementation_per_dimension.begin();
+            if (all_to_all_implementation_per_dimension.size() >
+                dimension_to_break) {
+                std::advance(it, dimension_to_break);
+            } else {
+                std::advance(it,
+                             all_to_all_implementation_per_dimension.size());
+            }
+            replicate = (CollectiveImpl*)(*it)->clone();
+            all_to_all_implementation_per_dimension.insert(it, replicate);
+            logical_topologies["AllReduce"] = new GeneralComplexTopology(
+                id, logical_dims, all_reduce_implementation_per_dimension);
+            logical_topologies["ReduceScatter"] = new GeneralComplexTopology(
+                id, logical_dims, reduce_scatter_implementation_per_dimension);
+            logical_topologies["AllGather"] = new GeneralComplexTopology(
+                id, logical_dims, all_gather_implementation_per_dimension);
+            logical_topologies["AllToAll"] = new GeneralComplexTopology(
+                id, logical_dims, all_to_all_implementation_per_dimension);
+            this->logical_broken_dims = logical_dims;
+            this->dim_to_break = dimension_to_break;
+
+            break_dimension_done = true;
+            return dimension_to_break;
+        } else if (all_npus * physical_dims[dimension_to_break] ==
+                   model_parallel_npu_group) {
+            break_dimension_done = true;
+            return dimension_to_break;
+        }
+    }
+
+    break_dimension_done = true;
+    return -1;
 }
 
 uint64_t Sys::determine_chunk_size(uint64_t& size, ComType type) {

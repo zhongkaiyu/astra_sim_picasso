@@ -7,11 +7,12 @@ LICENSE file in the root directory of this source tree.
 
 #include <cassert>
 #include <iostream>
+#include <cmath>
 
 #include "astra-sim/common/Logging.hh"
-#include "astra-sim/system/astraccl/CollectiveImpl.hh"
 #include "astra-sim/system/astraccl/native_collectives/logical_topology/DoubleBinaryTreeTopology.hh"
 #include "astra-sim/system/astraccl/native_collectives/logical_topology/RingTopology.hh"
+#include "astra-sim/system/astraccl/native_collectives/logical_topology/Mesh2DTopology.hh"
 
 using namespace std;
 using namespace AstraSim;
@@ -68,6 +69,25 @@ GeneralComplexTopology::GeneralComplexTopology(
                     offset);
                 dimension_topology.push_back(DBT);
             }
+        } else if (collective_impl[dim]->type ==
+                   CollectiveImplType::Mesh2D) {
+            // For Mesh2D, calculate total nodes and assume square mesh
+            int total_npus = 1;
+            for (int d : dimension_size) {
+                total_npus *= d;
+            }
+            
+            // For now, assume square mesh (width = height)
+            // This should ideally be passed from physical topology
+            int mesh_size = static_cast<int>(std::sqrt(total_npus));
+            if (mesh_size * mesh_size != total_npus) {
+                // Not a perfect square, use closest approximation
+                mesh_size = static_cast<int>(std::ceil(std::sqrt(total_npus)));
+            }
+            
+            // Create Mesh2D topology with square dimensions
+            Mesh2DTopology* mesh = new Mesh2DTopology(id, mesh_size, mesh_size);
+            dimension_topology.push_back(mesh);
         }
         offset *= dimension_size[dim];
     }

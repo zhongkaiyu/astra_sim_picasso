@@ -16,7 +16,6 @@ LICENSE file in the root directory of this source tree.
 #include "astra-sim/system/MemBus.hh"
 #include "astra-sim/system/Roofline.hh"
 #include "astra-sim/system/UsageTracker.hh"
-#include "astra-sim/system/astraccl/CollectiveImplLookup.hh"
 #include "astra-sim/system/astraccl/native_collectives/logical_topology/RingTopology.hh"
 #include "astra-sim/workload/Workload.hh"
 
@@ -80,6 +79,10 @@ class Sys : public Callable {
     // Intialization
     // ------------------------------------------------------------
     bool initialize_sys(std::string name);
+    CollectiveImpl* generate_collective_impl_from_input(
+        std::string collective_impl_str);
+    CollectiveImpl* generate_custom_collective_impl(
+        std::string collective_impl_str);
     //---------------------------------------------------------------------------
 
     // Helper Functions
@@ -117,32 +120,22 @@ class Sys : public Callable {
 
     // Collective Communication Primitives
     // --------------------------------------
-
-    // [operation specific custom collective]
-    // We want to designate different collective algorithms for different collective operations.
-    // To do that, when determining which collective algorithm to use, the system layer needs to know
-    // which operator (i.e. Chakra node) it is trying to simulate (so that it can look up the algorithm)
-    // Therefore, we provide the id of the Chakra node to use as a lookup key.
     DataSet* generate_all_reduce(uint64_t size,
                                  std::vector<bool> involved_dimensions,
                                  CommunicatorGroup* communicator_group,
-                                 int explicit_priority,
-                                 uint64_t workload_node_id = -1);
+                                 int explicit_priority);
     DataSet* generate_all_to_all(uint64_t size,
                                  std::vector<bool> involved_dimensions,
                                  CommunicatorGroup* communicator_group,
-                                 int explicit_priority,
-                                 uint64_t workload_node_id = -1);
+                                 int explicit_priority);
     DataSet* generate_all_gather(uint64_t size,
                                  std::vector<bool> involved_dimensions,
                                  CommunicatorGroup* communicator_group,
-                                 int explicit_priority,
-                                 uint64_t workload_node_id = -1);
+                                 int explicit_priority);
     DataSet* generate_reduce_scatter(uint64_t size,
                                      std::vector<bool> involved_dimensions,
                                      CommunicatorGroup* communicator_group,
-                                     int explicit_priority,
-                                     uint64_t workload_node_id = -1);
+                                     int explicit_priority);
     DataSet* generate_collective(
         uint64_t size,
         LogicalTopology* topology,
@@ -157,8 +150,8 @@ class Sys : public Callable {
                                               int queue_id,
                                               RingTopology::Direction direction,
                                               InjectionPolicy injection_policy,
-                                              CollectiveImpl* collective_impl,
-                                              CommunicatorGroup* comm_group = nullptr);
+                                              CollectiveImpl* collective_impl);
+    int break_dimension(int model_parallel_npu_group);
     //---------------------------------------------------------------------------
 
     // Middle-level Network Primitives
@@ -318,12 +311,17 @@ class Sys : public Callable {
     std::vector<int> queues_per_dim;
 
     // collective communication
-    CollectiveImplLookup* collective_impl_lookup;
     int num_streams;
     static uint8_t* dummy_data;
     std::map<std::string, LogicalTopology*> logical_topologies;
+    std::vector<CollectiveImpl*> all_reduce_implementation_per_dimension;
+    std::vector<CollectiveImpl*> reduce_scatter_implementation_per_dimension;
+    std::vector<CollectiveImpl*> all_gather_implementation_per_dimension;
+    std::vector<CollectiveImpl*> all_to_all_implementation_per_dimension;
     CollectiveOptimization collectiveOptimization;
     Tick last_scheduled_collective;
+    bool break_dimension_done;
+    int dimension_to_break;
 
     // statistics
     bool trace_enabled;

@@ -7,7 +7,6 @@ LICENSE file in the root directory of this source tree.
 #define __LOGICAL_TOPOLOGY_HH__
 
 #include "astra-sim/system/Common.hh"
-#include "astra-sim/system/astraccl/CollectiveImpl.hh"
 
 namespace AstraSim {
 

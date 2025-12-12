@@ -157,6 +157,21 @@ void Workload::issue(shared_ptr<Chakra::FeederV3::ETFeederNode> node) {
                       sys->id, Sys::boostedTick(), node->id(), node->name(),
                       static_cast<uint64_t>(node->type()));
     }
+    
+    // Print layer boundary when processing transformer layers (always enabled for visibility)
+    std::string node_name = node->name();
+    if (node_name.find("transformer.") != std::string::npos) {
+        // Extract layer number from node name
+        size_t layer_start = node_name.find("transformer.");
+        if (layer_start != std::string::npos) {
+            size_t layer_end = node_name.find(".", layer_start + 12);
+            if (layer_end != std::string::npos) {
+                std::string layer_str = node_name.substr(layer_start + 12, layer_end - layer_start - 12);
+                std::cout << "\n[SIM_LAYER] NPU=" << sys->id << " Starting Layer " << layer_str 
+                          << " at tick=" << Sys::boostedTick() << std::endl;
+            }
+        }
+    }
 
     this->et_feeder->getDependancyResolver().take_node(node->id());
     this->hw_resource->occupy(node);
@@ -263,6 +278,20 @@ void Workload::issue_comp(shared_ptr<Chakra::FeederV3::ETFeederNode> node) {
     double perf = sys->roofline->get_perf(operational_intensity);
     double elapsed_time = static_cast<double>(node->num_ops()) / perf;  // sec
     uint64_t runtime = static_cast<uint64_t>(elapsed_time * 1e9);  // sec -> ns
+    
+    // Print computation operation details
+    double num_ops_gflops = num_ops / (1024.0 * 1024.0 * 1024.0);
+    double tensor_size_mb = tensor_size / (1024.0 * 1024.0);
+    std::string op_type_str = "COMP_NODE";
+    if (node->has_attr("op_type")) {
+        op_type_str = node->get_attr<std::string>("op_type");
+    }
+    std::cout << "[SIM_COMP] NPU=" << sys->id << " node_id=" << node->id() 
+              << " node_name=" << node->name() << " op_type=" << op_type_str
+              << " ops=" << num_ops_gflops << " GFLOPs (" << num_ops << " ops)"
+              << " size=" << tensor_size_mb << " MB (" << tensor_size << " bytes)"
+              << " runtime=" << (runtime / 1000.0) << " us (" << runtime << " ns)" << std::endl;
+    
     if (node->is_cpu_op()) {
         hw_resource->tics_cpu_ops += runtime;
     } else {
@@ -344,27 +373,50 @@ void Workload::issue_coll_comm(
     // same pg
     const auto comm_priority = node->comm_priority<uint32_t>();  // default 0u
 
+    // Print collective communication operation details
+    const char* comm_type_str = nullptr;
+    if (comm_type == ChakraCollectiveCommType::ALL_REDUCE) {
+        comm_type_str = "ALL_REDUCE";
+    } else if (comm_type == ChakraCollectiveCommType::ALL_TO_ALL) {
+        comm_type_str = "ALL_TO_ALL";
+    } else if (comm_type == ChakraCollectiveCommType::ALL_GATHER) {
+        comm_type_str = "ALL_GATHER";
+    } else if (comm_type == ChakraCollectiveCommType::REDUCE_SCATTER) {
+        comm_type_str = "REDUCE_SCATTER";
+    }
+    
+    std::string comm_group_name = node->pg_name<std::string>("");
+    int comm_group_id = 0;
+    if (!comm_group_name.empty()) {
+        comm_group_id = std::stoi(comm_group_name);
+    }
+    double comm_size_mb = comm_size / (1024.0 * 1024.0);
+    std::cout << "[SIM_COMM] NPU=" << sys->id << " node_id=" << node->id() 
+              << " node_name=" << node->name() << " type=" << comm_type_str
+              << " size=" << comm_size_mb << " MB (" << comm_size << " bytes)"
+              << " comm_group_id=" << comm_group_id << std::endl;
+
     if (comm_type == ChakraCollectiveCommType::ALL_REDUCE) {
         DataSet* fp = sys->generate_all_reduce(comm_size, involved_dims,
-                                               comm_group, comm_priority, node->id());
+                                               comm_group, comm_priority);
         collective_comm_node_id_map[fp->my_id] = node->id();
         collective_comm_wrapper_map[fp->my_id] = fp;
         fp->set_notifier(this, EventType::CollectiveCommunicationFinished);
     } else if (comm_type == ChakraCollectiveCommType::ALL_TO_ALL) {
         DataSet* fp = sys->generate_all_to_all(comm_size, involved_dims,
-                                               comm_group, comm_priority, node->id());
+                                               comm_group, comm_priority);
         collective_comm_node_id_map[fp->my_id] = node->id();
         collective_comm_wrapper_map[fp->my_id] = fp;
         fp->set_notifier(this, EventType::CollectiveCommunicationFinished);
     } else if (comm_type == ChakraCollectiveCommType::ALL_GATHER) {
         DataSet* fp = sys->generate_all_gather(comm_size, involved_dims,
-                                               comm_group, comm_priority, node->id());
+                                               comm_group, comm_priority);
         collective_comm_node_id_map[fp->my_id] = node->id();
         collective_comm_wrapper_map[fp->my_id] = fp;
         fp->set_notifier(this, EventType::CollectiveCommunicationFinished);
     } else if (comm_type == ChakraCollectiveCommType::REDUCE_SCATTER) {
         DataSet* fp = sys->generate_reduce_scatter(comm_size, involved_dims,
-                                                   comm_group, comm_priority, node->id());
+                                                   comm_group, comm_priority);
         collective_comm_node_id_map[fp->my_id] = node->id();
         collective_comm_wrapper_map[fp->my_id] = fp;
         fp->set_notifier(this, EventType::CollectiveCommunicationFinished);
@@ -477,12 +529,37 @@ void Workload::call(EventType event, CallData* data) {
                         static_cast<uint64_t>(node->type()));
         }
 
+        // Print communication completion details
+        const auto comm_type = static_cast<ChakraCollectiveCommType>(node->comm_type<uint64_t>());
+        const auto comm_size = node->comm_size<uint64_t>();
+        Tick execution_time = int_data->execution_time;
+        const char* comm_type_str = nullptr;
+        if (comm_type == ChakraCollectiveCommType::ALL_REDUCE) {
+            comm_type_str = "ALL_REDUCE";
+        } else if (comm_type == ChakraCollectiveCommType::ALL_TO_ALL) {
+            comm_type_str = "ALL_TO_ALL";
+        } else if (comm_type == ChakraCollectiveCommType::ALL_GATHER) {
+            comm_type_str = "ALL_GATHER";
+        } else if (comm_type == ChakraCollectiveCommType::REDUCE_SCATTER) {
+            comm_type_str = "REDUCE_SCATTER";
+        }
+        double comm_size_mb = comm_size / (1024.0 * 1024.0);
+        double exec_time_us = execution_time / 1000.0;
+        std::string comm_group_name = node->pg_name<std::string>("");
+        int comm_group_id = 0;
+        if (!comm_group_name.empty()) {
+            comm_group_id = std::stoi(comm_group_name);
+        }
+        std::cout << "[SIM_COMM_FINISH] NPU=" << sys->id << " node_id=" << node_id 
+                  << " node_name=" << node->name() << " type=" << comm_type_str
+                  << " size=" << comm_size_mb << " MB execution_time=" << exec_time_us 
+                  << " us (" << execution_time << " ns) comm_group_id=" << comm_group_id << std::endl;
+
         hw_resource->release(node);
         stats->record_end(node, Sys::boostedTick());
 
         // Calculate network bandwidth
         auto& op_stat = stats->get_operator_statistics(node_id);
-        Tick execution_time = int_data->execution_time;
         if (execution_time > 0 && op_stat.comm_size.has_value()) {
             double bandwidth =
                 static_cast<double>(op_stat.comm_size.value()) / execution_time;
@@ -509,6 +586,23 @@ void Workload::call(EventType event, CallData* data) {
             WorkloadLayerHandlerData* wlhd = (WorkloadLayerHandlerData*)data;
             shared_ptr<Chakra::FeederV3::ETFeederNode> node =
                 et_feeder->lookupNode(wlhd->node_id);
+            
+            // Print computation completion details
+            if (node->type() == ChakraNodeType::COMP_NODE) {
+                double num_ops = static_cast<double>(node->num_ops<uint64_t>());
+                double tensor_size = static_cast<double>(node->tensor_size<uint64_t>());
+                double num_ops_gflops = num_ops / (1024.0 * 1024.0 * 1024.0);
+                double tensor_size_mb = tensor_size / (1024.0 * 1024.0);
+                std::string op_type_str = "COMP_NODE";
+                if (node->has_attr("op_type")) {
+                    op_type_str = node->get_attr<std::string>("op_type");
+                }
+                std::cout << "[SIM_COMP_FINISH] NPU=" << sys->id << " node_id=" << node->id() 
+                          << " node_name=" << node->name() << " op_type=" << op_type_str
+                          << " ops=" << num_ops_gflops << " GFLOPs"
+                          << " size=" << tensor_size_mb << " MB"
+                          << " at tick=" << Sys::boostedTick() << std::endl;
+            }
 
             if (sys->trace_enabled) {
                 LoggerFactory::get_logger("workload")
@@ -589,12 +683,7 @@ void Workload::report() {
 CommunicatorGroup* Workload::extract_comm_group(
     std::shared_ptr<Chakra::ETFeederNode> node) {
     std::string comm_group_name = node->pg_name<std::string>("");
-    // [default communication group]
-    // We assume that an empty comm group, or comm group '0' both correspond
-    // to the default communicator group that includes all ranks.
-    // If, in the future, we want to support a user-defined comm group '0',
-    // revisit this logic.
-    if (comm_group_name == "" || comm_group_name == "0") {
+    if (comm_group_name == "") {
         // No communicator group is specified for this communication ET node.
         return nullptr;
     }

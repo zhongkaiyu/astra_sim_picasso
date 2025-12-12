@@ -7,7 +7,7 @@
         "ring"
     ],
     "all-gather-implementation": [
-        "ring"
+        "mesh2d"
     ],
     "reduce-scatter-implementation": [
         "ring"
@@ -16,8 +16,9 @@
         "ring"
     ],
     "collective-optimization": "localBWAware",
-    "local-mem-bw": 3350,
+    "local-mem-bw": 1600,
     "boost-mode": 0,
-    "roofline-enabled": 1,
-    "peak-perf": 989
+    "roofline-enabled": 0,
+    "peak-perf": 900
 }
+
