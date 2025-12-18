@@ -1,0 +1,116 @@
+ASTRA-sim Simulation Results File Manifest
+===========================================
+Generated: 2025-12-18
+
+SUMMARY
+-------
+Total files: 42
+Configurations: 2 (Mesh2D TP=24, Megatron TP=8)
+
+DIRECTORY STRUCTURE
+-------------------
+
+output/
+├── README.md                                      [Index & Documentation]
+├── QUICK_START.md                                [Quick Start Guide]
+├── FILE_MANIFEST.txt                             [This file]
+│
+├── comparison/
+│   └── COMPARISON_SUMMARY.md                     [Performance Comparison ⭐]
+│
+├── mesh2d_tp24/
+│   ├── CONFIG_INFO.md                            [Configuration Details]
+│   ├── logs/
+│   │   └── simulation_log.txt                    [Full Simulation Log]
+│   ├── workloads/
+│   │   ├── attention_tp24.0.et                   [NPU 0 Workload]
+│   │   ├── attention_tp24.1.et                   [NPU 1 Workload]
+│   │   ├── ... (22 more files)
+│   │   ├── attention_tp24.23.et                  [NPU 23 Workload]
+│   │   └── attention_tp24.json                   [Communication Group Config]
+│   └── analysis/
+│       └── simulation_summary.md                 [Performance Analysis]
+│
+└── megatron_tp8/
+    ├── CONFIG_INFO.md                            [Configuration Details]
+    ├── logs/
+    │   └── simulation_log_megatron_tp8.txt      [Full Simulation Log]
+    ├── workloads/
+    │   ├── attention_tp8.0.et                    [GPU 0 Workload]
+    │   ├── attention_tp8.1.et                    [GPU 1 Workload]
+    │   ├── ... (6 more files)
+    │   ├── attention_tp8.7.et                    [GPU 7 Workload]
+    │   └── attention_tp8.json                    [Communication Group Config]
+    └── analysis/
+        └── simulation_megatron_tp8_summary.md   [Performance Analysis]
+
+FILE DESCRIPTIONS
+-----------------
+
+Documentation Files:
+  README.md                 - Complete documentation and usage guide
+  QUICK_START.md           - Quick start guide for viewing results
+  FILE_MANIFEST.txt        - This file
+  CONFIG_INFO.md           - Configuration details for each setup
+
+Analysis Files:
+  COMPARISON_SUMMARY.md              - Side-by-side performance comparison
+  simulation_summary.md              - Mesh2D TP=24 analysis
+  simulation_megatron_tp8_summary.md - Megatron TP=8 analysis
+
+Log Files:
+  simulation_log.txt              - Mesh2D TP=24 full simulation output
+  simulation_log_megatron_tp8.txt - Megatron TP=8 full simulation output
+
+Workload Files:
+  attention_tp24.{0-23}.et - Chakra ET traces for 24 NPUs (Mesh2D)
+  attention_tp8.{0-7}.et   - Chakra ET traces for 8 GPUs (Megatron)
+  *.json                   - Communication group configurations
+
+FILE SIZES
+----------
+Mesh2D TP=24 workloads:  24 × ~13 KB = ~312 KB
+Megatron TP=8 workloads:  8 × ~13 KB = ~104 KB
+Logs:                    ~100-200 KB each
+Analysis:                ~10-30 KB each
+
+KEY RESULTS
+-----------
+Mesh2D TP=24:     35,334,744 cycles
+Megatron TP=8:     7,424,768 cycles
+Speedup:          4.76×
+
+RECOMMENDED READING ORDER
+-------------------------
+1. QUICK_START.md                          (Start here!)
+2. comparison/COMPARISON_SUMMARY.md        (Key findings)
+3. mesh2d_tp24/CONFIG_INFO.md             (Config 1)
+4. megatron_tp8/CONFIG_INFO.md            (Config 2)
+5. Detailed analysis files                 (Optional)
+
+CONFIGURATION REFERENCES
+------------------------
+Mesh2D TP=24:
+  - Network:  ../../examples/network/analytical/Mesh2D_24npus_6x4.yml
+  - System:   ../../examples/system/native_collectives/Ring_4chunks.json
+  - Script:   ../../examples/run_scripts/analytical/congestion_aware/Mesh2D_allgather_24npus_6x4.sh
+
+Megatron TP=8:
+  - Network:  ../../examples/network/analytical/NVSwitch_8gpus_megatron.yml
+  - System:   ../../examples/system/native_collectives/Megatron_TP8.json
+  - Script:   ../../examples/run_scripts/analytical/congestion_aware/Megatron_TP8_attention.sh
+
+TOOLS USED
+----------
+- ASTRA-sim 2.0: Distributed AI system simulator
+- STG: Symbolic Tensor Graph workload generator
+- Chakra ET: Execution trace format
+- Backend: Analytical (congestion-aware)
+
+NOTES
+-----
+- All times are in simulation cycles
+- Speedup is calculated as: Mesh2D_time / Megatron_time
+- Both configurations use Qwen3 attention layer workload
+- Model parameters: dmodel=4096, heads=64, kvheads=4, seq=1024, batch=1
+

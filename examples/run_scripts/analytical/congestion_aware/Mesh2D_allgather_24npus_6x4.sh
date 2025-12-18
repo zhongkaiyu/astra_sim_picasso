@@ -8,11 +8,11 @@ EXAMPLE_DIR="${PROJECT_DIR:?}/examples"
 
 # paths
 ASTRA_SIM="${PROJECT_DIR:?}/build/astra_analytical/build/bin/AstraSim_Analytical_Congestion_Aware"
-WORKLOAD="/home/ohm/astra-sim/symbolic_tensor_graph/generated_attn_24npu/attention_tp24"
+WORKLOAD="${PROJECT_DIR:?}/symbolic_tensor_graph_picasso/generated_attn_24npu/attention_tp24"
 SYSTEM="${EXAMPLE_DIR:?}/system/native_collectives/Ring_4chunks.json"
 NETWORK="${EXAMPLE_DIR:?}/network/analytical/Mesh2D_24npus_6x4.yml"
 REMOTE_MEMORY="${EXAMPLE_DIR:?}/remote_memory/analytical/no_memory_expansion.json"
-COMM_GROUP="/home/ohm/astra-sim/symbolic_tensor_graph/generated_attn_24npu/attention_tp24.json"
+COMM_GROUP="${PROJECT_DIR:?}/symbolic_tensor_graph_picasso/generated_attn_24npu/attention_tp24.json"
 
 # start
 echo "[ASTRA-sim] Running Attention-Only Workload (TP=24) on Mesh2D Physical Topology (6x4 grid, 24 NPUs)"

@@ -1,0 +1,29 @@
+======================================================================
+ASTRA-sim Multi-Configuration Comparison
+======================================================================
+
+[OK] Loaded: output/mesh2d_tp24/logs/simulation_log.txt
+[OK] Loaded: output/megatron_tp8/logs/simulation_log_megatron_tp8.txt
+
+======================================================================
+Comparison Table
+======================================================================
+Metric                           Config 1        Config 2
+----------------------------------------------------------------------
+Wall Time (cycles)             35,334,744       7,424,768
+GPU Time (cycles)               1,229,228       1,455,554
+Comm Time (cycles)             34,254,490       6,107,088
+GPU %                                3.48           19.60
+Comm %                              96.94           82.25
+Compute Util %                      13.69           34.33
+Bottleneck                SEVERE_COMM_BOUND      COMM_BOUND
+
+======================================================================
+Speedup Analysis (vs Config 1)
+======================================================================
+  Config 1: simulation_log.txt
+    Baseline: 35,334,744 cycles
+  Config 2: simulation_log_megatron_tp8.txt
+    Speedup: 4.76x
+    Time saved: 79.0%
+

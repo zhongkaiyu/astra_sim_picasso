@@ -29,3 +29,4 @@ build/astra_htsim/build/
 
 # runs
 runs
+symbolic_tensor_graph_picasso/

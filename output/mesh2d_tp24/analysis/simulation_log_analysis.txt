@@ -1,0 +1,36 @@
+======================================================================
+ASTRA-sim Log Analysis: simulation_log.txt
+======================================================================
+
+[Performance Metrics]
+----------------------------------------------------------------------
+  Wall Time:                35,334,744 cycles (100%)
+  GPU Time (Compute):        1,229,228 cycles ( 3.48%)
+  Comm Time:                34,254,490 cycles (96.94%)
+  Compute-Comm Overlap:        148,974 cycles ( 0.42%)
+
+[Utilization Metrics]
+----------------------------------------------------------------------
+  Compute Bound:                  8.99%
+  Compute Utilization:           13.69%
+  Memory Utilization:            91.38%
+  Operation Intensity:        6,836.19
+
+[Bottleneck Analysis]
+----------------------------------------------------------------------
+  Status: [WARNING] Severely communication-bound (>90%)
+
+[Time Breakdown]
+----------------------------------------------------------------------
+  Compute           3.5% #-------------------------------------------------
+  Communication    96.9% ################################################--
+
+[Multi-NPU Consistency Check]
+----------------------------------------------------------------------
+  Total NPUs:          24
+  Min Wall Time:       34,370,388 cycles
+  Max Wall Time:       35,334,744 cycles
+  Avg Wall Time:       34,980,510 cycles
+  Variance:            2.76%
+  Status:              [OK] Good load balance (<5% variance)
+

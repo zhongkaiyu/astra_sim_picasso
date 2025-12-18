@@ -1,0 +1,1396 @@
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                    ASTRA-SIM: MAIN ENTRY POINT                            ║
+║               Analytical Network Backend - Congestion Aware               ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+[MAIN] Starting ASTRA-SIM simulation...
+[MAIN] Process ID: 1199361
+[MAIN] Timestamp: Dec 17 2025 19:39:47
+
+[MAIN-ARGS] Parsing command line arguments...
+[MAIN-ARGS] Arguments parsed ✓
+
+[MAIN-CONFIG] Configuration files:
+  ├─ Workload: /home/haotian/waferchip/mesh2D/astra_sim_picasso/examples/run_scripts/analytical/congestion_aware/../../../../symbolic_tensor_graph_picasso/generated_attn_8npu/attention_tp8
+  ├─ System: /home/haotian/waferchip/mesh2D/astra_sim_picasso/examples/run_scripts/analytical/congestion_aware/../../../../examples/system/native_collectives/Megatron_TP8.json
+  ├─ Network: /home/haotian/waferchip/mesh2D/astra_sim_picasso/examples/run_scripts/analytical/congestion_aware/../../../../examples/network/analytical/NVSwitch_8gpus_megatron.yml
+  ├─ Remote Memory: /home/haotian/waferchip/mesh2D/astra_sim_picasso/examples/run_scripts/analytical/congestion_aware/../../../../examples/remote_memory/analytical/no_memory_expansion.json
+  ├─ Comm Groups: /home/haotian/waferchip/mesh2D/astra_sim_picasso/examples/run_scripts/analytical/congestion_aware/../../../../symbolic_tensor_graph_picasso/generated_attn_8npu/attention_tp8.json
+  └─ Logging: empty
+
+[MAIN-QUEUE] Creating event queue (Discrete Event Simulator)...
+[MAIN-QUEUE] Event queue created ✓
+
+[MAIN-TOPOLOGY] Parsing and constructing network topology...
+[MAIN-TOPOLOGY] NetworkParser created from: /home/haotian/waferchip/mesh2D/astra_sim_picasso/examples/run_scripts/analytical/congestion_aware/../../../../examples/network/analytical/NVSwitch_8gpus_megatron.yml
+[MAIN-TOPOLOGY] Topology constructed ✓
+[MAIN-TOPOLOGY] Topology info:
+  ├─ Total NPUs: 8
+  ├─ Dimensions: 1
+  └─ NPUs per dimension: 8
+
+[MAIN-NETWORK] Setting up Network API...
+[MAIN-NETWORK] Network API configured ✓
+
+[MAIN-RESOURCES] Allocating ASTRA-sim resources...
+[MAIN-RESOURCES] Memory API created ✓
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                    PHASE 1: SYSTEM INITIALIZATION                         ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+[SYS-INIT] Creating 8 Sys objects (one per NPU)...
+
+[SYS-INIT] Creating Sys[0]...
+[SYS-INIT]   ├─ Network API created
+[2025-12-18 02:40:29.651] [system::topology::RingTopology] [info] ring of node 0, id: 0 dimension: local total nodes in ring: 8 index in ring: 0 offset: 1 total nodes in ring: 8
+[2025-12-18 02:40:29.651] [system::topology::RingTopology] [info] ring of node 0, id: 0 dimension: local total nodes in ring: 8 index in ring: 0 offset: 1 total nodes in ring: 8
+[2025-12-18 02:40:29.651] [system::topology::RingTopology] [info] ring of node 0, id: 0 dimension: local total nodes in ring: 8 index in ring: 0 offset: 1 total nodes in ring: 8
+[2025-12-18 02:40:29.651] [system::topology::RingTopology] [info] ring of node 0, id: 0 dimension: local total nodes in ring: 8 index in ring: 0 offset: 1 total nodes in ring: 8
+[SYS-INIT]   ├─ Sys object created
+[SYS-INIT]   └─ Workload loaded ✓
+[SYS-INIT] Creating Sys[1]...
+[SYS-INIT]   ├─ Network API created
+[SYS-INIT]   ├─ Sys object created
+[SYS-INIT]   └─ Workload loaded ✓
+[SYS-INIT] Creating Sys[2]...
+[SYS-INIT]   ├─ Network API created
+[SYS-INIT]   ├─ Sys object created
+[SYS-INIT]   └─ Workload loaded ✓
+[SYS-INIT] Creating Sys[3]...
+[SYS-INIT]   ├─ Network API created
+[SYS-INIT]   ├─ Sys object created
+[SYS-INIT]   └─ Workload loaded ✓
+[SYS-INIT] Creating Sys[4]...
+[SYS-INIT]   ├─ Network API created
+[SYS-INIT]   ├─ Sys object created
+[SYS-INIT]   └─ Workload loaded ✓
+[SYS-INIT] Creating Sys[5]...
+[SYS-INIT]   ├─ Network API created
+[SYS-INIT]   ├─ Sys object created
+[SYS-INIT]   └─ Workload loaded ✓
+[SYS-INIT] Creating Sys[6]...
+[SYS-INIT]   ├─ Network API created
+[SYS-INIT]   ├─ Sys object created
+[SYS-INIT]   └─ Workload loaded ✓
+[SYS-INIT] Creating Sys[7]...
+[SYS-INIT]   ├─ Network API created
+[SYS-INIT]   ├─ Sys object created
+[SYS-INIT]   └─ Workload loaded ✓
+
+[SYS-INIT] All 8 Sys objects created ✓
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                    PHASE 2: FIRE INITIAL EVENTS                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+[SIM-START] Firing initial events for all NPUs...
+[SIM-START] Calling workload[0]->fire()
+[SIM_COMP] NPU=0 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM-START] Calling workload[1]->fire()
+[SIM_COMP] NPU=1 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM-START] Calling workload[2]->fire()
+[SIM_COMP] NPU=2 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM-START] Calling workload[3]->fire()
+[SIM_COMP] NPU=3 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM-START] Calling workload[4]->fire()
+[SIM_COMP] NPU=4 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM-START] Calling workload[5]->fire()
+[SIM_COMP] NPU=5 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM-START] Calling workload[6]->fire()
+[SIM_COMP] NPU=6 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM-START] Calling workload[7]->fire()
+[SIM_COMP] NPU=7 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+
+[SIM-START] All initial events fired ✓
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║              PHASE 3: MAIN SIMULATION LOOP (Discrete Events)              ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+[SIM-LOOP] Starting main simulation loop...
+[SIM-LOOP] Processing events from queue until completion
+
+[SIM_COMP_FINISH] NPU=0 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=80544
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=80544
+[SIM_COMP] NPU=0 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=80544
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=80544
+[SIM_COMP] NPU=1 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=80544
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=80544
+[SIM_COMP] NPU=2 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=80544
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=80544
+[SIM_COMP] NPU=3 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=80544
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=80544
+[SIM_COMP] NPU=4 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=80544
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=80544
+[SIM_COMP] NPU=5 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=80544
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=80544
+[SIM_COMP] NPU=6 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=64 node_name=mb0.in_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=80544
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=80544
+[SIM_COMP] NPU=7 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=80700
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=80700
+[SIM_COMM] NPU=0 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=1 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=80700
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=80700
+[SIM_COMM] NPU=1 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=2 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=80700
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=80700
+[SIM_COMM] NPU=2 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=3 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=80700
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=80700
+[SIM_COMM] NPU=3 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=4 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=80700
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=80700
+[SIM_COMM] NPU=4 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=5 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=80700
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=80700
+[SIM_COMM] NPU=5 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=6 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=80700
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=80700
+[SIM_COMM] NPU=6 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=7 node_id=2 node_name=mb0.transformer.0.input_norm.y@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=80700
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=80700
+[SIM_COMM] NPU=7 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=4 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=140084
+[SIM_COMP] NPU=4 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=0.5625 MB (589824 bytes) runtime=2.442 us (2442 ns)
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=140084
+[SIM_COMM] NPU=4 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=5 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=140084
+[SIM_COMP] NPU=5 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=0.5625 MB (589824 bytes) runtime=2.442 us (2442 ns)
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=140084
+[SIM_COMM] NPU=5 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=6 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=140084
+[SIM_COMP] NPU=6 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=0.5625 MB (589824 bytes) runtime=2.442 us (2442 ns)
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=140084
+[SIM_COMM] NPU=6 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=7 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=140084
+[SIM_COMP] NPU=7 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=0.5625 MB (589824 bytes) runtime=2.442 us (2442 ns)
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=140084
+[SIM_COMM] NPU=7 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=0 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=140084
+[SIM_COMP] NPU=0 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=0.5625 MB (589824 bytes) runtime=2.442 us (2442 ns)
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=140084
+[SIM_COMM] NPU=0 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=1 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=140084
+[SIM_COMP] NPU=1 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=0.5625 MB (589824 bytes) runtime=2.442 us (2442 ns)
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=140084
+[SIM_COMM] NPU=1 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=2 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=140084
+[SIM_COMP] NPU=2 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=0.5625 MB (589824 bytes) runtime=2.442 us (2442 ns)
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=140084
+[SIM_COMM] NPU=2 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=3 node_id=8 node_name=mb0.transformer.0.mha.qkv@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=140084
+[SIM_COMP] NPU=3 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=0.5625 MB (589824 bytes) runtime=2.442 us (2442 ns)
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=140084
+[SIM_COMM] NPU=3 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=4 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs size=0.5625 MB at tick=142526
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=142526
+[SIM_COMP] NPU=4 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs size=0.5625 MB at tick=142526
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=142526
+[SIM_COMP] NPU=5 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs size=0.5625 MB at tick=142526
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=142526
+[SIM_COMP] NPU=6 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs size=0.5625 MB at tick=142526
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=142526
+[SIM_COMP] NPU=7 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs size=0.5625 MB at tick=142526
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=142526
+[SIM_COMP] NPU=0 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs size=0.5625 MB at tick=142526
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=142526
+[SIM_COMP] NPU=1 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs size=0.5625 MB at tick=142526
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=142526
+[SIM_COMP] NPU=2 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=7 node_name=mb0.transformer.0.mha.qkv@0_COMP op_type=M ops=2.25 GFLOPs size=0.5625 MB at tick=142526
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=142526
+[SIM_COMP] NPU=3 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs size=0.5 MB at tick=142682
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=142682
+[SIM_COMP] NPU=4 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs size=0.5 MB at tick=142682
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=142682
+[SIM_COMP] NPU=5 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs size=0.5 MB at tick=142682
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=142682
+[SIM_COMP] NPU=6 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs size=0.5 MB at tick=142682
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=142682
+[SIM_COMP] NPU=7 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs size=0.5 MB at tick=142682
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=142682
+[SIM_COMP] NPU=0 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs size=0.5 MB at tick=142682
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=142682
+[SIM_COMP] NPU=1 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs size=0.5 MB at tick=142682
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=142682
+[SIM_COMP] NPU=2 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=9 node_name=mb0.transformer.0.mha.q@0_COMP op_type=SLICE ops=0.000488281 GFLOPs size=0.5 MB at tick=142682
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=142682
+[SIM_COMP] NPU=3 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142691
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=142691
+[SIM_COMP] NPU=4 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142691
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=142691
+[SIM_COMP] NPU=5 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142691
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=142691
+[SIM_COMP] NPU=6 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142691
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=142691
+[SIM_COMP] NPU=7 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142691
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=142691
+[SIM_COMP] NPU=0 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142691
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=142691
+[SIM_COMP] NPU=1 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142691
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=142691
+[SIM_COMP] NPU=2 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=10 node_name=mb0.transformer.0.mha.k@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142691
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=142691
+[SIM_COMP] NPU=3 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142700
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=142700
+[SIM_COMP] NPU=4 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs (1.57286e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142700
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=142700
+[SIM_COMP] NPU=5 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs (1.57286e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142700
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=142700
+[SIM_COMP] NPU=6 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs (1.57286e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142700
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=142700
+[SIM_COMP] NPU=7 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs (1.57286e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142700
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=142700
+[SIM_COMP] NPU=0 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs (1.57286e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142700
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=142700
+[SIM_COMP] NPU=1 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs (1.57286e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142700
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=142700
+[SIM_COMP] NPU=2 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs (1.57286e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=11 node_name=mb0.transformer.0.mha.v@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=142700
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=142700
+[SIM_COMP] NPU=3 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs (1.57286e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs size=0.5 MB at tick=142856
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=142856
+[SIM_COMP] NPU=4 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs size=0.5 MB at tick=142856
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=142856
+[SIM_COMP] NPU=5 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs size=0.5 MB at tick=142856
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=142856
+[SIM_COMP] NPU=6 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs size=0.5 MB at tick=142856
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=142856
+[SIM_COMP] NPU=7 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs size=0.5 MB at tick=142856
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=142856
+[SIM_COMP] NPU=0 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs size=0.5 MB at tick=142856
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=142856
+[SIM_COMP] NPU=1 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs size=0.5 MB at tick=142856
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=142856
+[SIM_COMP] NPU=2 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=37 node_name=mb0.transformer.0.mha.attn_kernel.qkv@0_COMP op_type=CUSTOM ops=0.00146484 GFLOPs size=0.5 MB at tick=142856
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=142856
+[SIM_COMP] NPU=3 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs size=4 MB at tick=145027
+[SIM_COMP_FINISH] NPU=5 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs size=4 MB at tick=145027
+[SIM_COMP_FINISH] NPU=6 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs size=4 MB at tick=145027
+[SIM_COMP_FINISH] NPU=7 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs size=4 MB at tick=145027
+[SIM_COMP_FINISH] NPU=0 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs size=4 MB at tick=145027
+[SIM_COMP_FINISH] NPU=1 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs size=4 MB at tick=145027
+[SIM_COMP_FINISH] NPU=2 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs size=4 MB at tick=145027
+[SIM_COMP_FINISH] NPU=3 node_id=14 node_name=mb0.transformer.0.mha.o1@0_COMP op_type=M ops=2 GFLOPs size=4 MB at tick=145027
+[SIM_COMM_FINISH] NPU=0 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=199468
+[SIM_COMM] NPU=0 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=1 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=199468
+[SIM_COMM] NPU=1 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=2 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=199468
+[SIM_COMM] NPU=2 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=3 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=199468
+[SIM_COMM] NPU=3 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=4 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=199468
+[SIM_COMM] NPU=4 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=5 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=199468
+[SIM_COMM] NPU=5 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=6 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=199468
+[SIM_COMM] NPU=6 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=7 node_id=28 node_name=mb0.transformer.0.mha.dwqkv@0_X2_COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=199468
+[SIM_COMM] NPU=7 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=4 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=260448
+[SIM_COMP] NPU=4 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMM_FINISH] NPU=5 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=260448
+[SIM_COMP] NPU=5 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMM_FINISH] NPU=6 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=260448
+[SIM_COMP] NPU=6 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMM_FINISH] NPU=7 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=260448
+[SIM_COMP] NPU=7 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMM_FINISH] NPU=0 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=260448
+[SIM_COMP] NPU=0 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMM_FINISH] NPU=1 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=260448
+[SIM_COMP] NPU=1 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMM_FINISH] NPU=2 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=260448
+[SIM_COMP] NPU=2 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMM_FINISH] NPU=3 node_id=16 node_name=mb0.transformer.0.mha.o@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=260448
+[SIM_COMP] NPU=3 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260604
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=260604
+[SIM_COMP] NPU=4 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260604
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=260604
+[SIM_COMP] NPU=5 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260604
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=260604
+[SIM_COMP] NPU=6 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260604
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=260604
+[SIM_COMP] NPU=7 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260604
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=260604
+[SIM_COMP] NPU=0 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260604
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=260604
+[SIM_COMP] NPU=1 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260604
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=260604
+[SIM_COMP] NPU=2 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=46 node_name=mb0.transformer.0.mha_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260604
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=260604
+[SIM_COMP] NPU=3 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260760
+[SIM_COMP] NPU=4 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260760
+[SIM_COMP] NPU=5 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260760
+[SIM_COMP] NPU=6 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260760
+[SIM_COMP] NPU=7 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260760
+[SIM_COMP] NPU=0 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260760
+[SIM_COMP] NPU=1 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260760
+[SIM_COMP] NPU=2 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=52 node_name=mb0.transformer.0.ffn_res.y@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=260760
+[SIM_COMP] NPU=3 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=341304
+[SIM_COMP] NPU=4 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=341304
+[SIM_COMP] NPU=5 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=341304
+[SIM_COMP] NPU=6 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=341304
+[SIM_COMP] NPU=7 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=341304
+[SIM_COMP] NPU=0 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=341304
+[SIM_COMP] NPU=1 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=341304
+[SIM_COMP] NPU=2 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=69 node_name=mb0.out_emb.y@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=341304
+[SIM_COMP] NPU=3 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341460
+[SIM_COMP] NPU=4 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341460
+[SIM_COMP] NPU=5 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341460
+[SIM_COMP] NPU=6 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341460
+[SIM_COMP] NPU=7 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341460
+[SIM_COMP] NPU=0 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341460
+[SIM_COMP] NPU=1 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341460
+[SIM_COMP] NPU=2 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=74 node_name=mb0.loss.loss@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341460
+[SIM_COMP] NPU=3 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341616
+[SIM_COMP] NPU=4 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341616
+[SIM_COMP] NPU=5 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341616
+[SIM_COMP] NPU=6 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341616
+[SIM_COMP] NPU=7 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341616
+[SIM_COMP] NPU=0 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341616
+[SIM_COMP] NPU=1 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341616
+[SIM_COMP] NPU=2 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=75 node_name=mb0.loss.dy@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=341616
+[SIM_COMP] NPU=3 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=527386
+[SIM_COMP] NPU=4 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=527386
+[SIM_COMP] NPU=5 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=527386
+[SIM_COMP] NPU=6 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=527386
+[SIM_COMP] NPU=7 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=527386
+[SIM_COMP] NPU=0 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=527386
+[SIM_COMP] NPU=1 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=527386
+[SIM_COMP] NPU=2 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=71 node_name=mb0.out_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=527386
+[SIM_COMP] NPU=3 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=0.5 MB (524288 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=607930
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=607930
+[SIM_COMM] NPU=4 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=607930
+[SIM_COMP] NPU=4 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=607930
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=607930
+[SIM_COMM] NPU=5 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=607930
+[SIM_COMP] NPU=5 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=607930
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=607930
+[SIM_COMM] NPU=6 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=607930
+[SIM_COMP] NPU=6 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=607930
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=607930
+[SIM_COMM] NPU=7 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=607930
+[SIM_COMP] NPU=7 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=607930
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=607930
+[SIM_COMM] NPU=0 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=607930
+[SIM_COMP] NPU=0 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=607930
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=607930
+[SIM_COMM] NPU=1 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=607930
+[SIM_COMP] NPU=1 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=607930
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=607930
+[SIM_COMM] NPU=2 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=607930
+[SIM_COMP] NPU=2 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=72 node_name=mb0.out_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=0.5 MB at tick=607930
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=607930
+[SIM_COMM] NPU=3 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB (524288 bytes) comm_group_id=9
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=607930
+[SIM_COMP] NPU=3 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=608086
+[SIM_COMP] NPU=4 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=608086
+[SIM_COMP] NPU=5 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=608086
+[SIM_COMP] NPU=6 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=608086
+[SIM_COMP] NPU=7 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=608086
+[SIM_COMP] NPU=0 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=608086
+[SIM_COMP] NPU=1 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=608086
+[SIM_COMP] NPU=2 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=56 node_name=mb0.transformer.0.input_norm.dy_temp@None_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=608086
+[SIM_COMP] NPU=3 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=0 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=1 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=2 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=3 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=4 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=5 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=6 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=7 node_id=19 node_name=mb0.transformer.0.mha.do1@0_X1COMM type=ALL_GATHER size=0.5 MB execution_time=59.384 us (59384 ns) comm_group_id=9
+[SIM_COMP_FINISH] NPU=4 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=793856
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=793856
+[SIM_COMP] NPU=4 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=0.5 MB (524288 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMM] NPU=4 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=5 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=793856
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=793856
+[SIM_COMP] NPU=5 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=0.5 MB (524288 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMM] NPU=5 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=6 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=793856
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=793856
+[SIM_COMP] NPU=6 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=0.5 MB (524288 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMM] NPU=6 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=7 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=793856
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=793856
+[SIM_COMP] NPU=7 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=0.5 MB (524288 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMM] NPU=7 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=0 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=793856
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=793856
+[SIM_COMP] NPU=0 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=0.5 MB (524288 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMM] NPU=0 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=1 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=793856
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=793856
+[SIM_COMP] NPU=1 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=0.5 MB (524288 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMM] NPU=1 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=2 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=793856
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=793856
+[SIM_COMP] NPU=2 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=0.5 MB (524288 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMM] NPU=2 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=3 node_id=78 node_name=out_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=793856
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=793856
+[SIM_COMP] NPU=3 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=0.5 MB (524288 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMM] NPU=3 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=4 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs size=0.5 MB at tick=796027
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=796027
+[SIM_COMP] NPU=4 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=2 MB (2.09715e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs size=0.5 MB at tick=796027
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=796027
+[SIM_COMP] NPU=5 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=2 MB (2.09715e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs size=0.5 MB at tick=796027
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=796027
+[SIM_COMP] NPU=6 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=2 MB (2.09715e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs size=0.5 MB at tick=796027
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=796027
+[SIM_COMP] NPU=7 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=2 MB (2.09715e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs size=0.5 MB at tick=796027
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=796027
+[SIM_COMP] NPU=0 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=2 MB (2.09715e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs size=0.5 MB at tick=796027
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=796027
+[SIM_COMP] NPU=1 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=2 MB (2.09715e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs size=0.5 MB at tick=796027
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=796027
+[SIM_COMP] NPU=2 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=2 MB (2.09715e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=20 node_name=mb0.transformer.0.mha.dattn@0_COMP op_type=M ops=2 GFLOPs size=0.5 MB at tick=796027
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=796027
+[SIM_COMP] NPU=3 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs (2.14748e+09 ops) size=2 MB (2.09715e+06 bytes) runtime=2.171 us (2171 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs size=2 MB at tick=798198
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=798198
+[SIM_COMP] NPU=4 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs size=2 MB at tick=798198
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=798198
+[SIM_COMP] NPU=5 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs size=2 MB at tick=798198
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=798198
+[SIM_COMP] NPU=6 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs size=2 MB at tick=798198
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=798198
+[SIM_COMP] NPU=7 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs size=2 MB at tick=798198
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=798198
+[SIM_COMP] NPU=0 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs size=2 MB at tick=798198
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=798198
+[SIM_COMP] NPU=1 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs size=2 MB at tick=798198
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=798198
+[SIM_COMP] NPU=2 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=21 node_name=mb0.transformer.0.mha.dwo@0_COMP op_type=M ops=2 GFLOPs size=2 MB at tick=798198
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=798198
+[SIM_COMP] NPU=3 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798354
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=798354
+[SIM_COMP] NPU=4 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798354
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=798354
+[SIM_COMP] NPU=5 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798354
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=798354
+[SIM_COMP] NPU=6 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798354
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=798354
+[SIM_COMP] NPU=7 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798354
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=798354
+[SIM_COMP] NPU=0 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798354
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=798354
+[SIM_COMP] NPU=1 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798354
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=798354
+[SIM_COMP] NPU=2 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=39 node_name=mb0.transformer.0.mha.attn_kernel.dq@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798354
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=798354
+[SIM_COMP] NPU=3 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798510
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=798510
+[SIM_COMP] NPU=4 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798510
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=798510
+[SIM_COMP] NPU=5 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798510
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=798510
+[SIM_COMP] NPU=6 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798510
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=798510
+[SIM_COMP] NPU=7 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798510
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=798510
+[SIM_COMP] NPU=0 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798510
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=798510
+[SIM_COMP] NPU=1 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798510
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=798510
+[SIM_COMP] NPU=2 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=40 node_name=mb0.transformer.0.mha.attn_kernel.dk1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798510
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=798510
+[SIM_COMP] NPU=3 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs (3.14573e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798666
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=798666
+[SIM_COMP] NPU=4 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798666
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=798666
+[SIM_COMP] NPU=5 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798666
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=798666
+[SIM_COMP] NPU=6 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798666
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=798666
+[SIM_COMP] NPU=7 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798666
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=798666
+[SIM_COMP] NPU=0 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798666
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=798666
+[SIM_COMP] NPU=1 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798666
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=798666
+[SIM_COMP] NPU=2 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=41 node_name=mb0.transformer.0.mha.attn_kernel.dv1@0_COMP op_type=CUSTOM ops=0.00292969 GFLOPs size=0.5 MB at tick=798666
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=798666
+[SIM_COMP] NPU=3 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798675
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=798675
+[SIM_COMP] NPU=4 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798675
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=798675
+[SIM_COMP] NPU=5 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798675
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=798675
+[SIM_COMP] NPU=6 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798675
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=798675
+[SIM_COMP] NPU=7 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798675
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=798675
+[SIM_COMP] NPU=0 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798675
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=798675
+[SIM_COMP] NPU=1 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798675
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=798675
+[SIM_COMP] NPU=2 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=42 node_name=mb0.transformer.0.mha.attn_kernel.dk@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798675
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=798675
+[SIM_COMP] NPU=3 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs (32768 ops) size=0.03125 MB (32768 bytes) runtime=0.009 us (9 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798684
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=798684
+[SIM_COMP] NPU=4 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs (65536 ops) size=0.0625 MB (65536 bytes) runtime=0.019 us (19 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798684
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=798684
+[SIM_COMP] NPU=5 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs (65536 ops) size=0.0625 MB (65536 bytes) runtime=0.019 us (19 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798684
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=798684
+[SIM_COMP] NPU=6 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs (65536 ops) size=0.0625 MB (65536 bytes) runtime=0.019 us (19 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798684
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=798684
+[SIM_COMP] NPU=7 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs (65536 ops) size=0.0625 MB (65536 bytes) runtime=0.019 us (19 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798684
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=798684
+[SIM_COMP] NPU=0 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs (65536 ops) size=0.0625 MB (65536 bytes) runtime=0.019 us (19 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798684
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=798684
+[SIM_COMP] NPU=1 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs (65536 ops) size=0.0625 MB (65536 bytes) runtime=0.019 us (19 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798684
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=798684
+[SIM_COMP] NPU=2 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs (65536 ops) size=0.0625 MB (65536 bytes) runtime=0.019 us (19 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=43 node_name=mb0.transformer.0.mha.attn_kernel.dv@0_COMP op_type=SLICE ops=3.05176e-05 GFLOPs size=0.03125 MB at tick=798684
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=798684
+[SIM_COMP] NPU=3 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs (65536 ops) size=0.0625 MB (65536 bytes) runtime=0.019 us (19 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs size=0.0625 MB at tick=798703
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=798703
+[SIM_COMP] NPU=4 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs (589824 ops) size=0.5625 MB (589824 bytes) runtime=0.176 us (176 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs size=0.0625 MB at tick=798703
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=798703
+[SIM_COMP] NPU=5 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs (589824 ops) size=0.5625 MB (589824 bytes) runtime=0.176 us (176 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs size=0.0625 MB at tick=798703
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=798703
+[SIM_COMP] NPU=6 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs (589824 ops) size=0.5625 MB (589824 bytes) runtime=0.176 us (176 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs size=0.0625 MB at tick=798703
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=798703
+[SIM_COMP] NPU=7 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs (589824 ops) size=0.5625 MB (589824 bytes) runtime=0.176 us (176 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs size=0.0625 MB at tick=798703
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=798703
+[SIM_COMP] NPU=0 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs (589824 ops) size=0.5625 MB (589824 bytes) runtime=0.176 us (176 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs size=0.0625 MB at tick=798703
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=798703
+[SIM_COMP] NPU=1 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs (589824 ops) size=0.5625 MB (589824 bytes) runtime=0.176 us (176 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs size=0.0625 MB at tick=798703
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=798703
+[SIM_COMP] NPU=2 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs (589824 ops) size=0.5625 MB (589824 bytes) runtime=0.176 us (176 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=25 node_name=mb0.transformer.0.mha.dkv@0_COMP op_type=SLICE ops=6.10352e-05 GFLOPs size=0.0625 MB at tick=798703
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=798703
+[SIM_COMP] NPU=3 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs (589824 ops) size=0.5625 MB (589824 bytes) runtime=0.176 us (176 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs size=0.5625 MB at tick=798879
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=798879
+[SIM_COMP] NPU=4 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=2.25 MB (2.3593e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs size=0.5625 MB at tick=798879
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=798879
+[SIM_COMP] NPU=5 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=2.25 MB (2.3593e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs size=0.5625 MB at tick=798879
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=798879
+[SIM_COMP] NPU=6 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=2.25 MB (2.3593e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs size=0.5625 MB at tick=798879
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=798879
+[SIM_COMP] NPU=7 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=2.25 MB (2.3593e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs size=0.5625 MB at tick=798879
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=798879
+[SIM_COMP] NPU=0 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=2.25 MB (2.3593e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs size=0.5625 MB at tick=798879
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=798879
+[SIM_COMP] NPU=1 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=2.25 MB (2.3593e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs size=0.5625 MB at tick=798879
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=798879
+[SIM_COMP] NPU=2 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=2.25 MB (2.3593e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=26 node_name=mb0.transformer.0.mha.dqkv@0_COMP op_type=SLICE ops=0.000549316 GFLOPs size=0.5625 MB at tick=798879
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=798879
+[SIM_COMP] NPU=3 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=2.25 MB (2.3593e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs size=2.25 MB at tick=801321
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=801321
+[SIM_COMP] NPU=4 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs size=2.25 MB at tick=801321
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=801321
+[SIM_COMP] NPU=5 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs size=2.25 MB at tick=801321
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=801321
+[SIM_COMP] NPU=6 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs size=2.25 MB at tick=801321
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=801321
+[SIM_COMP] NPU=7 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs size=2.25 MB at tick=801321
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=801321
+[SIM_COMP] NPU=0 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs size=2.25 MB at tick=801321
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=801321
+[SIM_COMP] NPU=1 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs size=2.25 MB at tick=801321
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=801321
+[SIM_COMP] NPU=2 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=27 node_name=mb0.transformer.0.mha.dwqkv@0_COMP op_type=M ops=2.25 GFLOPs size=2.25 MB at tick=801321
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=801321
+[SIM_COMP] NPU=3 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs (2.41592e+09 ops) size=4 MB (4.1943e+06 bytes) runtime=2.442 us (2442 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs size=4 MB at tick=803763
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=803763
+[SIM_COMP] NPU=4 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs size=4 MB at tick=803763
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=803763
+[SIM_COMP] NPU=5 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs size=4 MB at tick=803763
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=803763
+[SIM_COMP] NPU=6 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs size=4 MB at tick=803763
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=803763
+[SIM_COMP] NPU=7 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs size=4 MB at tick=803763
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=803763
+[SIM_COMP] NPU=0 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs size=4 MB at tick=803763
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=803763
+[SIM_COMP] NPU=1 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs size=4 MB at tick=803763
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=803763
+[SIM_COMP] NPU=2 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=29 node_name=mb0.transformer.0.mha.dx1@0_COMP op_type=M ops=2.25 GFLOPs size=4 MB at tick=803763
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=803763
+[SIM_COMP] NPU=3 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs size=4.25 MB at tick=805093
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=805093
+[SIM_COMP] NPU=4 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs size=4.25 MB at tick=805093
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=805093
+[SIM_COMP] NPU=5 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs size=4.25 MB at tick=805093
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=805093
+[SIM_COMP] NPU=6 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs size=4.25 MB at tick=805093
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=805093
+[SIM_COMP] NPU=7 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs size=4.25 MB at tick=805093
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=805093
+[SIM_COMP] NPU=0 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs size=4.25 MB at tick=805093
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=805093
+[SIM_COMP] NPU=1 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs size=4.25 MB at tick=805093
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=805093
+[SIM_COMP] NPU=2 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=76 node_name=transformer.0._sharded_grad@0_COMP op_type=CUSTOM ops=0.00415039 GFLOPs size=4.25 MB at tick=805093
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=805093
+[SIM_COMP] NPU=3 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs (4.45645e+06 ops) size=4.25 MB (4.45645e+06 bytes) runtime=1.33 us (1330 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs size=4.25 MB at tick=806423
+[SIM_COMP_FINISH] NPU=5 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs size=4.25 MB at tick=806423
+[SIM_COMP_FINISH] NPU=6 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs size=4.25 MB at tick=806423
+[SIM_COMP_FINISH] NPU=7 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs size=4.25 MB at tick=806423
+[SIM_COMP_FINISH] NPU=0 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs size=4.25 MB at tick=806423
+[SIM_COMP_FINISH] NPU=1 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs size=4.25 MB at tick=806423
+[SIM_COMP_FINISH] NPU=2 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs size=4.25 MB at tick=806423
+[SIM_COMP_FINISH] NPU=3 node_id=82 node_name=transformer.0._sharded_weight@1_COMP op_type=A ops=0.00415039 GFLOPs size=4.25 MB at tick=806423
+[SIM_COMM_FINISH] NPU=4 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=3697344
+[SIM_COMM] NPU=4 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMP] NPU=4 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=5 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=3697344
+[SIM_COMM] NPU=5 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMP] NPU=5 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=6 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=3697344
+[SIM_COMM] NPU=6 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMP] NPU=6 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=7 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=3697344
+[SIM_COMM] NPU=7 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMP] NPU=7 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=0 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=3697344
+[SIM_COMM] NPU=0 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMP] NPU=0 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=1 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=3697344
+[SIM_COMM] NPU=1 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMP] NPU=1 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=2 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=3697344
+[SIM_COMM] NPU=2 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMP] NPU=2 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=3 node_id=86 node_name=out_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=3697344
+[SIM_COMM] NPU=3 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB (4194304 bytes) comm_group_id=9
+[SIM_COMP] NPU=3 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=0 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=1 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=2 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=3 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=4 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=5 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=6 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+[SIM_COMM_FINISH] NPU=7 node_id=31 node_name=mb0.transformer.0.mha.dx@0_X1COMM type=REDUCE_SCATTER size=4 MB execution_time=60.98 us (60980 ns) comm_group_id=9
+[SIM_COMP_FINISH] NPU=4 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs size=593.5 MB at tick=3883114
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=3883114
+[SIM_COMP] NPU=4 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs size=593.5 MB at tick=3883114
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=3883114
+[SIM_COMP] NPU=5 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs size=593.5 MB at tick=3883114
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=3883114
+[SIM_COMP] NPU=6 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs size=593.5 MB at tick=3883114
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=3883114
+[SIM_COMP] NPU=7 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs size=593.5 MB at tick=3883114
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=3883114
+[SIM_COMP] NPU=0 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs size=593.5 MB at tick=3883114
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=3883114
+[SIM_COMP] NPU=1 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs size=593.5 MB at tick=3883114
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=3883114
+[SIM_COMP] NPU=2 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=85 node_name=out_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs size=593.5 MB at tick=3883114
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=3883114
+[SIM_COMP] NPU=3 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs (524288 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=3883270
+
+[SIM_LAYER] NPU=4 Starting Layer 0 at tick=3883270
+[SIM_COMP] NPU=4 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=3883270
+
+[SIM_LAYER] NPU=5 Starting Layer 0 at tick=3883270
+[SIM_COMP] NPU=5 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=3883270
+
+[SIM_LAYER] NPU=6 Starting Layer 0 at tick=3883270
+[SIM_COMP] NPU=6 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=3883270
+
+[SIM_LAYER] NPU=7 Starting Layer 0 at tick=3883270
+[SIM_COMP] NPU=7 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=3883270
+
+[SIM_LAYER] NPU=0 Starting Layer 0 at tick=3883270
+[SIM_COMP] NPU=0 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=3883270
+
+[SIM_LAYER] NPU=1 Starting Layer 0 at tick=3883270
+[SIM_COMP] NPU=1 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=3883270
+
+[SIM_LAYER] NPU=2 Starting Layer 0 at tick=3883270
+[SIM_COMP] NPU=2 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=3 node_name=mb0.transformer.0.input_norm.dy@0_COMP op_type=A ops=0.000488281 GFLOPs size=0.5 MB at tick=3883270
+
+[SIM_LAYER] NPU=3 Starting Layer 0 at tick=3883270
+[SIM_COMP] NPU=3 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs (2.62144e+06 ops) size=0.5 MB (524288 bytes) runtime=0.156 us (156 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=3883426
+[SIM_COMP] NPU=4 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=3883426
+[SIM_COMP] NPU=5 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=3883426
+[SIM_COMP] NPU=6 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=3883426
+[SIM_COMP] NPU=7 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=3883426
+[SIM_COMP] NPU=0 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=3883426
+[SIM_COMP] NPU=1 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=3883426
+[SIM_COMP] NPU=2 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=4 node_name=mb0.transformer.0.input_norm.dx@0_COMP op_type=E ops=0.00244141 GFLOPs size=0.5 MB at tick=3883426
+[SIM_COMP] NPU=3 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=4069196
+[SIM_COMP] NPU=4 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=4069196
+[SIM_COMP] NPU=5 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=4069196
+[SIM_COMP] NPU=6 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=4069196
+[SIM_COMP] NPU=7 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=4069196
+[SIM_COMP] NPU=0 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=4069196
+[SIM_COMP] NPU=1 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=4069196
+[SIM_COMP] NPU=2 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=66 node_name=mb0.in_emb.dw@0_COMP op_type=M ops=74.1875 GFLOPs size=593.5 MB at tick=4069196
+[SIM_COMP] NPU=3 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs (7.96582e+10 ops) size=18.5469 MB (1.94478e+07 bytes) runtime=80.544 us (80544 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=4149740
+[SIM_COMP] NPU=4 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=5 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=4149740
+[SIM_COMP] NPU=5 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=6 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=4149740
+[SIM_COMP] NPU=6 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=7 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=4149740
+[SIM_COMP] NPU=7 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=0 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=4149740
+[SIM_COMP] NPU=0 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=1 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=4149740
+[SIM_COMP] NPU=1 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=2 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=4149740
+[SIM_COMP] NPU=2 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=3 node_id=67 node_name=mb0.in_emb.dx@0_COMP op_type=M ops=74.1875 GFLOPs size=18.5469 MB at tick=4149740
+[SIM_COMP] NPU=3 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=4335510
+[SIM_COMM] NPU=4 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=5 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=4335510
+[SIM_COMM] NPU=5 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=6 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=4335510
+[SIM_COMM] NPU=6 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=7 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=4335510
+[SIM_COMM] NPU=7 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=0 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=4335510
+[SIM_COMM] NPU=0 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=1 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=4335510
+[SIM_COMM] NPU=1 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=2 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=4335510
+[SIM_COMM] NPU=2 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMP_FINISH] NPU=3 node_id=77 node_name=in_emb.dw@0_COMP op_type=CUSTOM ops=0.57959 GFLOPs size=593.5 MB at tick=4335510
+[SIM_COMM] NPU=3 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB (622329856 bytes) comm_group_id=9
+[SIM_COMM_FINISH] NPU=4 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+[SIM_COMP] NPU=4 node_id=83 node_name=in_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=5 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+[SIM_COMP] NPU=5 node_id=83 node_name=in_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=6 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+[SIM_COMP] NPU=6 node_id=83 node_name=in_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=7 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+[SIM_COMP] NPU=7 node_id=83 node_name=in_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=0 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+[SIM_COMP] NPU=0 node_id=83 node_name=in_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=1 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+[SIM_COMP] NPU=1 node_id=83 node_name=in_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=2 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+[SIM_COMP] NPU=2 node_id=83 node_name=in_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMM_FINISH] NPU=3 node_id=84 node_name=in_emb.w@1_X2_COMM type=ALL_REDUCE size=593.5 MB execution_time=2903.49 us (2903488 ns) comm_group_id=9
+[SIM_COMP] NPU=3 node_id=83 node_name=in_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs (6.2233e+08 ops) size=593.5 MB (6.2233e+08 bytes) runtime=185.77 us (185770 ns)
+[SIM_COMP_FINISH] NPU=4 node_id=83 node_name=in_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs size=593.5 MB at tick=7424768
+[2025-12-18 02:40:29.667] [workload] [info] sys[4] finished, 7424768 cycles, exposed communication 5969214 cycles.
+[2025-12-18 02:40:29.667] [statistics] [info] sys[4]. Post statistics processing start.
+[2025-12-18 02:40:29.667] [statistics] [info] sys[4]. Post statistics processing end.
+[2025-12-18 02:40:29.667] [statistics] [info] sys[4], Wall time: 7424768
+[2025-12-18 02:40:29.667] [statistics] [info] sys[4], GPU time: 1455554
+[SIM_COMP_FINISH] NPU=[2025-12-18 02:40:29.667] [statistics] [info] sys[4], Comm time: 6107088
+5[2025-12-18 02:40:29.667] [statistics] [info] sys[4], Total compute-communication overlap: 137874
+ node_id=[2025-12-18 02:40:29.667] [statistics] [info] sys[4], Compute bound percentage: 23.085%
+83[2025-12-18 02:40:29.667] [statistics] [info] sys[4], Average compute utilization: 34.327%
+ node_name=[2025-12-18 02:40:29.667] [statistics] [info] sys[4], Average memory utilization: 78.020%
+in_emb.w@1_COMP[2025-12-18 02:40:29.667] [statistics] [info] sys[4], Average operation intensity: 17319.393
+ op_type=A ops=0.57959 GFLOPs size=593.5 MB at tick=7424768
+[2025-12-18 02:40:29.667] [workload] [info] sys[5] finished, 7424768 cycles, exposed communication 5969214 cycles.
+[SIM_COMP_FINISH] NPU=6 node_id=83 node_name=in_emb.w@1_COMP op_type=A ops=[2025-12-18 02:40:29.667] [statistics] [info] sys[5]. Post statistics processing start.
+0.57959[2025-12-18 02:40:29.667] [statistics] [info] sys[5]. Post statistics processing end.
+ GFLOPs[2025-12-18 02:40:29.667] [statistics] [info] sys[5], Wall time: 7424768
+ size=[2025-12-18 02:40:29.667] [statistics] [info] sys[5], GPU time: 1455554
+593.5 MB at tick=7424768
+[2025-12-18 02:40:29.667] [statistics] [info] sys[5], Comm time: 6107088
+[SIM_COMP_FINISH] NPU=[2025-12-18 02:40:29.667] [statistics] [info] sys[5], Total compute-communication overlap: 137874
+7[2025-12-18 02:40:29.667] [statistics] [info] sys[5], Compute bound percentage: 23.085%
+ node_id=[2025-12-18 02:40:29.667] [statistics] [info] sys[5], Average compute utilization: 34.327%
+83 node_name=in_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs size=[2025-12-18 02:40:29.667] [statistics] [info] sys[5], Average memory utilization: 78.020%
+593.5 MB at tick=7424768
+[2025-12-18 02:40:29.667] [statistics] [info] sys[5], Average operation intensity: 17319.393
+[SIM_COMP_FINISH] NPU=[2025-12-18 02:40:29.667] [workload] [info] sys[6] finished, 7424768 cycles, exposed communication 5969214 cycles.
+0[2025-12-18 02:40:29.667] [statistics] [info] sys[6]. Post statistics processing start.
+ node_id=[2025-12-18 02:40:29.667] [statistics] [info] sys[6]. Post statistics processing end.
+83 node_name=in_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs size=[2025-12-18 02:40:29.667] [statistics] [info] sys[6], Wall time: 7424768
+593.5 MB at tick=7424768
+[2025-12-18 02:40:29.667] [statistics] [info] sys[6], GPU time: 1455554
+[SIM_COMP_FINISH] NPU=[2025-12-18 02:40:29.667] [statistics] [info] sys[6], Comm time: 6107088
+1[2025-12-18 02:40:29.667] [statistics] [info] sys[6], Total compute-communication overlap: 137874
+ node_id=[2025-12-18 02:40:29.667] [statistics] [info] sys[6], Compute bound percentage: 23.085%
+83 node_name=in_emb.w@1_COMP op_type=A ops=[2025-12-18 02:40:29.667] [statistics] [info] sys[6], Average compute utilization: 34.327%
+0.57959 GFLOPs size=593.5 MB[2025-12-18 02:40:29.667] [statistics] [info] sys[6], Average memory utilization: 78.020%
+ at tick=[2025-12-18 02:40:29.667] [statistics] [info] sys[6], Average operation intensity: 17319.393
+7424768
+[2025-12-18 02:40:29.667] [workload] [info] sys[7] finished, 7424768 cycles, exposed communication 5969214 cycles.
+[SIM_COMP_FINISH] NPU=2 node_id=83 node_name=in_emb.w@1_COMP op_type=A ops=0.57959 GFLOPs size=593.5 MB at tick=7424768
+[2025-12-18 02:40:29.667] [statistics] [info] sys[7]. Post statistics processing start.
+[SIM_COMP_FINISH] NPU=[2025-12-18 02:40:29.667] [statistics] [info] sys[7]. Post statistics processing end.
+3[2025-12-18 02:40:29.667] [statistics] [info] sys[7], Wall time: 7424768
+ node_id=83 node_name=in_emb.w@1_COMP op_type=A ops=[2025-12-18 02:40:29.667] [statistics] [info] sys[7], GPU time: 1455554
+0.57959 GFLOPs size=593.5 MB at tick=[2025-12-18 02:40:29.667] [statistics] [info] sys[7], Comm time: 6107088
+7424768
+[2025-12-18 02:40:29.667] [statistics] [info] sys[7], Total compute-communication overlap: 137874
+
+[SIM-LOOP] Total iterations: [2025-12-18 02:40:29.667] [statistics] [info] sys[7], Compute bound percentage: 23.085%
+2333[2025-12-18 02:40:29.667] [statistics] [info] sys[7], Average compute utilization: 34.327%
+
+[2025-12-18 02:40:29.667] [statistics] [info] sys[7], Average memory utilization: 78.020%
+[SIM-LOOP] Event queue finished - Simulation COMPLETE ✓
+
+[2025-12-18 02:40:29.667] [statistics] [info] sys[7], Average operation intensity: 17319.393
+╔═══════════════════════════════════════════════════════════════════════════╗
+[2025-12-18 02:40:29.667] [workload] [info] sys[0] finished, 7424768 cycles, exposed communication 5969214 cycles.
+║                         CLEANUP AND SHUTDOWN                              ║
+[2025-12-18 02:40:29.667] [statistics] [info] sys[0]. Post statistics processing start.
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+[2025-12-18 02:40:29.667] [statistics] [info] sys[0]. Post statistics processing end.
+[SHUTDOWN] Deleting Sys objects...
+[2025-12-18 02:40:29.667] [statistics] [info] sys[0], Wall time: 7424768
+[2025-12-18 02:40:29.667] [statistics] [info] sys[0], GPU time: 1455554
+[2025-12-18 02:40:29.667] [statistics] [info] sys[0], Comm time: 6107088
+[2025-12-18 02:40:29.667] [statistics] [info] sys[0], Total compute-communication overlap: 137874
+[2025-12-18 02:40:29.667] [statistics] [info] sys[0], Compute bound percentage: 23.085%
+[2025-12-18 02:40:29.667] [statistics] [info] sys[0], Average compute utilization: 34.327%
+[2025-12-18 02:40:29.667] [statistics] [info] sys[0], Average memory utilization: 78.020%
+[2025-12-18 02:40:29.667] [statistics] [info] sys[0], Average operation intensity: 17319.393
+[2025-12-18 02:40:29.667] [workload] [info] sys[1] finished, 7424768 cycles, exposed communication 5969214 cycles.
+[2025-12-18 02:40:29.667] [statistics] [info] sys[1]. Post statistics processing start.
+[2025-12-18 02:40:29.667] [statistics] [info] sys[1]. Post statistics processing end.
+[SHUTDOWN] Sys objects deleted ✓
+[2025-12-18 02:40:29.667] [statistics] [info] sys[1], Wall time: 7424768
+[SHUTDOWN] Shutting down logger...
+[2025-12-18 02:40:29.667] [statistics] [info] sys[1], GPU time: 1455554
+[2025-12-18 02:40:29.667] [statistics] [info] sys[1], Comm time: 6107088
+[2025-12-18 02:40:29.667] [statistics] [info] sys[1], Total compute-communication overlap: 137874
+[2025-12-18 02:40:29.667] [statistics] [info] sys[1], Compute bound percentage: 23.085%
+[2025-12-18 02:40:29.667] [statistics] [info] sys[1], Average compute utilization: 34.327%
+[2025-12-18 02:40:29.667] [statistics] [info] sys[1], Average memory utilization: 78.020%
+[2025-12-18 02:40:29.667] [statistics] [info] sys[1], Average operation intensity: 17319.393
+[2025-12-18 02:40:29.668] [workload] [info] sys[2] finished, 7424768 cycles, exposed communication 5969214 cycles.
+[2025-12-18 02:40:29.668] [statistics] [info] sys[2]. Post statistics processing start.
+[2025-12-18 02:40:29.668] [statistics] [info] sys[2]. Post statistics processing end.
+[2025-12-18 02:40:29.668] [statistics] [info] sys[2], Wall time: 7424768
+[2025-12-18 02:40:29.668] [statistics] [info] sys[2], GPU time: 1455554
+[2025-12-18 02:40:29.668] [statistics] [info] sys[2], Comm time: 6107088
+[2025-12-18 02:40:29.668] [statistics] [info] sys[2], Total compute-communication overlap: 137874
+[2025-12-18 02:40:29.668] [statistics] [info] sys[2], Compute bound percentage: 23.085%
+[2025-12-18 02:40:29.668] [statistics] [info] sys[2], Average compute utilization: 34.327%
+[2025-12-18 02:40:29.668] [statistics] [info] sys[2], Average memory utilization: 78.020%
+[2025-12-18 02:40:29.668] [statistics] [info] sys[2], Average operation intensity: 17319.393
+[2025-12-18 02:40:29.668] [workload] [info] sys[3] finished, 7424768 cycles, exposed communication 5969214 cycles.
+[2025-12-18 02:40:29.668] [statistics] [info] sys[3]. Post statistics processing start.
+[2025-12-18 02:40:29.668] [statistics] [info] sys[3]. Post statistics processing end.
+[2025-12-18 02:40:29.668] [statistics] [info] sys[3], Wall time: 7424768
+[2025-12-18 02:40:29.668] [statistics] [info] sys[3], GPU time: 1455554
+[2025-12-18 02:40:29.668] [statistics] [info] sys[3], Comm time: 6107088
+[2025-12-18 02:40:29.668] [statistics] [info] sys[3], Total compute-communication overlap: 137874
+[2025-12-18 02:40:29.668] [statistics] [info] sys[3], Compute bound percentage: 23.085%
+[2025-12-18 02:40:29.668] [statistics] [info] sys[3], Average compute utilization: 34.327%
+[2025-12-18 02:40:29.668] [statistics] [info] sys[3], Average memory utilization: 78.020%
+[2025-12-18 02:40:29.668] [statistics] [info] sys[3], Average operation intensity: 17319.393
+[2025-12-18 02:40:29.668] [system] [warning] Exiting
+[SHUTDOWN] Logger shutdown ✓
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                      ASTRA-SIM EXECUTION COMPLETE                         ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+

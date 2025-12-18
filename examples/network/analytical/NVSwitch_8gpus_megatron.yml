@@ -1,0 +1,21 @@
+topology: [ Switch ]
+npus_count: [ 8 ]
+bandwidth: [ 400.0 ]  # GB/s (NVLink 4.0: ~400 GB/s per GPU to NVSwitch)
+latency: [ 900.0 ]    # ns (intra-node latency ~1us)
+
+# Megatron-style Single Node with NVSwitch
+# This simulates an NVIDIA DGX H100/A100 node:
+#
+#           NVSwitch (Full Crossbar)
+#         /  |  |  |  |  |  |  \
+#       GPU0 GPU1 GPU2 GPU3 GPU4 GPU5 GPU6 GPU7
+#
+# All GPUs connected via NVSwitch with full bisection bandwidth
+# Typical for Tensor Parallelism within a node
+#
+# Specifications (H100):
+# - NVLink 4.0: 900 GB/s total bandwidth per GPU
+# - 18 NVLink lanes per GPU @ 50 GB/s each
+# - Effective per-direction bandwidth: ~400 GB/s
+# - Latency: ~1us for intra-node communication
+

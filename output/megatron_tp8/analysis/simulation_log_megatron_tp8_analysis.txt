@@ -1,0 +1,36 @@
+======================================================================
+ASTRA-sim Log Analysis: simulation_log_megatron_tp8.txt
+======================================================================
+
+[Performance Metrics]
+----------------------------------------------------------------------
+  Wall Time:                 7,424,768 cycles (100%)
+  GPU Time (Compute):        1,455,554 cycles (19.60%)
+  Comm Time:                 6,107,088 cycles (82.25%)
+  Compute-Comm Overlap:        137,874 cycles ( 1.86%)
+
+[Utilization Metrics]
+----------------------------------------------------------------------
+  Compute Bound:                 23.09%
+  Compute Utilization:           34.33%
+  Memory Utilization:            78.02%
+  Operation Intensity:       17,319.39
+
+[Bottleneck Analysis]
+----------------------------------------------------------------------
+  Status: [WARNING] Communication-bound (70-90%)
+
+[Time Breakdown]
+----------------------------------------------------------------------
+  Compute          19.6% #########-----------------------------------------
+  Communication    82.3% #########################################---------
+
+[Multi-NPU Consistency Check]
+----------------------------------------------------------------------
+  Total NPUs:          8
+  Min Wall Time:       7,424,768 cycles
+  Max Wall Time:       7,424,768 cycles
+  Avg Wall Time:       7,424,768 cycles
+  Variance:            0.00%
+  Status:              [OK] Excellent load balance (<1% variance)
+
