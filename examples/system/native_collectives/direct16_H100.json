@@ -1,0 +1,68 @@
+{
+    "//": "============================================================================",
+    "//": "ASTRA-sim System Configuration for TP=16 with AllToAll (16 H100 GPUs)",
+    "//": "============================================================================",
+    
+    "//": "--- Scheduling Configuration ---",
+    "scheduling-policy": "LIFO",
+    "//scheduling-policy-note": "Last-In-First-Out scheduling for better pipeline efficiency",
+    
+    "endpoint-delay": 10,
+    "//endpoint-delay-note": "Communication endpoint delay in nanoseconds",
+    
+    "active-chunks-per-dimension": 2,
+    "//active-chunks-note": "Number of concurrent message chunks per dimension",
+    
+    "preferred-dataset-splits": 16,
+    "//preferred-splits-note": "Preferred number of dataset splits (matches TP degree)",
+    
+    "//": "--- Collective Communication Algorithms ---",
+    "all-reduce-implementation": [
+        "direct"
+    ],
+    "//all-reduce-note": "Direct algorithm for AllReduce (bandwidth-optimal for fully connected topology)",
+    
+    "all-gather-implementation": [
+        "direct"
+    ],
+    "//all-gather-note": "Direct algorithm for AllGather (commonly used in TP, optimal for all-to-all)",
+    
+    "reduce-scatter-implementation": [
+        "direct"
+    ],
+    "//reduce-scatter-note": "Direct algorithm for ReduceScatter (TP gradient aggregation)",
+    
+    "all-to-all-implementation": [
+        "direct"
+    ],
+    "//all-to-all-note": "Direct algorithm for AllToAll (optimal for fully connected topology)",
+    
+    "//": "--- Memory and Compute Configuration (NVIDIA H100 SXM5 80GB) ---",
+    "collective-optimization": "localBWAware",
+    "//collective-opt-note": "Enable local bandwidth-aware collective optimization",
+    
+    "local-mem-bw": 3350,
+    "//local-mem-bw-note": "Local memory bandwidth in GB/s (H100 80GB HBM3e: 3350 GB/s)",
+    
+    "boost-mode": 0,
+    "//boost-mode-note": "Boost mode disabled (0=off, 1=on)",
+    
+    "roofline-enabled": 1,
+    "//roofline-note": "Enable roofline performance model for computation",
+    
+    "peak-perf": 989,
+    "//peak-perf-note": "Peak FP16/BF16 Tensor Core performance in TFLOPS (H100: 989 TFLOPS)",
+    
+    "//": "============================================================================",
+    "//": "Hardware Reference: NVIDIA H100 SXM5 80GB",
+    "//": "============================================================================",
+    "//": "Memory: 80 GB HBM3e @ 3350 GB/s",
+    "//": "Compute: 989 TFLOPS (FP16/BF16 with Tensor Cores)",
+    "//": "NVLink: 18 links x 50 GB/s = 900 GB/s total (400 GB/s per direction)",
+    "//": "TDP: 700W",
+    "//": "Architecture: NVIDIA Hopper (GH100)",
+    "//": "============================================================================",
+    "//": "Use Case: Tensor Parallel (TP=16) with AllToAll Network",
+    "//": "============================================================================"
+}
+

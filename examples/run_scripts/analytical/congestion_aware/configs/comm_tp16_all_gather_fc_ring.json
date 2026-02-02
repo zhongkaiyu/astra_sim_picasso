@@ -1,0 +1,10 @@
+{
+  "output_dir": "{PROJECT_DIR}/output_qwen/test/comm_tp16_all_gather_fc_ring",
+  "astra_sim": "{PROJECT_DIR}/build/astra_analytical/build/bin/AstraSim_Analytical_Congestion_Aware",
+  "system": "{EXAMPLE_DIR}/system/native_collectives/ring16_H100.json",
+  "network": "{EXAMPLE_DIR}/network/analytical/AllToAll_16gpus_H100.yml",
+  "remote_memory": "{EXAMPLE_DIR}/remote_memory/analytical/no_memory_expansion.json",
+  "workload_dir": "{PROJECT_DIR}/tests/rt_template/inputs/workload/comm_primitive_traces_16gpu/all_gather",
+  "workload_base": "chakra_trace",
+  "log_file": "simulation_log_comm_tp16_all_gather_fc_ring.txt"
+}

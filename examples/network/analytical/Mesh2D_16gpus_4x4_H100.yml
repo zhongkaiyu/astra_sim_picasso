@@ -1,0 +1,150 @@
+topology: [ Mesh2D ]
+npus_count: [ 16 ]
+width: 4
+height: 4
+bandwidth: [ 400.0 ]  # GB/s (NVLink 4.0: ~400 GB/s per GPU)
+latency: [ 900.0 ]    # ns (intra-node latency ~900ns)
+
+# ============================================================================
+# Mesh2D Network Topology (16 H100 GPUs - 4x4 Grid)
+# ============================================================================
+#
+# Physical Topology (4 columns × 4 rows):
+#
+#     0 --- 1 --- 2 --- 3
+#     |     |     |     |
+#     4 --- 5 --- 6 --- 7
+#     |     |     |     |
+#     8 --- 9 --- 10--- 11
+#     |     |     |     |
+#     12--- 13--- 14--- 15
+#
+# width = 4 (columns), height = 4 (rows)
+# Total NPUs = width × height = 4 × 4 = 16
+#
+# 连接关系 (Connectivity):
+# - 角落节点 (4个): 2条连接 (例如 GPU0: 右1, 下4)
+# - 边缘节点 (8个): 3条连接 (例如 GPU1: 左0, 右2, 下5)
+# - 内部节点 (4个): 4条连接 (例如 GPU5: 左4, 右6, 上1, 下9)
+#
+# ============================================================================
+# Hardware Specifications: NVIDIA H100 SXM5 80GB
+# ============================================================================
+#
+# NVLink Configuration:
+# - NVLink 4.0 Generation
+# - 18 NVLink lanes per GPU @ 50 GB/s per lane (bidirectional)
+# - Total NVLink bandwidth per GPU: 900 GB/s (bidirectional aggregate)
+# - Effective per-direction bandwidth: ~400 GB/s
+# - Mesh2D topology (each GPU connected to 2-4 neighbors)
+#
+# Memory Subsystem:
+# - HBM3e memory: 80 GB per GPU
+# - Memory bandwidth: 3350 GB/s (~3.35 TB/s) per GPU
+#
+# Compute Performance:
+# - FP16/BF16 Tensor Core: 989 TFLOPS
+# - FP32: 67 TFLOPS
+# - INT8: 1979 TOPS
+#
+# Network Latency:
+# - GPU-to-GPU (adjacent): ~900 ns (1 hop)
+# - Multi-hop latency increases with distance
+# - Maximum hops: 6 hops (corner to opposite corner)
+#
+# ============================================================================
+# 路由特性 (Routing Characteristics):
+# ============================================================================
+#
+# 跳数分布 (Hop Count Distribution):
+# - 1 hop: 相邻 GPU (24条边: 12条水平 + 12条垂直)
+# - 2 hops: 对角和二跳邻居
+# - 3 hops: 三跳邻居
+# - 最大 6 hops: GPU0 ? GPU15 (对角线)
+#
+# 示例路由路径：
+# - GPU0 → GPU1: 直连 (1 hop)
+# - GPU0 → GPU5: GPU0 → GPU1 → GPU5 或 GPU0 → GPU4 → GPU5 (2 hops)
+# - GPU0 → GPU15: GPU0 → GPU4 → GPU8 → GPU12 → GPU13 → GPU14 → GPU15 (6 hops)
+#
+# ============================================================================
+# Parallelism Mapping Examples:
+# ============================================================================
+#
+# Option 1: DP=4, TP=4 (推荐配置 - 行映射)
+# - TP Group 0 (DP rank 0): [GPU0,  GPU1,  GPU2,  GPU3]  (Row 0)
+# - TP Group 1 (DP rank 1): [GPU4,  GPU5,  GPU6,  GPU7]  (Row 1)
+# - TP Group 2 (DP rank 2): [GPU8,  GPU9,  GPU10, GPU11] (Row 2)
+# - TP Group 3 (DP rank 3): [GPU12, GPU13, GPU14, GPU15] (Row 3)
+# - TP通信: 行内, 1-3 hops
+# - DP通信: 跨行, 1-3 hops (垂直方向)
+#
+# Option 2: DP=4, TP=4 (列映射)
+# - TP Group 0 (DP rank 0): [GPU0, GPU4, GPU8,  GPU12] (Col 0)
+# - TP Group 1 (DP rank 1): [GPU1, GPU5, GPU9,  GPU13] (Col 1)
+# - TP Group 2 (DP rank 2): [GPU2, GPU6, GPU10, GPU14] (Col 2)
+# - TP Group 3 (DP rank 3): [GPU3, GPU7, GPU11, GPU15] (Col 3)
+# - TP通信: 列内, 1-3 hops
+# - DP通信: 跨列, 1-3 hops (水平方向)
+#
+# Option 3: DP=16 (纯数据并行)
+# - DP Group 0: GPU0  (数据批次 0)
+# - DP Group 1: GPU1  (数据批次 1)
+# - ...
+# - DP Group 15: GPU15 (数据批次 15)
+# - 通信模式: AllReduce 梯度同步需要跨越 1-6 hops
+#
+# Option 4: DP=2, TP=8 (大模型张量并行)
+# - TP Group 0 (DP rank 0): [GPU0, GPU1, GPU2, GPU3, GPU4, GPU5, GPU6, GPU7]
+# - TP Group 1 (DP rank 1): [GPU8, GPU9, GPU10, GPU11, GPU12, GPU13, GPU14, GPU15]
+# - TP通信: 组内, 1-6 hops
+# - DP通信: 组间, 2-4 hops (垂直跨越)
+#
+# ============================================================================
+# Mesh2D vs All-to-All 对比:
+# ============================================================================
+#
+# Mesh2D (本配置):
+# - 每个 GPU 有 2-4 条物理连接
+# - 最大跳数: 6 hops (对角线)
+# - 硬件成本: 低 (24 条双向链路)
+# - 链路总数: 24 条 (比全连接少 96 条)
+# - 适用场景: 实际硬件部署，资源受限环境
+#
+# All-to-All (FullyConnected):
+# - 每个 GPU 有 15 条物理连接（连接到其他所有 GPU）
+# - 最大跳数: 1 hop (直连)
+# - 硬件成本: 高 (120 条双向链路)
+# - 适用场景: 理想性能基准测试
+#
+# ============================================================================
+# 通信性能特性:
+# ============================================================================
+#
+# 带宽竞争 (Bandwidth Contention):
+# - 同时通信时可能产生链路竞争
+# - 多个路径共享同一链路时会产生瓶颈
+# - 例如: 如果多个AllReduce同时执行，中间节点会成为热点
+#
+# 最优通信模式:
+# - 行内通信: 水平链路, 1-3 hops
+# - 列内通信: 垂直链路, 1-3 hops
+# - 对角通信: 多跳路由, 2-6 hops, 容易产生竞争
+# - Ring AllReduce: 沿着行或列进行可以减少竞争
+#
+# 拥塞感知路由 (Congestion-Aware Routing):
+# - 多条等价路径: XY路由 vs YX路由
+# - 动态选择负载较轻的路径
+# - 对性能影响显著，特别是在高负载下
+#
+# ============================================================================
+# Usage Notes:
+# ============================================================================
+# - Mesh2D 拓扑比 All-to-All 更接近真实硬件
+# - TP 组应该映射到相邻 GPU（最小化跳数）
+# - 推荐使用 congestion-aware 路由算法
+# - Ring AllReduce 算法适合 Mesh2D 拓扑
+# - 适合研究网络拓扑对性能的影响
+# - 4x4 是常见的单机多卡配置（如 DGX A100/H100）
+# ============================================================================
+

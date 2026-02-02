@@ -1,0 +1,59 @@
+{
+    "//": "============================================================================",
+    "//": "ASTRA-sim System Configuration for DP=16 (16 H100 GPUs) - OneRing",
+    "//": "============================================================================",
+
+    "//": "--- Scheduling Configuration ---",
+    "scheduling-policy": "LIFO",
+    "//scheduling-policy-note": "Last-In-First-Out scheduling",
+
+    "endpoint-delay": 10,
+    "//endpoint-delay-note": "Communication endpoint delay in nanoseconds",
+
+    "active-chunks-per-dimension": 2,
+    "//active-chunks-note": "Number of concurrent message chunks per dimension",
+
+    "preferred-dataset-splits": 16,
+    "//preferred-splits-note": "Preferred number of dataset splits (matches DP degree)",
+
+    "//": "--- Collective Communication Algorithms ---",
+    "all-reduce-implementation": [
+        "oneRing"
+    ],
+    "//all-reduce-note": "OneRing algorithm (1D logical ring) for AllReduce",
+
+    "all-gather-implementation": [
+        "oneRing"
+    ],
+    "//all-gather-note": "OneRing algorithm for AllGather",
+
+    "reduce-scatter-implementation": [
+        "oneRing"
+    ],
+    "//reduce-scatter-note": "OneRing algorithm for ReduceScatter",
+
+    "all-to-all-implementation": [
+        "oneRing"
+    ],
+    "//all-to-all-note": "OneRing algorithm for AllToAll",
+
+    "//": "--- Memory and Compute Configuration (NVIDIA H100 SXM5 80GB) ---",
+    "collective-optimization": "localBWAware",
+    "//collective-opt-note": "Enable local bandwidth-aware collective optimization",
+
+    "local-mem-bw": 3350,
+    "//local-mem-bw-note": "Local memory bandwidth in GB/s (H100 80GB HBM3e: 3350 GB/s)",
+
+    "boost-mode": 0,
+    "//boost-mode-note": "Boost mode disabled (0=off, 1=on)",
+
+    "roofline-enabled": 1,
+    "//roofline-note": "Enable roofline performance model for computation",
+
+    "peak-perf": 989,
+    "//peak-perf-note": "Peak FP16/BF16 Tensor Core performance in TFLOPS (H100: 989 TFLOPS)",
+
+    "//": "============================================================================",
+    "//": "Use Case: Data Parallel (DP=16) - OneRing Variant",
+    "//": "============================================================================"
+}

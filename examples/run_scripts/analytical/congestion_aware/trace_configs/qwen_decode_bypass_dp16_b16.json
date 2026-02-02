@@ -1,0 +1,14 @@
+{
+  "output_dir": "{PROJECT_DIR}/symbolic_tensor_graph_picasso/et_trace/generated_decode_bypass_dp16_b16",
+  "output_name": "decode_bypass_dp16_b16",
+  "model_type": "qwen_decode_bypass",
+  "dp": 16,
+  "kvhead": 4,
+  "head": 64,
+  "num_stacks": 94,
+  "dmodel": 4096,
+  "batch": 16,
+  "seq": 1024,
+  "tpsp": true
+}
+

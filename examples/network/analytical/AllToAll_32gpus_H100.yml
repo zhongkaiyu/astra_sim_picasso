@@ -1,0 +1,76 @@
+topology: [ FullyConnected ]
+npus_count: [ 32 ]
+bandwidth: [ 400.0 ]  # GB/s (NVLink 4.0: ~400 GB/s per GPU)
+latency: [ 900.0 ]    # ns (intra-node latency ~900ns)
+
+# ============================================================================
+# All-to-All Network Topology (32 H100 GPUs - Fully Connected)
+# ============================================================================
+#
+# Logical Topology: DP=8, TP=4 (32 GPUs Total)
+#
+#   DP Group 0 (TP=4):  GPU0  - GPU1  - GPU2  - GPU3
+#   DP Group 1 (TP=4):  GPU4  - GPU5  - GPU6  - GPU7
+#   DP Group 2 (TP=4):  GPU8  - GPU9  - GPU10 - GPU11
+#   DP Group 3 (TP=4):  GPU12 - GPU13 - GPU14 - GPU15
+#   DP Group 4 (TP=4):  GPU16 - GPU17 - GPU18 - GPU19
+#   DP Group 5 (TP=4):  GPU20 - GPU21 - GPU22 - GPU23
+#   DP Group 6 (TP=4):  GPU24 - GPU25 - GPU26 - GPU27
+#   DP Group 7 (TP=4):  GPU28 - GPU29 - GPU30 - GPU31
+#
+# All GPUs are fully connected (all-to-all)
+# Each GPU can communicate with any other GPU directly
+#
+# ============================================================================
+# Hardware Specifications: NVIDIA H100 SXM5 80GB
+# ============================================================================
+#
+# NVLink Configuration:
+# - NVLink 4.0 Generation
+# - 18 NVLink lanes per GPU @ 50 GB/s per lane (bidirectional)
+# - Total NVLink bandwidth per GPU: 900 GB/s (bidirectional aggregate)
+# - Effective per-direction bandwidth: ~400 GB/s
+# - Fully connected topology (all-to-all)
+#
+# Memory Subsystem:
+# - HBM3e memory: 80 GB per GPU
+# - Memory bandwidth: 3350 GB/s (~3.35 TB/s) per GPU
+#
+# Compute Performance:
+# - FP16/BF16 Tensor Core: 989 TFLOPS
+# - FP32: 67 TFLOPS
+# - INT8: 1979 TOPS
+#
+# Network Latency:
+# - GPU-to-GPU (direct): ~900 ns
+# - All-to-All provides minimum latency (no intermediate hops)
+#
+# ============================================================================
+# Parallelism Strategy:
+# ============================================================================
+# - DP=8: 8 Data Parallel groups (vertical communication)
+#   * Each DP group processes different data batches
+#   * DP groups synchronize gradients via AllReduce
+#
+# - TP=4: 4 Tensor Parallel GPUs per DP group (horizontal communication)
+#   * Each TP group splits model across 4 GPUs
+#   * TP GPUs exchange activations via AllGather/ReduceScatter
+#
+# - Total GPUs: 32 (8 DP groups × 4 TP GPUs)
+#
+# Communication Pattern:
+# - Intra-TP (within DP group): High-frequency, small messages
+# - Inter-DP (across DP groups): Low-frequency, large gradient syncs
+# - All-to-All topology minimizes communication overhead
+#
+# ============================================================================
+# Usage Notes:
+# ============================================================================
+# - This configuration supports hybrid DP+TP parallelism
+# - Fully connected topology ensures optimal bandwidth for both:
+#   * Intra-TP communication (within each DP group)
+#   * Inter-DP communication (gradient synchronization)
+# - No network congestion assumed (ideal all-to-all)
+# - Scales efficiently to 32 GPUs
+# ============================================================================
+

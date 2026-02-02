@@ -1,21 +1,50 @@
 topology: [ Switch ]
 npus_count: [ 8 ]
-bandwidth: [ 400.0 ]  # GB/s (NVLink 4.0: ~400 GB/s per GPU to NVSwitch)
-latency: [ 900.0 ]    # ns (intra-node latency ~1us)
+bandwidth: [ 300.0 ]  # GB/s (NVLink 3.0: ~300 GB/s per GPU to NVSwitch)
+latency: [ 1200.0 ]   # ns (intra-node latency ~1.2us)
 
-# Megatron-style Single Node with NVSwitch
-# This simulates an NVIDIA DGX H100/A100 node:
+# ============================================================================
+# Megatron-style Single Node with NVSwitch (DGX A100 Configuration)
+# ============================================================================
 #
-#           NVSwitch (Full Crossbar)
+# Physical Topology:
+#           NVSwitch (Full Crossbar - Non-blocking)
 #         /  |  |  |  |  |  |  \
 #       GPU0 GPU1 GPU2 GPU3 GPU4 GPU5 GPU6 GPU7
 #
 # All GPUs connected via NVSwitch with full bisection bandwidth
-# Typical for Tensor Parallelism within a node
+# Typical configuration for Tensor Parallelism (TP) within a single node
 #
-# Specifications (H100):
-# - NVLink 4.0: 900 GB/s total bandwidth per GPU
-# - 18 NVLink lanes per GPU @ 50 GB/s each
-# - Effective per-direction bandwidth: ~400 GB/s
-# - Latency: ~1us for intra-node communication
+# ============================================================================
+# Hardware Specifications: NVIDIA A100 80GB (DGX A100)
+# ============================================================================
+#
+# NVLink Configuration:
+# - NVLink 3.0 Generation
+# - 12 NVLink lanes per GPU @ 50 GB/s per lane (bidirectional)
+# - Total NVLink bandwidth per GPU: 600 GB/s (bidirectional aggregate)
+# - Effective per-direction bandwidth: ~300 GB/s
+# - NVSwitch provides full crossbar connectivity (any-to-any)
+#
+# Memory Subsystem:
+# - HBM2e memory: 80 GB per GPU
+# - Memory bandwidth: 1935 GB/s (~2 TB/s) per GPU
+#
+# Compute Performance:
+# - FP16/BF16 Tensor Core: 312 TFLOPS
+# - FP32: 19.5 TFLOPS
+# - INT8: 624 TOPS
+#
+# Network Latency:
+# - Intra-node (GPU-to-GPU via NVSwitch): ~1-1.5 us
+# - This configuration uses 1.2 us as typical latency
+#
+# ============================================================================
+# Usage Notes:
+# ============================================================================
+# - This network config is optimized for Tensor Parallelism (TP=8)
+# - Suitable for Megatron-style model parallelism
+# - All-to-All communication patterns benefit from full crossbar
+# - Ring/Tree collective algorithms can fully utilize the bandwidth
+# ============================================================================
 

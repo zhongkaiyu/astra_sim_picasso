@@ -1,0 +1,8 @@
+topology: [ FullyConnected, Ring ]
+npus_count: [ 8, 2 ]        # 2 nodes, 8 GPUs per node
+bandwidth: [ 400.0, 400.0 ] # GB/s per link (NVLink-like; inter-node left same unless you want to reduce)
+latency: [ 900.0, 9000.0 ]  # ns; inter-node = 10x intra-node
+
+# Dimension 0 (FullyConnected): intra-node NVLink all-to-all
+# Dimension 1 (Ring): inter-node links
+

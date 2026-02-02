@@ -1,0 +1,94 @@
+topology: [ Mesh2D ]
+npus_count: [ 32 ]
+width: 8
+height: 4
+bandwidth: [ 400.0 ]  # GB/s (NVLink 4.0: ~400 GB/s per GPU)
+latency: [ 900.0 ]    # ns (intra-node latency ~900ns)
+
+# ============================================================================
+# Mesh2D Network Topology (32 H100 GPUs - 8x4 Grid)
+# ============================================================================
+#
+# Physical Topology (8 columns × 4 rows):
+#
+#     0 --- 1 --- 2 --- 3 --- 4 --- 5 --- 6 --- 7
+#     |     |     |     |     |     |     |     |
+#     8 --- 9 --- 10--- 11--- 12--- 13--- 14--- 15
+#     |     |     |     |     |     |     |     |
+#     16--- 17--- 18--- 19--- 20--- 21--- 22--- 23
+#     |     |     |     |     |     |     |     |
+#     24--- 25--- 26--- 27--- 28--- 29--- 30--- 31
+#
+# width = 8 (columns), height = 4 (rows)
+# Total NPUs = width × height = 8 × 4 = 32
+#
+# ============================================================================
+# Hardware Specifications: NVIDIA H100 SXM5 80GB
+# ============================================================================
+#
+# NVLink Configuration:
+# - NVLink 4.0 Generation
+# - 18 NVLink lanes per GPU @ 50 GB/s per lane (bidirectional)
+# - Total NVLink bandwidth per GPU: 900 GB/s (bidirectional aggregate)
+# - Effective per-direction bandwidth: ~400 GB/s
+# - Mesh2D topology (each GPU connected to 2-4 neighbors)
+#
+# Memory Subsystem:
+# - HBM3e memory: 80 GB per GPU
+# - Memory bandwidth: 3350 GB/s (~3.35 TB/s) per GPU
+#
+# Compute Performance:
+# - FP16/BF16 Tensor Core: 989 TFLOPS
+# - FP32: 67 TFLOPS
+# - INT8: 1979 TOPS
+#
+# Network Latency:
+# - GPU-to-GPU (adjacent): ~900 ns
+# - Multi-hop latency increases with distance
+#
+# ============================================================================
+# Parallelism Mapping (DP=8, TP=4):
+# ============================================================================
+# 
+# Option 1: TP groups as rows (recommended for better locality)
+#   DP Group 0 (TP=4): GPU 0  - 1  - 2  - 3     (row 0, cols 0-3)
+#   DP Group 1 (TP=4): GPU 4  - 5  - 6  - 7     (row 0, cols 4-7)
+#   DP Group 2 (TP=4): GPU 8  - 9  - 10 - 11    (row 1, cols 0-3)
+#   DP Group 3 (TP=4): GPU 12 - 13 - 14 - 15    (row 1, cols 4-7)
+#   DP Group 4 (TP=4): GPU 16 - 17 - 18 - 19    (row 2, cols 0-3)
+#   DP Group 5 (TP=4): GPU 20 - 21 - 22 - 23    (row 2, cols 4-7)
+#   DP Group 6 (TP=4): GPU 24 - 25 - 26 - 27    (row 3, cols 0-3)
+#   DP Group 7 (TP=4): GPU 28 - 29 - 30 - 31    (row 3, cols 4-7)
+#
+# Option 2: TP groups as columns
+#   DP Group 0 (TP=4): GPU 0  - 8  - 16 - 24    (col 0)
+#   DP Group 1 (TP=4): GPU 1  - 9  - 17 - 25    (col 1)
+#   ... and so on
+#
+# ============================================================================
+# Communication Characteristics:
+# ============================================================================
+# 
+# Intra-TP Communication (within DP group):
+# - Horizontal links (if TP groups are rows): 1-hop for adjacent GPUs
+# - Max distance within TP group: 3 hops
+#
+# Inter-DP Communication (across DP groups):
+# - Vertical links: multi-hop depending on distance
+# - Max distance: 7 hops (corner to corner)
+#
+# Mesh2D vs All-to-All:
+# - Mesh2D: Lower hardware cost, multi-hop routing
+# - All-to-All: Higher hardware cost, single-hop routing
+# - Trade-off: Mesh2D reduces link count but increases latency
+#
+# ============================================================================
+# Usage Notes:
+# ============================================================================
+# - Mesh2D topology is more realistic for large-scale systems
+# - Communication patterns should align with physical topology
+# - TP groups should be mapped to adjacent GPUs (minimize hops)
+# - DP synchronization crosses multiple hops (higher latency)
+# - Congestion-aware routing important for multi-hop paths
+# ============================================================================
+

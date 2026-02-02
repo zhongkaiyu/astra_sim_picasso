@@ -1,0 +1,10 @@
+{
+  "output_dir": "{PROJECT_DIR}/output_qwen/test/tp16_h100_alltoall_16gpus",
+  "astra_sim": "{PROJECT_DIR}/build/astra_analytical/build/bin/AstraSim_Analytical_Congestion_Aware",
+  "system": "{EXAMPLE_DIR}/system/native_collectives/direct16_H100.json",
+  "network": "{EXAMPLE_DIR}/network/analytical/AllToAll_16gpus_H100.yml",
+  "remote_memory": "{EXAMPLE_DIR}/remote_memory/analytical/no_memory_expansion.json",
+  "workload_dir": "{PROJECT_DIR}/symbolic_tensor_graph_picasso/et_trace/generated_decode_bypass_tp16",
+  "workload_base": "decode_bypass_tp16",
+  "log_file": "simulation_log_tp16_h100_alltoall_16gpus_direct.txt"
+}
