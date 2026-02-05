@@ -1,0 +1,58 @@
+# Sparse Mesh2D Topology with CUSTOM SNAKE PATTERN
+# 
+# This configuration creates an optimized layout where ring neighbors
+# are physically close, reducing hop counts for collective communication.
+#
+# Custom Layout (snake pattern):
+#
+#     0 --- 1 --- 2 --- 3 --- 4 --- 5
+#                 |     |     |     |
+#     x     x     9 --- 8 --- 7 --- 6   (reversed row!)
+#                 |     |     |     |
+#     x     x    12 ---11 ---10 ---13   (mostly reversed, 13 at end)
+#                             |     |
+#     x     x     x     x    14 ---15
+#
+# Ring communication: 0→1→2→3→4→5→6→7→8→9→10→11→12→13→14→15→0
+#
+# Benefits of this layout:
+# - 5→6: Now just 1 hop down (was 4 hops with auto-numbering!)
+# - 6→7: Adjacent horizontally (1 hop)
+# - 9→10: Through vertical link to row 2 (fewer hops)
+# - Most ring transitions are 1-2 hops instead of 4+
+
+topology: [ Mesh2D ]  # Will be auto-converted to SparseMesh2D when excluded is present
+
+npus_count: [ 16 ]
+bandwidth: [ 100 ]
+latency: [ 1000 ]
+
+# Grid dimensions
+width: 6
+height: 4
+
+# Excluded positions (holes in the mesh)
+excluded: [
+  [0, 1], [1, 1],           # Row 1: positions 0,1 excluded
+  [0, 2], [1, 2],           # Row 2: positions 0,1 excluded
+  [0, 3], [1, 3], [2, 3], [3, 3]  # Row 3: positions 0,1,2,3 excluded
+]
+
+# Custom NPU placement: [ [column, row, npu_id], ... ]
+# This creates a snake pattern optimized for ring communication
+npu_placement: [
+  # Row 0: Standard left-to-right (0 → 5)
+  [0, 0, 0], [1, 0, 1], [2, 0, 2], [3, 0, 3], [4, 0, 4], [5, 0, 5],
+  
+  # Row 1: REVERSED right-to-left (9 ← 8 ← 7 ← 6)
+  # So ring goes 5→6 (both at column 5, 1 hop!), then 6→7→8→9 left
+  [5, 1, 6], [4, 1, 7], [3, 1, 8], [2, 1, 9],
+  
+  # Row 2: Mostly reversed, but 13 at right edge for transition to row 3
+  # Ring: 9→10 (column 2), then 10→11→12 left-ish, 12→13 (13 at column 5)
+  [4, 2, 10], [3, 2, 11], [2, 2, 12], [5, 2, 13],
+  
+  # Row 3: 14, 15 at the only valid positions
+  # Ring: 13→14 (both near column 4-5), 14→15 adjacent
+  [4, 3, 14], [5, 3, 15]
+]
