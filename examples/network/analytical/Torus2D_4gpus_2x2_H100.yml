@@ -1,0 +1,6 @@
+topology: [ Ring ]
+npus_count: [ 4 ]
+bandwidth: [ 400.0 ]  # GB/s
+latency: [ 900.0 ]    # ns
+
+# Generated Torus2D Topology (2x2)

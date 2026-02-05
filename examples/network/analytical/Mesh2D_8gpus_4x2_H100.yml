@@ -1,0 +1,8 @@
+topology: [ Mesh2D ]
+npus_count: [ 8 ]
+width: 8
+height: 1
+bandwidth: [ 400.0 ]  # GB/s
+latency: [ 900.0 ]    # ns
+
+# Generated Mesh2D Topology (4x2)

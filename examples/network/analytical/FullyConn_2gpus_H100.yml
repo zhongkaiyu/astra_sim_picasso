@@ -1,0 +1,6 @@
+topology: [ FullyConnected ]
+npus_count: [ 2 ]
+bandwidth: [ 400.0 ]  # GB/s
+latency: [ 900.0 ]    # ns
+
+# Generated FullyConnected Topology (2 GPUs)

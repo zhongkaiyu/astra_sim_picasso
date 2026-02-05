@@ -3,7 +3,7 @@ npus_count: [ 16 ]
 width: 4
 height: 4
 bandwidth: [ 400.0 ]  # GB/s (NVLink 4.0: ~400 GB/s per GPU)
-latency: [ 900.0 ]    # ns (intra-node latency ~900ns)
+latency: [ 1.0 ]    # ns (intra-node latency ~900ns)
 
 # ============================================================================
 # Mesh2D Network Topology (16 H100 GPUs - 4x4 Grid)

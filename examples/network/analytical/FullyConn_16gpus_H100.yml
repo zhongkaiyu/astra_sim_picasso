@@ -1,18 +1,14 @@
 topology: [ FullyConnected ]
-npus_count: [ 4 ]
+npus_count: [ 16 ]
 bandwidth: [ 400.0 ]  # GB/s (NVLink 4.0: ~400 GB/s per GPU)
-latency: [ 900.0 ]    # ns (intra-node latency ~900ns)
+latency: [ 1.0 ]    # ns (intra-node latency ~900ns)
 
 # ============================================================================
-# All-to-All Network Topology (4 H100 GPUs - Fully Connected)
+# All-to-All Network Topology (16 H100 GPUs - Fully Connected)
 # ============================================================================
 #
 # Physical Topology:
-#       GPU0 ???? GPU1
-#        ?  ?   ?
-#       GPU2 ???? GPU3
-#
-# All GPUs are fully connected (all-to-all)
+# All 16 GPUs are fully connected (all-to-all)
 # Each GPU can communicate with any other GPU directly
 #
 # ============================================================================
@@ -42,10 +38,8 @@ latency: [ 900.0 ]    # ns (intra-node latency ~900ns)
 # ============================================================================
 # Usage Notes:
 # ============================================================================
-# - This network config supports both TP and DP with 4 GPUs
-# - TP=4: All 4 GPUs work on same data (model parallelism)
-# - DP=4: Each GPU works on different data (data parallelism)
-# - Fully connected topology is optimal for both patterns
-# - No network congestion for small-scale (4 GPUs)
+# - This network config supports both TP and DP with 16 GPUs
+# - Fully connected topology is optimal for all-to-all communication
+# - No network congestion for small-scale (16 GPUs)
 # ============================================================================
 
