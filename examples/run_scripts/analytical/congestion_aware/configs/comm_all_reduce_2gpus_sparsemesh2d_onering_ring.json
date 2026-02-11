@@ -2,9 +2,10 @@
     "workload_dir": "{PROJECT_DIR}/examples/workloads/all_reduce_scaling/all_reduce_2gpus",
     "workload_base": "all_reduce_2gpus",
     "comm_group": "{PROJECT_DIR}/examples/workloads/all_reduce_scaling/all_reduce_2gpus/all_reduce_2gpus.json",
-    "system": "{EXAMPLE_DIR}/system/native_collectives/onering2_H100.json",
-    "network": "{EXAMPLE_DIR}/network/analytical/Torus2D_2gpus_2x1_H100.yml",
+    "system": "{EXAMPLE_DIR}/system/native_collectives/ring2_H100.json",
+    "network": "{EXAMPLE_DIR}/network/analytical/SparseMesh2D_2npus_onering.yml",
     "remote_memory": "{EXAMPLE_DIR}/remote_memory/analytical/no_memory_expansion.json",
-    "output_dir": "{PROJECT_DIR}/output/scaling_test/comm_all_reduce_2gpus_torus_ring",
-    "log_file": "comm_all_reduce_2gpus_torus_ring.log"
+    "output_dir": "{PROJECT_DIR}/output/scaling_test/comm_all_reduce_2gpus_sparsemesh2d_onering_ring",
+    "log_file": "comm_all_reduce_2gpus_sparsemesh2d_onering_ring.log"
 }
+

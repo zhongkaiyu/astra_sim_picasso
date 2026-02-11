@@ -1,0 +1,25 @@
+# Sparse Mesh2D Topology with ONE-RING SNAKE PATTERN (2x2)
+#
+# Snake layout:
+#     0 --- 1
+#     |     |
+#     3 --- 2   (reversed row)
+#
+# Ring order: 0¡ú1¡ú2¡ú3¡ú0
+#
+topology: [ Mesh2D ]  # Auto-converted to SparseMesh2D when npu_placement is present
+
+npus_count: [ 4 ]
+bandwidth: [ 400 ]
+latency: [ 900 ]
+
+# Grid dimensions
+width: 2
+height: 2
+
+# Custom NPU placement: [ [column, row, npu_id], ... ]
+npu_placement: [
+  [0, 0, 0], [1, 0, 1],
+  [1, 1, 2], [0, 1, 3]
+]
+
