@@ -1,0 +1,60 @@
+# Baseline strategy: Standard TP/SP with sharded Wo + explicit AR/AG comm ops.
+# Same model/dtype/compute as HMP; only interconnect & strategy differ.
+
+model:
+  B: 64
+  D: 4096
+  Hq: 64
+  Hkv: 4
+  G: 4
+  Cg: 4
+  dk: 128
+  Lq: 1024
+  Lk: 1024
+
+dtype:
+  act_bytes: 2
+  w_bytes: 2
+  scalar_bytes: 4
+
+hardware:
+  BW_hbm_gbs: 2000
+  BW_sram_gbs: 2500
+  BW_ip_gbs: 2000            # same interconnect as HMP
+  alpha_ns: 100              # same interconnect as HMP
+  compute_tflops: 30
+
+efficiency:
+  eta_compute: 1.0
+  eta_hbm: 1.0
+  eta_sram: 1.0
+  eta_ip: 1.0
+
+schedule:
+  overlap_q_kv: false
+
+strategy:
+  name: baseline
+  wo_mode: sharded            # no duplication; standard TP/SP sharded Wo
+  comm_ops:
+    # AR_seq: allgather/concat across Cg (within group) after attention
+    #   payload = B * Lq * Dq_g * act_bytes = 64*1024*2048*2 = 268435456 bytes (0.25 GB)
+    - name: AR_seq
+      collective: allgather
+      participants: 4         # within group (Cg=4)
+      payload_bytes: 268435456
+
+    # AG_feat: allgather across groups (G) to reconstruct full feature dim
+    #   payload = B * Lq * D * act_bytes = 64*1024*4096*2 = 536870912 bytes (0.5 GB)
+    - name: AG_feat
+      collective: allgather
+      participants: 4         # across groups (G=4)
+      payload_bytes: 536870912
+
+    # AR_head: allreduce partial sums after sharded Wo projection
+    #   payload = B * Lq * D * act_bytes = 64*1024*4096*2 = 536870912 bytes (0.5 GB)
+    - name: AR_head
+      collective: allreduce
+      participants: 4         # within group (Cg=4)
+      payload_bytes: 536870912
+

@@ -1,0 +1,11 @@
+{
+    "workload_dir": "{PROJECT_DIR}/examples/workloads/all_reduce_scaling/all_reduce_16gpus",
+    "workload_base": "all_reduce_16gpus",
+    "comm_group": "{PROJECT_DIR}/examples/workloads/all_reduce_scaling/all_reduce_16gpus/all_reduce_16gpus.json",
+    "system": "{EXAMPLE_DIR}/system/native_collectives/ring16_H100.json",
+    "network": "{EXAMPLE_DIR}/network/analytical/Mesh2D_16gpus_4x4_H100.yml",
+    "remote_memory": "{EXAMPLE_DIR}/remote_memory/analytical/no_memory_expansion.json",
+    "output_dir": "{PROJECT_DIR}/output/scaling_test/comm_all_reduce_16gpus_mesh2d_ring",
+    "log_file": "comm_all_reduce_16gpus_mesh2d_ring.log"
+}
+

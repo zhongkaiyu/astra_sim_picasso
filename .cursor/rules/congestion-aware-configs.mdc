@@ -1,0 +1,105 @@
+---
+description: 仿真配置命名规则、cache_db 字段规范
+globs: examples/run_scripts/analytical/congestion_aware/**/*.json,examples/run_scripts/analytical/congestion_aware/cache_db_v131/**
+alwaysApply: false
+---
+
+# 仿真配置命名与 Cache DB 规范
+
+## 配置命名规则（严格格式，`cache_db.py` 按此顺序解析）
+
+### 通信原语测试 (`comm_` 前缀)
+格式: `comm_{op}_{scale}_{physical}_{logical}[_{device}].json`
+- op: `all_reduce`, `all_gather`, `reduce_scatter`, `all_to_all`, `broadcast`, `scatter`, `gather`, `reduce`, `barrier`
+- scale: `2gpus`, `4gpus`, `8gpus`, `16gpus`, `tp16`
+- physical: `mesh2d`, `fc`, `sparsemesh2d`, `torus2d`
+- logical: `ring`, `onering`, `direct`, `onering_ring`
+- device: `HBM4` (省略=H100)
+
+### 端到端工作负载 (非 `comm_` 前缀)
+格式: `{par}_{device}_{physical}_{layout}_{logical}_{model}_{operation}_bs{batch}_sl{seq}.json`
+
+| 字段 | 解析位置 | 可选值 | 说明 |
+|---|---|---|---|
+| `par` | 第1段 | `tp16`, `dp16` | 并行策略 |
+| `device` | 第2段 | `h100`, `hbm4` | 设备类型 |
+| `physical` | **第3段** | `mesh2d`, `torus2d`, `alltoall`, `fullyconnected` | 物理拓扑 |
+| `layout` | **第4段** | `4x4`, `8x2`, `16gpus` | GPU 布局 (→ `num_gpus` 字段) |
+| `logical` | **第5段** | `ring`, `onering`, `direct` | 逻辑拓扑 (集合通信算法) |
+| `model` | 第6段 | `qwen`, `baseline` 等 | 模型名 |
+| `operation` | 第7段+ | `gqa_tp16_fwd`, `gqa_hmp_fwd` 等 | 操作类型 |
+| `bs{N}` | 任意位置 | `bs64` | batch_size |
+| `sl{N}` | 任意位置 | `sl1024` | seq_length |
+
+**禁止事项**:
+- **不要在配置名中加入 `real`** — 它会导致解析器字段偏移，使 physical/logical 拓扑全部错位
+- device 字段只写设备型号 (`hbm4`/`h100`)，不要附加拓扑信息
+
+**示例**:
+```
+✓ tp16_hbm4_mesh2d_4x4_onering_qwen_gqa_tp16_fwd_bs64_sl1024
+✓ tp16_hbm4_torus2d_4x4_onering_qwen_gqa_tp16_fwd_bs64_sl1024
+✓ tp16_h100_alltoall_16gpus_direct_qwen_decode_bypass_tp16_bs64_sl1024
+✗ tp16_hbm4_real_mesh2d_4x4_onering_...  ← "real" 导致解析错误
+✗ tp16_hbm4_ring_mesh2d_4x4_onering_...  ← device 含拓扑信息，解析错误
+```
+
+## Cache DB (cache_db_v131/)
+
+唯一的结果缓存目录，不要创建额外的 cache_db 目录。
+
+### CSV 字段 (`results_cache.csv`)
+
+| 字段 | 来源 | 说明 |
+|---|---|---|
+| `key_hash` | SHA256(config JSON) | 去重主键 |
+| `config_name` | 文件名 (无 .json) | 按上述规则解析 |
+| `physical_topology` | 配置名第3段 | `mesh2d` / `torus2d` / `alltoall` / `fullyconnected` |
+| `num_gpus` | 配置名第4段 | `4x4` / `8x2` / `16gpus` |
+| `logical_topology` | 配置名第5段 | `onering` / `ring` / `direct` |
+| `model` | 配置名第6段 | 模型名 |
+| `operation` | 配置名第7段+ | 操作类型 (不含 bs/sl) |
+| `wall_time` | 仿真日志 | Wall time (ns) |
+| `gpu_time` | 仿真日志 | GPU compute time (ns) |
+| `comm_time` | 仿真日志 | Communication time (ns) |
+
+### 查询示例
+
+```python
+import csv
+with open('cache_db_v131/results_cache.csv') as f:
+    for row in csv.DictReader(f):
+        if row['physical_topology'] == 'torus2d' and row['logical_topology'] == 'onering':
+            print(row['config_name'], row['wall_time'], row['comm_time'])
+```
+
+## JSON 字段模板
+
+### 通信原语
+```json
+{
+  "workload_dir":  "{PROJECT_DIR}/examples/workloads/all_reduce_scaling/all_reduce_{N}gpus",
+  "workload_base": "all_reduce_{N}gpus",
+  "system":        "{EXAMPLE_DIR}/system/native_collectives/{logical}{N}_{device}.json",
+  "network":       "{EXAMPLE_DIR}/network/analytical/{Physical}_{N}gpus_{layout}_{device}.yml",
+  "remote_memory": "{EXAMPLE_DIR}/remote_memory/analytical/no_memory_expansion.json",
+  "output_dir":    "{PROJECT_DIR}/output/scaling_test/{config_name}",
+  "log_file":      "{config_name}.log"
+}
+```
+
+### 端到端仿真
+```json
+{
+  "astra_sim":     "{PROJECT_DIR}/build/astra_analytical/build/bin/AstraSim_Analytical_Congestion_Aware",
+  "system":        "{EXAMPLE_DIR}/system/native_collectives/{logical}{N}_{device}.json",
+  "network":       "{EXAMPLE_DIR}/network/analytical/{Physical}_{N}gpus_{layout}_{device}.yml",
+  "remote_memory": "{EXAMPLE_DIR}/remote_memory/analytical/no_memory_expansion.json",
+  "workload_dir":  "{PROJECT_DIR}/symbolic_tensor_graph_picasso/et_trace/{trace_dir}",
+  "workload_base": "{trace_name}",
+  "output_dir":    "{PROJECT_DIR}/output_qwen/{experiment}/{unique_name}",
+  "log_file":      "simulation_log_{unique_name}.txt"
+}
+```
+
+占位符: `{PROJECT_DIR}` = 项目根, `{EXAMPLE_DIR}` = `{PROJECT_DIR}/examples`

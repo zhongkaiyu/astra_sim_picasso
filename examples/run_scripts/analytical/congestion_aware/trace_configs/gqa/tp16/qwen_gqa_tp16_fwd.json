@@ -1,0 +1,15 @@
+{
+  "output_dir": "{PROJECT_DIR}/symbolic_tensor_graph_picasso/et_trace/gqa/tp16_fwd",
+  "output_name": "tp16_fwd",
+  "model_type": "qwen_gqa_tp16_fwd",
+  "dp": 1,
+  "tp": 16,
+  "kvhead": 8,
+  "head": 64,
+  "num_stacks": 1,
+  "dmodel": 4096,
+  "batch": 64,
+  "seq": 1024,
+  "tpsp": true,
+  "head_dim": 128
+}

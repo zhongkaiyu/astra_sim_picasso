@@ -1,0 +1,10 @@
+{
+  "output_dir": "{PROJECT_DIR}/output_qwen/gqa/tp16_hbm4_mesh2d_4x4_gqa_baseline_fwd_onering",
+  "astra_sim": "{PROJECT_DIR}/build/astra_analytical/build/bin/AstraSim_Analytical_Congestion_Aware",
+  "system": "{EXAMPLE_DIR}/system/native_collectives/onering16_HBM4.json",
+  "network": "{EXAMPLE_DIR}/network/analytical/Torus2D_16gpus_4x4_HBM4.yml",
+  "remote_memory": "{EXAMPLE_DIR}/remote_memory/analytical/no_memory_expansion.json",
+  "workload_dir": "{PROJECT_DIR}/symbolic_tensor_graph_picasso/et_trace/gqa/baseline_fwd_tph4_tps4",
+  "workload_base": "baseline_fwd_tph4_tps4",
+  "log_file": "simulation_log_tp16_hbm4_mesh2d_4x4_gqa_baseline_fwd_onering.txt"
+}

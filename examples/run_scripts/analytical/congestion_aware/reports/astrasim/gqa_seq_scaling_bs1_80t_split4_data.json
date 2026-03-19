@@ -1,0 +1,507 @@
+{
+  "hmp": {
+    "label": "HMP (block2x2 Mesh2D, bs=1, split4)",
+    "log_pattern": "output_qwen/gqa_seq_scaling/baseline_block2x2_fwd_bs1_sl{seq}_split4/logs/simulation_log_gqa_baseline_block2x2_fwd_bs1_sl{seq}_split4.txt",
+    "sim_config_pattern": "examples/run_scripts/analytical/congestion_aware/configs/gqa_seq_scaling/tp16_hbm4_80t_mesh2d_4x4_onering_qwen_gqa_baseline_fwd_block2x2_bs1_sl{seq}_split4.json",
+    "trace_config_pattern": "examples/run_scripts/analytical/congestion_aware/trace_configs/gqa/baseline/qwen_gqa_baseline_fwd_tph4_tps4_bs1_sl{seq}_block2x2.json",
+    "data": [
+      {
+        "seq": 1024,
+        "wall_ns": 2462,
+        "gpu_ns": 182,
+        "comm_ns": 2280,
+        "modules": {
+          "attn_comm": 670.0,
+          "attn_comm_bytes": 2048.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1610.0,
+          "output_comm_bytes": 2048.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1270.0,
+          "output_ar_comm_bytes": 1024.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 340.0,
+          "output_ag_comm_bytes": 1024.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 2048,
+        "wall_ns": 2514,
+        "gpu_ns": 234,
+        "comm_ns": 2280,
+        "modules": {
+          "attn_comm": 670.0,
+          "attn_comm_bytes": 2048.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1270.0,
+          "output_comm_bytes": 1024.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1270.0,
+          "output_ar_comm_bytes": 1024.0,
+          "output_ar_comm_group_id": 17
+        }
+      },
+      {
+        "seq": 4096,
+        "wall_ns": 2618,
+        "gpu_ns": 338,
+        "comm_ns": 2280,
+        "modules": {
+          "attn_comm": 670.0,
+          "attn_comm_bytes": 2048.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1610.0,
+          "output_comm_bytes": 2048.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1270.0,
+          "output_ar_comm_bytes": 1024.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 340.0,
+          "output_ag_comm_bytes": 1024.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 8192,
+        "wall_ns": 2826,
+        "gpu_ns": 546,
+        "comm_ns": 2280,
+        "modules": {
+          "attn_comm": 670.0,
+          "attn_comm_bytes": 2048.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1610.0,
+          "output_comm_bytes": 2048.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1270.0,
+          "output_ar_comm_bytes": 1024.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 340.0,
+          "output_ag_comm_bytes": 1024.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 16384,
+        "wall_ns": 3246,
+        "gpu_ns": 966,
+        "comm_ns": 2280,
+        "modules": {
+          "attn_comm": 670.0,
+          "attn_comm_bytes": 2048.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1610.0,
+          "output_comm_bytes": 2048.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1270.0,
+          "output_ar_comm_bytes": 1024.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 340.0,
+          "output_ag_comm_bytes": 1024.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 32768,
+        "wall_ns": 4086,
+        "gpu_ns": 1806,
+        "comm_ns": 2280,
+        "modules": {
+          "attn_comm": 670.0,
+          "attn_comm_bytes": 2048.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1610.0,
+          "output_comm_bytes": 2048.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1270.0,
+          "output_ar_comm_bytes": 1024.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 340.0,
+          "output_ag_comm_bytes": 1024.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 65536,
+        "wall_ns": 5762,
+        "gpu_ns": 3482,
+        "comm_ns": 2280,
+        "modules": {
+          "attn_comm": 670.0,
+          "attn_comm_bytes": 2048.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1610.0,
+          "output_comm_bytes": 2048.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1270.0,
+          "output_ar_comm_bytes": 1024.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 340.0,
+          "output_ag_comm_bytes": 1024.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 131072,
+        "wall_ns": 9118,
+        "gpu_ns": 6838,
+        "comm_ns": 2280,
+        "modules": {
+          "attn_comm": 670.0,
+          "attn_comm_bytes": 2048.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1610.0,
+          "output_comm_bytes": 2048.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1270.0,
+          "output_ar_comm_bytes": 1024.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 340.0,
+          "output_ag_comm_bytes": 1024.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 262144,
+        "wall_ns": 15830,
+        "gpu_ns": 13550,
+        "comm_ns": 2280,
+        "modules": {
+          "attn_comm": 670.0,
+          "attn_comm_bytes": 2048.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1610.0,
+          "output_comm_bytes": 2048.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1270.0,
+          "output_ar_comm_bytes": 1024.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 340.0,
+          "output_ag_comm_bytes": 1024.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 524288,
+        "wall_ns": 29250,
+        "gpu_ns": 26970,
+        "comm_ns": 2280,
+        "modules": {
+          "attn_comm": 670.0,
+          "attn_comm_bytes": 2048.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1610.0,
+          "output_comm_bytes": 2048.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1270.0,
+          "output_ar_comm_bytes": 1024.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 340.0,
+          "output_ag_comm_bytes": 1024.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 1048576,
+        "wall_ns": 56094,
+        "gpu_ns": 53814,
+        "comm_ns": 2280,
+        "modules": {
+          "attn_comm": 670.0,
+          "attn_comm_bytes": 2048.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1610.0,
+          "output_comm_bytes": 2048.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1270.0,
+          "output_ar_comm_bytes": 1024.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 340.0,
+          "output_ag_comm_bytes": 1024.0,
+          "output_ag_comm_group_id": 21
+        }
+      }
+    ]
+  },
+  "HMP_reo": {
+    "label": "HMP_reo (block2x2 Mesh2D, bs=1, split4)",
+    "log_pattern": "output_qwen/gqa_seq_scaling/hmp_block2x2_fwd_bs1_sl{seq}_split4/logs/simulation_log_gqa_hmp_block2x2_fwd_bs1_sl{seq}_split4.txt",
+    "sim_config_pattern": "examples/run_scripts/analytical/congestion_aware/configs/gqa_seq_scaling/tp16_hbm4_80t_mesh2d_4x4_onering_qwen_gqa_hmp_fwd_block2x2_bs1_sl{seq}_split4.json",
+    "trace_config_pattern": "examples/run_scripts/analytical/congestion_aware/trace_configs/gqa/hmp/qwen_gqa_hmp_fwd_tph4_tps4_bs1_sl{seq}_block2x2.json",
+    "data": [
+      {
+        "seq": 1024,
+        "wall_ns": 340,
+        "gpu_ns": 340,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 2048,
+        "wall_ns": 392,
+        "gpu_ns": 392,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 4096,
+        "wall_ns": 496,
+        "gpu_ns": 496,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 8192,
+        "wall_ns": 704,
+        "gpu_ns": 704,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 16384,
+        "wall_ns": 1124,
+        "gpu_ns": 1124,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 32768,
+        "wall_ns": 1964,
+        "gpu_ns": 1964,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 65536,
+        "wall_ns": 3640,
+        "gpu_ns": 3640,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 131072,
+        "wall_ns": 6996,
+        "gpu_ns": 6996,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 262144,
+        "wall_ns": 13708,
+        "gpu_ns": 13708,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 524288,
+        "wall_ns": 27128,
+        "gpu_ns": 27128,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 1048576,
+        "wall_ns": 53972,
+        "gpu_ns": 53972,
+        "comm_ns": 0,
+        "modules": {}
+      }
+    ]
+  },
+  "tp16": {
+    "label": "TP16 (Mesh2D, bs=1, split4)",
+    "log_pattern": "output_qwen/gqa_seq_scaling/tp16_fwd_bs1_sl{seq}_split4/logs/simulation_log_gqa_tp16_fwd_bs1_sl{seq}_split4.txt",
+    "sim_config_pattern": "examples/run_scripts/analytical/congestion_aware/configs/gqa_seq_scaling/tp16_hbm4_80t_mesh2d_4x4_onering_qwen_gqa_tp16_fwd_bs1_sl{seq}_split4.json",
+    "trace_config_pattern": "examples/run_scripts/analytical/congestion_aware/trace_configs/gqa/tp16/qwen_gqa_tp16_fwd_tph4_tps4_bs1_sl{seq}.json",
+    "data": [
+      {
+        "seq": 1024,
+        "wall_ns": 3172,
+        "gpu_ns": 162,
+        "comm_ns": 3010,
+        "modules": {
+          "attn_comm": 1070.0,
+          "attn_comm_bytes": 16384.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1940.0,
+          "output_comm_bytes": 8192.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1940.0,
+          "output_ar_comm_bytes": 8192.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 2048,
+        "wall_ns": 3224,
+        "gpu_ns": 214,
+        "comm_ns": 3010,
+        "modules": {
+          "attn_comm": 1070.0,
+          "attn_comm_bytes": 32768.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1940.0,
+          "output_comm_bytes": 8192.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1940.0,
+          "output_ar_comm_bytes": 8192.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 4096,
+        "wall_ns": 3350,
+        "gpu_ns": 318,
+        "comm_ns": 3032,
+        "modules": {
+          "attn_comm": 1092.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1938.0,
+          "output_comm_bytes": 8192.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1938.0,
+          "output_ar_comm_bytes": 8192.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 8192,
+        "wall_ns": 3602,
+        "gpu_ns": 526,
+        "comm_ns": 3076,
+        "modules": {
+          "attn_comm": 1136.0,
+          "attn_comm_bytes": 131072.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1934.0,
+          "output_comm_bytes": 8192.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1934.0,
+          "output_ar_comm_bytes": 8192.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 16384,
+        "wall_ns": 4101,
+        "gpu_ns": 946,
+        "comm_ns": 3155,
+        "modules": {
+          "attn_comm": 1215.0,
+          "attn_comm_bytes": 262144.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1926.0,
+          "output_comm_bytes": 8192.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1926.0,
+          "output_ar_comm_bytes": 8192.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 32768,
+        "wall_ns": 5108,
+        "gpu_ns": 1786,
+        "comm_ns": 3322,
+        "modules": {
+          "attn_comm": 1382.0,
+          "attn_comm_bytes": 524288.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1910.0,
+          "output_comm_bytes": 8192.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1910.0,
+          "output_ar_comm_bytes": 8192.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 65536,
+        "wall_ns": 7096,
+        "gpu_ns": 3462,
+        "comm_ns": 3634,
+        "modules": {
+          "attn_comm": 1694.0,
+          "attn_comm_bytes": 1048576.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1880.0,
+          "output_comm_bytes": 8192.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1880.0,
+          "output_ar_comm_bytes": 8192.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 131072,
+        "wall_ns": 11223,
+        "gpu_ns": 6818,
+        "comm_ns": 4405,
+        "modules": {
+          "attn_comm": 2465.0,
+          "attn_comm_bytes": 2097152.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1830.0,
+          "output_comm_bytes": 8192.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1830.0,
+          "output_ar_comm_bytes": 8192.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 262144,
+        "wall_ns": 19562,
+        "gpu_ns": 13530,
+        "comm_ns": 6032,
+        "modules": {
+          "attn_comm": 4092.0,
+          "attn_comm_bytes": 4194304.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1740.0,
+          "output_comm_bytes": 8192.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1740.0,
+          "output_ar_comm_bytes": 8192.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 524288,
+        "wall_ns": 36123,
+        "gpu_ns": 26950,
+        "comm_ns": 9173,
+        "modules": {
+          "attn_comm": 7233.0,
+          "attn_comm_bytes": 8388608.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1740.0,
+          "output_comm_bytes": 8192.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1740.0,
+          "output_ar_comm_bytes": 8192.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 1048576,
+        "wall_ns": 69249,
+        "gpu_ns": 53794,
+        "comm_ns": 15455,
+        "modules": {
+          "attn_comm": 13515.0,
+          "attn_comm_bytes": 16777216.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 1740.0,
+          "output_comm_bytes": 8192.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 1740.0,
+          "output_ar_comm_bytes": 8192.0,
+          "output_ar_comm_group_id": 21
+        }
+      }
+    ]
+  }
+}

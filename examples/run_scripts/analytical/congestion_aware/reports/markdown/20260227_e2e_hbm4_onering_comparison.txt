@@ -1,0 +1,138 @@
+
+==========================================================================================
+  simulation_log_tp16_hbm4_torus_4x4_baseline_fwd_onering
+  Wall=58,949,859 cycles  GPU=40,159,950  Comm=18,868,963
+==========================================================================================
+
+  transformer.0  (total comm = 201.3 us, 7 ops)
+  Op                                  Type                  Size MB  Group      Latency
+  ----------------------------------- ------------------ ---------- ------ ------------
+  mha.x                               ALL_GATHER            16.0000     17     24.720 us
+  mha.x                               ALL_GATHER            16.0000     21     93.668 us
+  mha.attn_kernel.k1                  ALL_TO_ALL             2.0059     21     22.681 us
+  mha.attn_kernel.v1                  ALL_TO_ALL             2.0059     21     22.655 us
+  mha.attn                            ALL_REDUCE             0.1250     21     19.760 us
+  mha.o                               ALL_REDUCE             0.0625     17      7.760 us
+  mha.o                               ALL_GATHER             0.0625     21     10.017 us
+
+  transformer.1  (total comm = 200.6 us, 7 ops)
+  Op                                  Type                  Size MB  Group      Latency
+  ----------------------------------- ------------------ ---------- ------ ------------
+  mha.x                               ALL_GATHER            16.0000     17     24.420 us
+  mha.x                               ALL_GATHER            16.0000     21     93.180 us
+  mha.attn_kernel.k1                  ALL_TO_ALL             2.0059     21     22.655 us
+  mha.attn_kernel.v1                  ALL_TO_ALL             2.0059     21     22.655 us
+  mha.attn                            ALL_REDUCE             0.1250     21     19.783 us
+  mha.o                               ALL_REDUCE             0.0625     17      7.897 us
+  mha.o                               ALL_GATHER             0.0625     21     10.018 us
+
+  ... (92 more layers omitted, use --layers 0 to show all)
+
+  --- Per-layer comm summary (94 layers) ---
+  Avg per layer: 200.7 us
+  Total all layers: 18868.9 us
+
+  --- By comm type ---
+  Type                  Count     Total us     Avg us
+  ALL_GATHER              282      11998.5     42.548
+  ALL_TO_ALL              188       4259.2     22.655
+  ALL_REDUCE              188       2611.2     13.890
+
+  --- By comm group ---
+   Group  Count     Total us     Avg us
+      21    470      15819.8     33.659
+      17    188       3049.0     16.218
+
+==========================================================================================
+  simulation_log_tp16_hbm4_torus_4x4_decode_bypass_hmp_fwd_onering
+  Wall=58,849,858 cycles  GPU=41,790,568  Comm=17,217,398
+==========================================================================================
+
+  transformer.0  (total comm = 183.6 us, 6 ops)
+  Op                                  Type                  Size MB  Group      Latency
+  ----------------------------------- ------------------ ---------- ------ ------------
+  mha.x                               ALL_GATHER            16.0000     17     24.720 us
+  mha.x                               ALL_GATHER            16.0000     21     93.668 us
+  mha.attn_kernel.k1                  ALL_TO_ALL             4.0117     21     25.550 us
+  mha.attn_kernel.v1                  ALL_TO_ALL             4.0117     21     25.550 us
+  mha_res.x1                          REDUCE_SCATTER         0.2500     17      4.029 us
+  mha_res.x1                          REDUCE_SCATTER         0.2500     21     10.089 us
+
+  transformer.1  (total comm = 183.0 us, 6 ops)
+  Op                                  Type                  Size MB  Group      Latency
+  ----------------------------------- ------------------ ---------- ------ ------------
+  mha.x                               ALL_GATHER            16.0000     17     24.417 us
+  mha.x                               ALL_GATHER            16.0000     21     93.180 us
+  mha.attn_kernel.k1                  ALL_TO_ALL             4.0117     21     25.690 us
+  mha.attn_kernel.v1                  ALL_TO_ALL             4.0117     21     25.580 us
+  mha_res.x1                          REDUCE_SCATTER         0.2500     17      4.029 us
+  mha_res.x1                          REDUCE_SCATTER         0.2500     21     10.089 us
+
+  ... (92 more layers omitted, use --layers 0 to show all)
+
+  --- Per-layer comm summary (94 layers) ---
+  Avg per layer: 183.2 us
+  Total all layers: 17217.3 us
+
+  --- By comm type ---
+  Type                  Count     Total us     Avg us
+  ALL_GATHER              188      11060.8     58.834
+  ALL_TO_ALL              188       4813.7     25.605
+  REDUCE_SCATTER          188       1342.8      7.143
+
+  --- By comm group ---
+   Group  Count     Total us     Avg us
+      21    376      14521.6     38.621
+      17    188       2695.6     14.339
+
+==========================================================================================
+  simulation_log_tp16_hbm4_torus_4x4_decode_bypass_onering
+  Wall=59,083,090 cycles  GPU=45,573,410  Comm=13,509,680
+==========================================================================================
+
+  transformer.0  (total comm = 143.7 us, 2 ops)
+  Op                                  Type                  Size MB  Group      Latency
+  ----------------------------------- ------------------ ---------- ------ ------------
+  mha.x                               ALL_GATHER            16.0000     17    117.240 us
+  mha.o                               ALL_REDUCE             0.2500     17     26.480 us
+
+  transformer.1  (total comm = 143.7 us, 2 ops)
+  Op                                  Type                  Size MB  Group      Latency
+  ----------------------------------- ------------------ ---------- ------ ------------
+  mha.x                               ALL_GATHER            16.0000     17    117.240 us
+  mha.o                               ALL_REDUCE             0.2500     17     26.480 us
+
+  ... (92 more layers omitted, use --layers 0 to show all)
+
+  --- Per-layer comm summary (94 layers) ---
+  Avg per layer: 143.7 us
+  Total all layers: 13509.7 us
+
+  --- By comm type ---
+  Type                  Count     Total us     Avg us
+  ALL_GATHER               94      11020.6    117.240
+  ALL_REDUCE               94       2489.1     26.480
+
+  --- By comm group ---
+   Group  Count     Total us     Avg us
+      17    188      13509.7     71.860
+
+==========================================================================================
+  COMPARISON (layer 0, NPU 0)
+==========================================================================================
+  Op                                    simulation_log_tp16_   simulation_log_tp16_   simulation_log_tp16_
+  ----------------------------------- ---------------------- ---------------------- ----------------------
+  mha.x                               AL g17 24.7us; AL g21 93.7us AL g17 24.7us; AL g21 93.7us         AL g17 117.2us
+  mha.attn_kernel.k1                           AL g21 22.7us          AL g21 25.6us                    ---
+  mha.attn_kernel.v1                           AL g21 22.7us          AL g21 25.6us                    ---
+  mha.attn                                     AL g21 19.8us                    ---                    ---
+  mha.o                               AL g17 7.8us; AL g21 10.0us                    ---          AL g17 26.5us
+  mha_res.x1                                             --- RE g17 4.0us; RE g21 10.1us                    ---
+  ----------------------------------- ---------------------- ---------------------- ----------------------
+  TOTAL per layer                                   201.3 us               183.6 us               143.7 us
+
+  Metric                                simulation_log_tp16_   simulation_log_tp16_   simulation_log_tp16_
+  ----------------------------------- ---------------------- ---------------------- ----------------------
+  Wall time (cycles)                              58,949,859             58,849,858             59,083,090
+  GPU time (cycles)                               40,159,950             41,790,568             45,573,410
+  Comm time (cycles)                              18,868,963             17,217,398             13,509,680

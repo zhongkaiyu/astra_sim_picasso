@@ -3,5 +3,5 @@ npus_count: [ 16 ]
 width: 4
 height: 4
 bandwidth: [ 100.0 ]  # GB/s
-latency: [ 1000.0 ]  # ns
+latency: [ 1 ]
 

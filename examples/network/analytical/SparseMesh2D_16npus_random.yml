@@ -25,7 +25,7 @@ topology: [ Mesh2D ]  # Will be auto-converted to SparseMesh2D when excluded is 
 
 npus_count: [ 16 ]
 bandwidth: [ 100 ]
-latency: [ 1000 ]
+latency: [ 1 ]
 
 # Grid dimensions
 width: 6

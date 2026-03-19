@@ -1,0 +1,256 @@
+
+==========================================================================================
+  simulation_log_tp16_hbm4_real_mesh2d_4x4_baseline_fwd_onering
+  Wall=48,168,034 cycles  GPU=40,159,950  Comm=8,087,138
+==========================================================================================
+
+  transformer.0  (total comm = 86.6 us, 7 ops)
+  Op                                  Type                  Size MB  Group      Latency
+  ----------------------------------- ------------------ ---------- ------ ------------
+  mha.x                               ALL_GATHER            16.0000     17     24.720 us
+  mha.x                               ALL_GATHER            16.0000     21     24.720 us
+  mha.attn_kernel.k1                  ALL_TO_ALL             2.0059     21      8.855 us
+  mha.attn_kernel.v1                  ALL_TO_ALL             2.0059     21      8.855 us
+  mha.attn                            ALL_REDUCE             0.1250     21      7.760 us
+  mha.o                               ALL_REDUCE             0.0625     17      7.760 us
+  mha.o                               ALL_GATHER             0.0625     21      3.957 us
+
+  ... (93 more layers omitted, use --layers 0 to show all)
+
+  --- Per-layer comm summary (94 layers) ---
+  Avg per layer: 86.0 us
+  Total all layers: 8087.1 us
+
+  --- By comm type ---
+  Type                  Count     Total us     Avg us
+  ALL_GATHER              282       4963.5     17.601
+  ALL_TO_ALL              188       1664.7      8.855
+  ALL_REDUCE              188       1458.9      7.760
+
+  --- By comm group ---
+   Group  Count     Total us     Avg us
+      21    470       5061.9     10.770
+      17    188       3025.2     16.092
+
+==========================================================================================
+  simulation_log_tp16_hbm4_real_mesh2d_4x4_hmp_fwd_onering
+  Wall=48,851,514 cycles  GPU=41,790,568  Comm=7,219,054
+==========================================================================================
+
+  transformer.0  (total comm = 77.4 us, 6 ops)
+  Op                                  Type                  Size MB  Group      Latency
+  ----------------------------------- ------------------ ---------- ------ ------------
+  mha.x                               ALL_GATHER            16.0000     17     24.720 us
+  mha.x                               ALL_GATHER            16.0000     21     24.720 us
+  mha.attn_kernel.k1                  ALL_TO_ALL             4.0117     21      9.950 us
+  mha.attn_kernel.v1                  ALL_TO_ALL             4.0117     21      9.950 us
+  mha_res.x1                          REDUCE_SCATTER         0.2500     17      4.029 us
+  mha_res.x1                          REDUCE_SCATTER         0.2500     21      4.029 us
+
+  ... (93 more layers omitted, use --layers 0 to show all)
+
+  --- Per-layer comm summary (94 layers) ---
+  Avg per layer: 76.8 us
+  Total all layers: 7219.1 us
+
+  --- By comm type ---
+  Type                  Count     Total us     Avg us
+  ALL_GATHER              188       4591.0     24.420
+  ALL_TO_ALL              188       1870.6      9.950
+  REDUCE_SCATTER          188        757.5      4.029
+
+  --- By comm group ---
+   Group  Count     Total us     Avg us
+      21    376       4544.8     12.087
+      17    188       2674.2     14.225
+
+==========================================================================================
+  simulation_log_tp16_hbm4_real_mesh2d_4x4_tp16_fwd_onering
+  Wall=62,721,806 cycles  GPU=45,573,410  Comm=17,148,396
+==========================================================================================
+
+  transformer.0  (total comm = 183.3 us, 2 ops)
+  Op                                  Type                  Size MB  Group      Latency
+  ----------------------------------- ------------------ ---------- ------ ------------
+  mha.x                               ALL_GATHER            16.0000     17    135.790 us
+  mha.o                               ALL_REDUCE             0.2500     17     47.480 us
+
+  ... (93 more layers omitted, use --layers 0 to show all)
+
+  --- Per-layer comm summary (94 layers) ---
+  Avg per layer: 182.4 us
+  Total all layers: 17148.1 us
+
+  --- By comm type ---
+  Type                  Count     Total us     Avg us
+  ALL_GATHER               94      12685.0    134.947
+  ALL_REDUCE               94       4463.1     47.480
+
+  --- By comm group ---
+   Group  Count     Total us     Avg us
+      17    188      17148.1     91.214
+
+==========================================================================================
+  COMPARISON (layer 0, NPU 0)
+==========================================================================================
+  Op                                    simulation_log_tp16_   simulation_log_tp16_   simulation_log_tp16_
+  ----------------------------------- ---------------------- ---------------------- ----------------------
+  mha.x                               AL g17 24.7us; AL g21 24.7us AL g17 24.7us; AL g21 24.7us         AL g17 135.8us
+  mha.attn_kernel.k1                            AL g21 8.9us           AL g21 9.9us                    ---
+  mha.attn_kernel.v1                            AL g21 8.9us           AL g21 9.9us                    ---
+  mha.attn                                      AL g21 7.8us                    ---                    ---
+  mha.o                               AL g17 7.8us; AL g21 4.0us                    ---          AL g17 47.5us
+  mha_res.x1                                             --- RE g17 4.0us; RE g21 4.0us                    ---
+  ----------------------------------- ---------------------- ---------------------- ----------------------
+  TOTAL per layer                                    86.6 us                77.4 us               183.3 us
+
+  Metric                                simulation_log_tp16_   simulation_log_tp16_   simulation_log_tp16_
+  ----------------------------------- ---------------------- ---------------------- ----------------------
+  Wall time (cycles)                              48,168,034             48,851,514             62,721,806
+  GPU time (cycles)                               40,159,950             41,790,568             45,573,410
+  Comm time (cycles)                               8,087,138              7,219,054             17,148,396
+
+====================================================================================================
+  MODULE BREAKDOWN (NPU 0)
+====================================================================================================
+
+  --- simulation_log_tp16_hbm4_real_mesh2d_4x4_baseline_fwd_onering (94 layers) ---
+
+  [Layer 0 Breakdown]
+  Module                      Time(us) % of Layer   Category
+  ------------------------- ---------- ---------- ----------
+  QKV Projection                20.131      15.1%       COMP
+  Attn Kernel                    1.734       1.3%       COMP
+  Output Projection              4.473       3.4%       COMP
+  Norm + Residual               20.130      15.1%       COMP
+  Weight AllGather              49.440      37.1%       COMM
+  Attn K/V/Reduce               25.470      19.1%       COMM
+  Output AR/RS/AG               11.717       8.8%       COMM
+  ------------------------- ---------- ---------- ----------
+  Total Compute                 46.468      34.9%       COMP
+  Total Communication           86.627      65.1%       COMM
+  Layer Total                  133.095     100.0%
+
+  [High-Level Split]
+  Component              Time(us) % of Layer
+  -------------------- ---------- ----------
+  MHA (comp+comm)         112.965      84.9%
+  FFN (comp+comm)           0.000       0.0%
+  Norm/Residual            20.130      15.1%
+  ** NOTE: No FFN in this workload (decode_bypass model) **
+
+  [All 94 Layers Aggregate]
+  Module                        Time(us) % of Total    Avg/Layer
+  ------------------------- ------------ ---------- ------------
+  QKV Projection                  1892.3      15.2%     20.131 us
+  Attn Kernel                      163.0       1.3%      1.734 us
+  Output Projection                420.5       3.4%      4.473 us
+  Norm + Residual                 1892.2      15.2%     20.130 us
+  Weight AllGather                4591.6      36.9%     48.846 us
+  Attn K/V/Reduce                 2394.2      19.2%     25.470 us
+  Output AR/RS/AG                 1101.4       8.8%     11.717 us
+  ------------------------- ------------ ---------- ------------
+  Total Compute                   4368.0      35.1%
+  Total Communication             8087.1      64.9%
+  Grand Total                    12455.1     100.0%
+
+  --- simulation_log_tp16_hbm4_real_mesh2d_4x4_hmp_fwd_onering (94 layers) ---
+
+  [Layer 0 Breakdown]
+  Module                      Time(us) % of Layer   Category
+  ------------------------- ---------- ---------- ----------
+  QKV Projection                22.368      15.8%       COMP
+  Attn Kernel                    3.416       2.4%       COMP
+  Output Projection             17.895      12.7%       COMP
+  Norm + Residual               20.130      14.3%       COMP
+  Weight AllGather              57.498      40.7%       COMM
+  Attn K/V/Reduce               19.900      14.1%       COMM
+  ------------------------- ---------- ---------- ----------
+  Total Compute                 63.809      45.2%       COMP
+  Total Communication           77.398      54.8%       COMM
+  Layer Total                  141.207     100.0%
+
+  [High-Level Split]
+  Component              Time(us) % of Layer
+  -------------------- ---------- ----------
+  MHA (comp+comm)         121.077      85.7%
+  FFN (comp+comm)           0.000       0.0%
+  Norm/Residual            20.130      14.3%
+  ** NOTE: No FFN in this workload (decode_bypass model) **
+
+  [All 94 Layers Aggregate]
+  Module                        Time(us) % of Total    Avg/Layer
+  ------------------------- ------------ ---------- ------------
+  QKV Projection                  2102.6      15.9%     22.368 us
+  Attn Kernel                      321.1       2.4%      3.416 us
+  Output Projection               1682.1      12.7%     17.895 us
+  Norm + Residual                 1892.2      14.3%     20.130 us
+  Weight AllGather                5348.5      40.5%     56.898 us
+  Attn K/V/Reduce                 1870.6      14.2%     19.900 us
+  ------------------------- ------------ ---------- ------------
+  Total Compute                   5998.0      45.4%
+  Total Communication             7219.1      54.6%
+  Grand Total                    13217.1     100.0%
+
+  --- simulation_log_tp16_hbm4_real_mesh2d_4x4_tp16_fwd_onering (94 layers) ---
+
+  [Layer 0 Breakdown]
+  Module                      Time(us) % of Layer   Category
+  ------------------------- ---------- ---------- ----------
+  QKV Projection                22.368       7.8%       COMP
+  Attn Kernel                   57.041      19.9%       COMP
+  Output Projection              4.473       1.6%       COMP
+  Norm + Residual               20.130       7.0%       COMP
+  Weight AllGather             135.790      47.3%       COMM
+  Output AR/RS/AG               47.480      16.5%       COMM
+  ------------------------- ---------- ---------- ----------
+  Total Compute                104.012      36.2%       COMP
+  Total Communication          183.270      63.8%       COMM
+  Layer Total                  287.282     100.0%
+
+  [High-Level Split]
+  Component              Time(us) % of Layer
+  -------------------- ---------- ----------
+  MHA (comp+comm)         267.152      93.0%
+  FFN (comp+comm)           0.000       0.0%
+  Norm/Residual            20.130       7.0%
+  ** NOTE: No FFN in this workload (decode_bypass model) **
+
+  [All 94 Layers Aggregate]
+  Module                        Time(us) % of Total    Avg/Layer
+  ------------------------- ------------ ---------- ------------
+  QKV Projection                  2102.6       7.8%     22.368 us
+  Attn Kernel                     5361.9      19.9%     57.041 us
+  Output Projection                420.5       1.6%      4.473 us
+  Norm + Residual                 1892.2       7.0%     20.130 us
+  Weight AllGather               12685.0      47.1%    134.947 us
+  Output AR/RS/AG                 4463.1      16.6%     47.480 us
+  ------------------------- ------------ ---------- ------------
+  Total Compute                   9777.1      36.3%
+  Total Communication            17148.1      63.7%
+  Grand Total                    26925.3     100.0%
+
+====================================================================================================
+  MODULE COMPARISON (Layer 0)
+====================================================================================================
+  Module                      simulation_log_tp1   simulation_log_tp1   simulation_log_tp1
+  ------------------------- -------------------- -------------------- --------------------
+  QKV Projection                         20.1 us              22.4 us              22.4 us
+  Attn Kernel                             1.7 us               3.4 us              57.0 us
+  Output Projection                       4.5 us              17.9 us               4.5 us
+  Norm + Residual                        20.1 us              20.1 us              20.1 us
+  Weight AllGather                       49.4 us              57.5 us             135.8 us
+  Attn K/V/Reduce                        25.5 us              19.9 us                  ---
+  Output AR/RS/AG                        11.7 us                  ---              47.5 us
+  ------------------------- -------------------- -------------------- --------------------
+  Compute Total                          46.5 us              63.8 us             104.0 us
+  Comm Total                             86.6 us              77.4 us             183.3 us
+  Layer Total                           133.1 us             141.2 us             287.3 us
+
+  Global Metric               simulation_log_tp1   simulation_log_tp1   simulation_log_tp1
+  ------------------------- -------------------- -------------------- --------------------
+  Wall time (ns)                      48,168,034           48,851,514           62,721,806
+  GPU time (ns)                       40,159,950           41,790,568           45,573,410
+  Comm time (ns)                       8,087,138            7,219,054           17,148,396
+  Compute %                                83.4%                85.5%                72.7%
+  Comm %                                   16.8%                14.8%                27.3%

@@ -1,7 +1,7 @@
 topology: [ FullyConnected ]
 npus_count: [ 16 ]
 bandwidth: [ 400.0 ]  # GB/s (NVLink 4.0: ~400 GB/s per GPU)
-latency: [ 1.0 ]    # ns (intra-node latency ~900ns)
+latency: [ 1 ]
 
 # ============================================================================
 # All-to-All Network Topology (16 H100 GPUs - Fully Connected)

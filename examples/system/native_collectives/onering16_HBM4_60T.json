@@ -1,0 +1,25 @@
+{
+    "scheduling-policy": "LIFO",
+    "endpoint-delay": 10,
+    "active-chunks-per-dimension": 2,
+    "preferred-dataset-splits": 16,
+    "all-reduce-implementation": [
+        "oneRing"
+    ],
+    "all-gather-implementation": [
+        "oneRing"
+    ],
+    "reduce-scatter-implementation": [
+        "oneRing"
+    ],
+    "all-to-all-implementation": [
+        "oneRing"
+    ],
+    "collective-optimization": "localBWAware",
+    "local-mem-bw": 2500,
+    "//local-mem-bw-note": "Local memory bandwidth in GB/s (HBM4 per-NPU: 2500 GB/s)",
+    "boost-mode": 0,
+    "roofline-enabled": 1,
+    "peak-perf": 60,
+    "//peak-perf-note": "Peak compute in TFLOPS per NPU (doubled from 30 for testing)"
+}

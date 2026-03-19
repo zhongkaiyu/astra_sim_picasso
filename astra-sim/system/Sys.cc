@@ -469,11 +469,11 @@ bool Sys::initialize_sys(string name) {
     }
     if (j.contains("peak-perf")) {
         peak_perf = j["peak-perf"];
-        peak_perf = peak_perf * 1000000000000;  // TFLOPS
+        peak_perf = peak_perf * 1e12;  // TFLOPS -> FLOPS
     }
     if (j.contains("local-mem-bw")) {
         local_mem_bw = j["local-mem-bw"];
-        local_mem_bw = local_mem_bw * 1000000000;  // GB/sec
+        local_mem_bw = local_mem_bw * 1e9;  // GB/s -> B/s (= elements/s at FP8)
     }
     if (j.contains("roofline-enabled")) {
         if (j["roofline-enabled"] != 0) {

@@ -1,0 +1,185 @@
+---
+description: Mesh2D 拓扑分析关键发现：hop 瓶颈、分组优化、E2E 加速比衰减
+globs: 
+alwaysApply: true
+---
+
+# Mesh2D 拓扑分析关键发现
+
+## 1. 通信组与物理拓扑映射 (tp_h=4, tp_s=4, 16 GPU)
+
+### 当前分组方案（行/列分割）
+
+```
+Mesh2D 4×4 布局:
+       col0   col1   col2   col3
+row0:  [0] ---[1] ---[2] ---[3]     ← g17 (tp_h)
+        |      |      |      |
+row1:  [4] ---[5] ---[6] ---[7]     ← g18
+        |      |      |      |
+row2:  [8] ---[9] ---[10]---[11]    ← g19
+        |      |      |      |
+row3:  [12]---[13]---[14]---[15]    ← g20
+        ↑      ↑      ↑      ↑
+       g21    g22    g23    g24 (tp_s)
+```
+
+### Comm Group JSON 定义
+
+```json
+{"17": [0,1,2,3], "18": [4,5,6,7], "19": [8,9,10,11], "20": [12,13,14,15],
+ "21": [0,4,8,12], "22": [1,5,9,13], "23": [2,6,10,14], "24": [3,7,11,15]}
+```
+
+数组顺序决定 OneRing 的环路径。
+
+### g17 和 g21 执行的操作
+
+| Group | 维度 | Baseline 操作 | HMP 操作 |
+|---|---|---|---|
+| g17 (tp_h) | 行 | AG(权重16MB) + AR(输出0.0625MB) | AG(权重16MB) + RS(残差0.25MB) |
+| g21 (tp_s) | 列 | AG(权重16MB) + A2A(KV 2MB×2) + AR(attn 0.125MB) + AG(输出0.0625MB) | AG(权重16MB) + A2A(KV 4MB×2) + RS(残差0.25MB) |
+
+## 2. OneRing 3-Hop 回程瓶颈（已由 Log 验证）
+
+### g17=[0,1,2,3] ring: 0→1→2→3→0
+- 0→1, 1→2, 2→3: 各 1 hop (100 ns)
+- **3→0: 3 hops (300 ns)** — 路径: (3,0)→LEFT→(2,0)→LEFT→(1,0)→LEFT→(0,0)
+
+### g21=[0,4,8,12] ring: 0→4→8→12→0
+- 0→4, 4→8, 8→12: 各 1 hop (100 ns)
+- **12→0: 3 hops (300 ns)** — 路径: (0,3)→UP→(0,2)→UP→(0,1)→UP→(0,0)
+
+**g17 和 g21 都有完全相同的 3 hop 回程瓶颈。**
+
+### TP16 g17=[0..15] ring 的跨行瓶颈
+- 3→4: (3,0)→(0,1) = **4 hops** (X=3 LEFT + Y=1 DOWN)
+- 7→8: (3,1)→(0,2) = **4 hops**
+- 11→12: (3,2)→(0,3) = **4 hops**
+
+## 3. 2×2 Block 分组优化方案（已实现并验证）
+
+### 实现方式
+
+通过 `main.py --rank_remap block2x2` 提供自定义 `readable_rank_map_number_rank`。
+不修改计算图/trace 逻辑，仅重映射逻辑 rank → 物理 GPU。
+Remap 数组: `[0, 2, 10, 8, 1, 3, 11, 9, 5, 7, 15, 13, 4, 6, 14, 12]`
+
+由于框架枚举顺序 tp_h 变化最快，实际映射结果为：
+- **g17-g20 (tp_h) → 棋盘布局**，max 2 hop
+- **g21-g24 (tp_s) → 2×2 block**，max 1 hop（对 g21 更优，因为 g21 通信量更大）
+
+### block2x2 Comm Group JSON
+
+```json
+{"17": [0,2,10,8], "18": [1,3,11,9], "19": [5,7,15,13], "20": [4,6,14,12],
+ "21": [0,1,5,4], "22": [2,3,7,6], "23": [10,11,15,14], "24": [8,9,13,12]}
+```
+
+### g21=[0,1,5,4] 2×2 block（1 hop）
+
+```
+[0]→→[1]
+ ↑    ↓
+[4]←←[5]
+```
+所有步骤 1 hop ✓
+
+### g17=[0,2,10,8] 棋盘（2 hop）
+
+(0,0)→(2,0)→(2,2)→(0,2)→(0,0)，所有步骤 2 hop ✓
+
+### Hop 分布验证（GQA baseline log）
+
+| Hop 数 | 原版（行/列） | block2x2 |
+|---|---|---|
+| 1 hop | 5,184 | 5,376 |
+| 2 hop | 0 | 1,536 |
+| 3 hop | 1,728 | **0** |
+
+**3-hop 路由完全消除。**
+
+### 仿真结果
+
+#### GQA-only 单层（无拥塞） — block2x2 明显更优
+
+| 配置 | 原版 wall | block2x2 wall | comm 改善 |
+|---|---|---|---|
+| Baseline | 62,690 ns | **55,958 ns** (-10.7%) | comm **-18.1%** |
+| HMP | 56,635 ns | **51,115 ns** (-9.7%) | comm **-31.2%** |
+
+#### E2E 94 层（拥塞感知） — block2x2 反而更差
+
+| 配置 | 原版 wall | block2x2 wall | comm 变化 |
+|---|---|---|---|
+| Baseline | 48.17M ns | **49.56M ns** (+2.9%) | comm **+17.2%** |
+| HMP | 48.85M ns | **50.29M ns** (+3.0%) | comm **+20.0%** |
+
+### 拥塞原因分析
+
+block2x2 将 g17 从行布局改为棋盘布局：
+- 原版 g17 行布局: 3步1-hop + 1步3-hop = 总链路占用6，**不同组在不同行，无交叉**
+- block2x2 棋盘: 4步均2-hop = 总链路占用8 (+33%)，**不同组的2-hop路径在中间节点交叉**
+
+虽然 max hop 从 3→2 改善了单次通信瓶颈，但：
+1. 平均 hop 从 1.5 增加到 2.0 (+33%)
+2. 不同 g17 组共享中间链路，94层同时通信时产生严重链路竞争
+3. 总链路占用虽然相同 (g17: 32+g21: 16 = 48 vs 原版 24+24 = 48)，但分布不均
+
+**结论**: 2×2 block 在无拥塞场景下有效（GQA -31% comm），但在密集多层场景下因链路竞争导致性能下降（+20% comm）。优化 Mesh2D 通信需同时考虑 max hop 和链路竞争。
+
+## 4. E2E 加速比衰减 — Amdahl 定律
+
+### 关键数据（Mesh2D 4×4, HBM4, 94层）
+
+```
+Wall = 固定计算 + 可变计算 + 通信
+
+TP16:     35,796 us (57.1%) + 9,777 us (15.6%) + 17,148 us (27.3%) = 62,721 us
+Baseline: 35,792 us (74.3%) + 4,368 us (9.1%)  + 8,087 us (16.8%) = 48,247 us
+HMP:      35,793 us (73.3%) + 5,998 us (12.3%) + 7,219 us (14.8%) = 49,010 us
+```
+
+- **~35.8 ms 固定计算** 三者完全一致，不随并行策略改变
+- GQA 可变部分加速比: (9,777+17,148)/(4,368+8,087) = **2.16×**
+- E2E 加速比: 62,721/48,247 = **1.30×**
+- Amdahl: 1/(0.571 + 0.429/2.16) = **1.30×** ✓
+
+### 在 Mesh2D vs Torus2D 对比中
+
+| 策略 | Mesh2D Wall | Torus2D Wall | 优势方 |
+|---|---|---|---|
+| Baseline | 48.17M ns | 58.95M ns | **Mesh2D** (1.22×) |
+| HMP | 48.85M ns | 58.85M ns | **Mesh2D** (1.20×) |
+| TP16 | 62.72M ns | 59.08M ns | **Torus2D** (1.06×) |
+
+多级并行（Baseline/HMP）适合 Mesh2D；单级 TP16 适合 Torus（环回链路缩短 ring 路径）。
+
+## 5. Log 文件位置参考
+
+| 配置 | Log 路径 |
+|---|---|
+| Mesh2D Baseline GQA | `output_qwen/gqa/tp16_hbm4_real_mesh2d_4x4_gqa_baseline_fwd_onering/logs/` |
+| Mesh2D HMP GQA | `output_qwen/gqa/tp16_hbm4_real_mesh2d_4x4_gqa_hmp_fwd_onering/logs/` |
+| Mesh2D TP16 GQA | `output_qwen/gqa/tp16_hbm4_real_mesh2d_4x4_gqa_tp16_fwd_onering/logs/` |
+| Ring Baseline GQA | `output_qwen/gqa/tp16_hbm4_mesh2d_4x4_gqa_baseline_fwd_onering/logs/` |
+| block2x2 Baseline GQA | `output_qwen/gqa/tp16_hbm4_real_mesh2d_4x4_gqa_baseline_fwd_onering_block2x2/logs/` |
+| block2x2 HMP GQA | `output_qwen/gqa/tp16_hbm4_real_mesh2d_4x4_gqa_hmp_fwd_onering_block2x2/logs/` |
+| block2x2 Baseline E2E | `output_qwen/hmp/tp16_hbm4_real_mesh2d_4x4_baseline_fwd_onering_block2x2/logs/` |
+| block2x2 HMP E2E | `output_qwen/hmp/tp16_hbm4_real_mesh2d_4x4_hmp_fwd_onering_block2x2/logs/` |
+
+## 6. 代码变更记录
+
+### `main.py` 新增
+
+- `--rank_remap` 参数（可选值: `block2x2`）
+- `_build_rank_remap()` 辅助函数
+- 在 `qwen_gqa_*_fwd`、`qwen_decode_bypass_hmp_fwd`、`qwen_decode_bypass_baseline_fwd` 三类 model type 中
+  将 `_build_rank_remap()` 返回值传给 `BundledConvertChakra.apply(readable_rank_map_number_rank=...)`
+
+### 新增配置文件
+
+- `trace_configs/qwen_gqa_*_block2x2.json` — GQA trace 配置
+- `trace_configs/qwen_decode_bypass_*_block2x2.json` — E2E trace 配置
+- `configs/tp16_gqa/*block2x2*.json` — GQA 仿真配置
+- `configs/tp16_e2e/*block2x2*.json` — E2E 仿真配置

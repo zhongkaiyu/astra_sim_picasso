@@ -1,7 +1,7 @@
 topology: [ Switch ]
 npus_count: [ 8 ]
 bandwidth: [ 300.0 ]  # GB/s (NVLink 3.0: ~300 GB/s per GPU to NVSwitch)
-latency: [ 1200.0 ]   # ns (intra-node latency ~1.2us)
+latency: [ 1 ]
 
 # ============================================================================
 # Megatron-style Single Node with NVSwitch (DGX A100 Configuration)

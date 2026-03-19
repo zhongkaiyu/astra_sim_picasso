@@ -1,0 +1,92 @@
+
+==========================================================================================
+  simulation_log_tp16_hbm4_mesh2d_4x4_gqa_baseline_fwd_onering
+  Wall=108,350 cycles  GPU=26,344  Comm=82,847
+==========================================================================================
+
+  transformer.0  (total comm = 82.8 us, 5 ops)
+  Op                                  Type                  Size MB  Group      Latency
+  ----------------------------------- ------------------ ---------- ------ ------------
+  mha.attn_kernel.k1                  ALL_TO_ALL             2.0059     21     22.655 us
+  mha.attn_kernel.v1                  ALL_TO_ALL             2.0059     21     22.655 us
+  mha.attn                            ALL_REDUCE             0.1250     21     19.760 us
+  mha.o                               ALL_REDUCE             0.0625     17      7.760 us
+  mha.o                               ALL_GATHER             0.0625     21     10.017 us
+
+  --- Per-layer comm summary (1 layers) ---
+  Avg per layer: 82.8 us
+  Total all layers: 82.8 us
+
+  --- By comm type ---
+  Type                  Count     Total us     Avg us
+  ALL_TO_ALL                2         45.3     22.655
+  ALL_REDUCE                2         27.5     13.760
+  ALL_GATHER                1         10.0     10.017
+
+  --- By comm group ---
+   Group  Count     Total us     Avg us
+      21      4         75.1     18.772
+      17      1          7.8      7.760
+
+==========================================================================================
+  simulation_log_tp16_hbm4_mesh2d_4x4_gqa_hmp_fwd_onering
+  Wall=84,235 cycles  GPU=39,766  Comm=45,310
+==========================================================================================
+
+  transformer.0  (total comm = 45.3 us, 2 ops)
+  Op                                  Type                  Size MB  Group      Latency
+  ----------------------------------- ------------------ ---------- ------ ------------
+  mha.attn_kernel.k1                  ALL_TO_ALL             2.0059     21     22.655 us
+  mha.attn_kernel.v1                  ALL_TO_ALL             2.0059     21     22.655 us
+
+  --- Per-layer comm summary (1 layers) ---
+  Avg per layer: 45.3 us
+  Total all layers: 45.3 us
+
+  --- By comm type ---
+  Type                  Count     Total us     Avg us
+  ALL_TO_ALL                2         45.3     22.655
+
+  --- By comm group ---
+   Group  Count     Total us     Avg us
+      21      2         45.3     22.655
+
+==========================================================================================
+  simulation_log_tp16_hbm4_mesh2d_4x4_gqa_tp16_fwd_onering
+  Wall=110,414 cycles  GPU=83,934  Comm=26,480
+==========================================================================================
+
+  transformer.0  (total comm = 26.5 us, 1 ops)
+  Op                                  Type                  Size MB  Group      Latency
+  ----------------------------------- ------------------ ---------- ------ ------------
+  mha.o                               ALL_REDUCE             0.2500     17     26.480 us
+
+  --- Per-layer comm summary (1 layers) ---
+  Avg per layer: 26.5 us
+  Total all layers: 26.5 us
+
+  --- By comm type ---
+  Type                  Count     Total us     Avg us
+  ALL_REDUCE                1         26.5     26.480
+
+  --- By comm group ---
+   Group  Count     Total us     Avg us
+      17      1         26.5     26.480
+
+==========================================================================================
+  COMPARISON (layer 0, NPU 0)
+==========================================================================================
+  Op                                    simulation_log_tp16_   simulation_log_tp16_   simulation_log_tp16_
+  ----------------------------------- ---------------------- ---------------------- ----------------------
+  mha.attn_kernel.k1                           AL g21 22.7us          AL g21 22.7us                    ---
+  mha.attn_kernel.v1                           AL g21 22.7us          AL g21 22.7us                    ---
+  mha.attn                                     AL g21 19.8us                    ---                    ---
+  mha.o                               AL g17 7.8us; AL g21 10.0us                    ---          AL g17 26.5us
+  ----------------------------------- ---------------------- ---------------------- ----------------------
+  TOTAL per layer                                    82.8 us                45.3 us                26.5 us
+
+  Metric                                simulation_log_tp16_   simulation_log_tp16_   simulation_log_tp16_
+  ----------------------------------- ---------------------- ---------------------- ----------------------
+  Wall time (cycles)                                 108,350                 84,235                110,414
+  GPU time (cycles)                                   26,344                 39,766                 83,934
+  Comm time (cycles)                                  82,847                 45,310                 26,480

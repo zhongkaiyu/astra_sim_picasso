@@ -3,7 +3,7 @@ npus_count: [ 24 ]
 width: 6
 height: 4
 bandwidth: [ 100.0 ]  # GB/s
-latency: [ 1000.0 ]   # ns
+latency: [ 1 ]
 
 # This creates a 6x4 mesh topology (24 NPUs):
 #

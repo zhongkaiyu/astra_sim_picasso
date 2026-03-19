@@ -1,0 +1,14 @@
+topology: [ FullyConnected ]
+npus_count: [ 16 ]
+bandwidth: [ 2000.0 ]  # GB/s (D2D: 2 TB/s)
+latency: [ 100 ]  # ns (D2D latency)
+
+# FullyConnected Topology (16 GPUs) - HBM4
+#
+# All 16 GPUs are fully connected (ideal ring: all pairs 1 hop)
+#
+# HBM4 Specifications:
+# - D2D bandwidth: 2 TB/s (2000 GB/s) per link
+# - D2D latency: 100 ns per hop
+# - Local memory bandwidth: 2.5 TB/s (2500 GB/s)
+# - Compute: 30 TFLOPS

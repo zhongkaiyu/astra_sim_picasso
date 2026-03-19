@@ -267,6 +267,7 @@ void Workload::issue_comp(shared_ptr<Chakra::FeederV3::ETFeederNode> node) {
 
     double num_ops = static_cast<double>(node->num_ops<uint64_t>());
     double tensor_size = static_cast<double>(node->tensor_size<uint64_t>());
+    double flops = 2.0 * num_ops;  // trace stores MACs; 1 MAC = 2 FLOPs
 
     // if tensor_size is 0 during roofline mode, this is an invalid node
     if (tensor_size == 0) {
@@ -274,13 +275,13 @@ void Workload::issue_comp(shared_ptr<Chakra::FeederV3::ETFeederNode> node) {
         return;
     }
 
-    double operational_intensity = num_ops / tensor_size;
+    double operational_intensity = flops / tensor_size;
     double perf = sys->roofline->get_perf(operational_intensity);
-    double elapsed_time = static_cast<double>(node->num_ops()) / perf;  // sec
+    double elapsed_time = flops / perf;  // sec (peak-perf is TFLOPS in JSON)
     uint64_t runtime = static_cast<uint64_t>(elapsed_time * 1e9);  // sec -> ns
     
     // Print computation operation details
-    double num_ops_gflops = num_ops / (1024.0 * 1024.0 * 1024.0);
+    double flops_gflops = flops / (1024.0 * 1024.0 * 1024.0);
     double tensor_size_mb = tensor_size / (1024.0 * 1024.0);
     std::string op_type_str = "COMP_NODE";
     if (node->has_attr("op_type")) {
@@ -288,7 +289,7 @@ void Workload::issue_comp(shared_ptr<Chakra::FeederV3::ETFeederNode> node) {
     }
     std::cout << "[SIM_COMP] NPU=" << sys->id << " node_id=" << node->id() 
               << " node_name=" << node->name() << " op_type=" << op_type_str
-              << " ops=" << num_ops_gflops << " GFLOPs (" << num_ops << " ops)"
+              << " ops=" << flops_gflops << " GFLOPs (" << flops << " flops)"
               << " size=" << tensor_size_mb << " MB (" << tensor_size << " bytes)"
               << " runtime=" << (runtime / 1000.0) << " us (" << runtime << " ns)" << std::endl;
     
@@ -308,10 +309,10 @@ void Workload::issue_comp(shared_ptr<Chakra::FeederV3::ETFeederNode> node) {
     LoggerFactory::get_logger("workload")
         ->debug("operation_intensity={}, perf={}, elapsed_time={} "
                 "compute_utilization={} memory_utilization={} tensor_size={} "
-                "num_ops={}",
+                "flops={}",
                 operational_intensity, perf, elapsed_time,
                 op_stat.compute_utilization.value(),
-                op_stat.memory_utilization.value(), tensor_size, num_ops);
+                op_stat.memory_utilization.value(), tensor_size, flops);
 }
 
 void Workload::issue_comm(shared_ptr<Chakra::FeederV3::ETFeederNode> node) {
@@ -591,7 +592,7 @@ void Workload::call(EventType event, CallData* data) {
             if (node->type() == ChakraNodeType::COMP_NODE) {
                 double num_ops = static_cast<double>(node->num_ops<uint64_t>());
                 double tensor_size = static_cast<double>(node->tensor_size<uint64_t>());
-                double num_ops_gflops = num_ops / (1024.0 * 1024.0 * 1024.0);
+                double flops_gflops = (2.0 * num_ops) / (1024.0 * 1024.0 * 1024.0);
                 double tensor_size_mb = tensor_size / (1024.0 * 1024.0);
                 std::string op_type_str = "COMP_NODE";
                 if (node->has_attr("op_type")) {
@@ -599,7 +600,7 @@ void Workload::call(EventType event, CallData* data) {
                 }
                 std::cout << "[SIM_COMP_FINISH] NPU=" << sys->id << " node_id=" << node->id() 
                           << " node_name=" << node->name() << " op_type=" << op_type_str
-                          << " ops=" << num_ops_gflops << " GFLOPs"
+                          << " ops=" << flops_gflops << " GFLOPs"
                           << " size=" << tensor_size_mb << " MB"
                           << " at tick=" << Sys::boostedTick() << std::endl;
             }

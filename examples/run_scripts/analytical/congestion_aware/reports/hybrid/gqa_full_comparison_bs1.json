@@ -1,0 +1,348 @@
+{
+  "metadata": {
+    "description": "Complete GQA single-layer comparison: roofline(with weights) + AstraSim comm",
+    "_sources": {
+      "gpu_ns (qkv/attn/output)": "roofline_gqa_calc.py (max(compute, memory_with_weights), 60T HBM4)",
+      "comm_ns": "AstraSim simulation (onering16_HBM4_60T.json, Mesh2D 4x4 block2x2)",
+      "rubin": "roofline_gqa_calc.py with rubin_single_layer_config (fused attention)"
+    },
+    "batch_size": 1,
+    "hbm4_60t": {
+      "peak_perf": "60 TMAC/s",
+      "bandwidth": "2.5 T-elem/s",
+      "crossover_oi": 24
+    },
+    "rubin": {
+      "peak_perf": "8750 TMAC/s",
+      "bandwidth": "22 T-elem/s",
+      "crossover_oi": 397.7
+    },
+    "attention_model": "fused GemV roofline (HMP/Baseline/TP16), fused FlashDecoding (Rubin)",
+    "projection_model": "roofline max(compute, weight_mem + activation_mem)",
+    "comm_source": "AstraSim simulation with onering16_HBM4_60T.json, Mesh2D 4x4 block2x2"
+  },
+  "data": [
+    {
+      "seq": 1024,
+      "hmp": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 26.2,
+        "output_ns": 3357.9,
+        "gpu_ns": 7161.5,
+        "comm_ns": 0,
+        "wall_ns": 7161.5,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 2.177
+      },
+      "baseline": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 26.2,
+        "output_ns": 841.3,
+        "gpu_ns": 4645.0,
+        "comm_ns": 18240,
+        "wall_ns": 22885.0,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 6.956
+      },
+      "tp16": {
+        "qkv_ns": 945.6,
+        "attn_ns": 26.2,
+        "output_ns": 840.7,
+        "gpu_ns": 1812.5,
+        "comm_ns": 23280,
+        "wall_ns": 25092.5,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 7.627
+      },
+      "rubin": {
+        "qkv_ns": 1716.5,
+        "attn_ns": 47.7,
+        "output_ns": 1525.8,
+        "gpu_ns": 3289.9,
+        "comm_ns": 0,
+        "wall_ns": 3289.9,
+        "qkv_bound": "memory",
+        "output_bound": "memory"
+      }
+    },
+    {
+      "seq": 2048,
+      "hmp": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 52.4,
+        "output_ns": 3357.9,
+        "gpu_ns": 7187.8,
+        "comm_ns": 0,
+        "wall_ns": 7187.8,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 2.154
+      },
+      "baseline": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 52.4,
+        "output_ns": 841.3,
+        "gpu_ns": 4671.2,
+        "comm_ns": 18240,
+        "wall_ns": 22911.2,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 6.865
+      },
+      "tp16": {
+        "qkv_ns": 945.6,
+        "attn_ns": 52.4,
+        "output_ns": 840.7,
+        "gpu_ns": 1838.7,
+        "comm_ns": 23280,
+        "wall_ns": 25118.7,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 7.526
+      },
+      "rubin": {
+        "qkv_ns": 1716.5,
+        "attn_ns": 95.3,
+        "output_ns": 1525.8,
+        "gpu_ns": 3337.6,
+        "comm_ns": 0,
+        "wall_ns": 3337.6,
+        "qkv_bound": "memory",
+        "output_bound": "memory"
+      }
+    },
+    {
+      "seq": 4096,
+      "hmp": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 104.9,
+        "output_ns": 3357.9,
+        "gpu_ns": 7240.2,
+        "comm_ns": 0,
+        "wall_ns": 7240.2,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 2.109
+      },
+      "baseline": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 104.9,
+        "output_ns": 841.3,
+        "gpu_ns": 4723.6,
+        "comm_ns": 18240,
+        "wall_ns": 22963.6,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 6.689
+      },
+      "tp16": {
+        "qkv_ns": 945.6,
+        "attn_ns": 104.9,
+        "output_ns": 840.7,
+        "gpu_ns": 1891.2,
+        "comm_ns": 23280,
+        "wall_ns": 25171.2,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 7.332
+      },
+      "rubin": {
+        "qkv_ns": 1716.5,
+        "attn_ns": 190.7,
+        "output_ns": 1525.8,
+        "gpu_ns": 3432.9,
+        "comm_ns": 0,
+        "wall_ns": 3432.9,
+        "qkv_bound": "memory",
+        "output_bound": "memory"
+      }
+    },
+    {
+      "seq": 8192,
+      "hmp": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 209.7,
+        "output_ns": 3357.9,
+        "gpu_ns": 7345.0,
+        "comm_ns": 0,
+        "wall_ns": 7345.0,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 2.027
+      },
+      "baseline": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 209.7,
+        "output_ns": 841.3,
+        "gpu_ns": 4828.5,
+        "comm_ns": 18240,
+        "wall_ns": 23068.5,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 6.366
+      },
+      "tp16": {
+        "qkv_ns": 945.6,
+        "attn_ns": 209.7,
+        "output_ns": 840.7,
+        "gpu_ns": 1996.0,
+        "comm_ns": 23280,
+        "wall_ns": 25276.0,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 6.976
+      },
+      "rubin": {
+        "qkv_ns": 1716.5,
+        "attn_ns": 381.3,
+        "output_ns": 1525.8,
+        "gpu_ns": 3623.5,
+        "comm_ns": 0,
+        "wall_ns": 3623.5,
+        "qkv_bound": "memory",
+        "output_bound": "memory"
+      }
+    },
+    {
+      "seq": 16384,
+      "hmp": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 419.4,
+        "output_ns": 3357.9,
+        "gpu_ns": 7554.8,
+        "comm_ns": 0,
+        "wall_ns": 7554.8,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 1.886
+      },
+      "baseline": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 419.4,
+        "output_ns": 841.3,
+        "gpu_ns": 5038.2,
+        "comm_ns": 18240,
+        "wall_ns": 23278.2,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 5.813
+      },
+      "tp16": {
+        "qkv_ns": 945.6,
+        "attn_ns": 419.4,
+        "output_ns": 840.7,
+        "gpu_ns": 2205.7,
+        "comm_ns": 23425,
+        "wall_ns": 25630.7,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 6.4
+      },
+      "rubin": {
+        "qkv_ns": 1716.5,
+        "attn_ns": 762.6,
+        "output_ns": 1525.8,
+        "gpu_ns": 4004.8,
+        "comm_ns": 0,
+        "wall_ns": 4004.8,
+        "qkv_bound": "memory",
+        "output_bound": "memory"
+      }
+    },
+    {
+      "seq": 32768,
+      "hmp": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 838.9,
+        "output_ns": 3357.9,
+        "gpu_ns": 7974.2,
+        "comm_ns": 0,
+        "wall_ns": 7974.2,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 1.673
+      },
+      "baseline": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 838.9,
+        "output_ns": 841.3,
+        "gpu_ns": 5457.6,
+        "comm_ns": 18240,
+        "wall_ns": 23697.6,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 4.971
+      },
+      "tp16": {
+        "qkv_ns": 945.6,
+        "attn_ns": 838.9,
+        "output_ns": 840.7,
+        "gpu_ns": 2625.2,
+        "comm_ns": 23715,
+        "wall_ns": 26340.2,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 5.525
+      },
+      "rubin": {
+        "qkv_ns": 1716.5,
+        "attn_ns": 1525.2,
+        "output_ns": 1525.8,
+        "gpu_ns": 4767.4,
+        "comm_ns": 0,
+        "wall_ns": 4767.4,
+        "qkv_bound": "memory",
+        "output_bound": "memory"
+      }
+    },
+    {
+      "seq": 65536,
+      "hmp": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 1677.7,
+        "output_ns": 3357.9,
+        "gpu_ns": 8813.0,
+        "comm_ns": 0,
+        "wall_ns": 8813.0,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 1.401
+      },
+      "baseline": {
+        "qkv_ns": 3777.4,
+        "attn_ns": 1677.7,
+        "output_ns": 841.3,
+        "gpu_ns": 6296.5,
+        "comm_ns": 18240,
+        "wall_ns": 24536.5,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 3.899
+      },
+      "tp16": {
+        "qkv_ns": 945.6,
+        "attn_ns": 1677.7,
+        "output_ns": 840.7,
+        "gpu_ns": 3464.0,
+        "comm_ns": 24223,
+        "wall_ns": 27687.0,
+        "qkv_bound": "memory",
+        "output_bound": "memory",
+        "ratio_vs_rubin": 4.4
+      },
+      "rubin": {
+        "qkv_ns": 1716.5,
+        "attn_ns": 3050.4,
+        "output_ns": 1525.8,
+        "gpu_ns": 6292.6,
+        "comm_ns": 0,
+        "wall_ns": 6292.6,
+        "qkv_bound": "memory",
+        "output_bound": "memory"
+      }
+    }
+  ]
+}

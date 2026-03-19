@@ -1,0 +1,19 @@
+topology: [ Mesh2D ]
+npus_count: [ 4 ]
+width: 2
+height: 2
+bandwidth: [ 2000.0 ]  # GB/s (D2D: 2 TB/s)
+latency: [ 100 ]  # ns (D2D latency)
+
+# Mesh2D Topology (2x2) - HBM4
+#
+# Physical Topology:
+#     0 --- 1
+#     |     |
+#     2 --- 3
+#
+# HBM4 Specifications:
+# - D2D bandwidth: 2 TB/s (2000 GB/s)
+# - D2D latency: 100 ns
+# - Local memory bandwidth: 2.5 TB/s (2500 GB/s)
+# - Compute: 30 TFLOPS

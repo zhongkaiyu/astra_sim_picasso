@@ -1,0 +1,82 @@
+{
+  "config": {
+    "B": 64,
+    "D": 4096,
+    "Hq": 64,
+    "Hkv": 4,
+    "G": 4,
+    "Cg": 4,
+    "dk": 128,
+    "Lq": 1024,
+    "Lk": 1024,
+    "act_bytes": 2,
+    "w_bytes": 2,
+    "scalar_bytes": 4,
+    "BW_hbm_gbs": 2000.0,
+    "BW_sram_gbs": 2500.0,
+    "BW_ip_gbs": 2000.0,
+    "alpha_ns": 100.0,
+    "compute_tflops": 30.0,
+    "eta_compute": 1.0,
+    "eta_hbm": 1.0,
+    "eta_sram": 1.0,
+    "eta_ip": 1.0,
+    "overlap_q_kv": false
+  },
+  "strategy": {
+    "name": "hmp",
+    "wo_mode": "duplicate",
+    "attn_kv_seq_shard": 4,
+    "attn_q_seq_shard": 1,
+    "softmax_reduce": "stats_only",
+    "final_reduce": "addtree"
+  },
+  "derived": {
+    "Hq_per_group": 16,
+    "Hkv_per_group": 1,
+    "Dq_g": 2048,
+    "Dkv_g": 128,
+    "Lk_per_cube": 256,
+    "strategy": "hmp",
+    "wo_mode": "duplicate"
+  },
+  "stages": [
+    {
+      "name": "Q_proj",
+      "flops": 1099511627776.0,
+      "bytes": 822083584,
+      "time_ns": 36650387.592533335
+    },
+    {
+      "name": "KV_proj",
+      "flops": 34359738368.0,
+      "bytes": 144703488.0,
+      "time_ns": 1145324.6122666667
+    },
+    {
+      "name": "Attn_local",
+      "flops": 137438953472.0,
+      "bytes": 545259520.0,
+      "time_ns": 4581298.449066667
+    },
+    {
+      "name": "Softmax_stats_reduce",
+      "flops": 0.0,
+      "bytes": 8388608.0,
+      "time_ns": 8588.608
+    },
+    {
+      "name": "Wo_local",
+      "flops": 1099511627776.0,
+      "bytes": 822083584,
+      "time_ns": 36650387.592533335
+    },
+    {
+      "name": "Final_addtree_reduce",
+      "flops": 0.0,
+      "bytes": 536870912.0,
+      "time_ns": 1074141.824
+    }
+  ],
+  "total_time_ns": 80110128.67840001
+}

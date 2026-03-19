@@ -34,6 +34,8 @@ from cache_db import (
 
 
 def iter_config_files(configs_dir: Path, pattern: str) -> Iterable[Path]:
+    if "/" not in pattern and "**" not in pattern:
+        pattern = f"**/{pattern}"
     return sorted(configs_dir.glob(pattern))
 
 
@@ -98,6 +100,12 @@ def parse_parallel_factors(name: str) -> dict:
 
 def guess_model_type(workload_base: str) -> str:
     base = (workload_base or "").lower()
+    if "decode_bypass_hmp_fwd" in base:
+        return "qwen_decode_bypass_hmp_fwd"
+    if "decode_bypass_baseline_fwd" in base:
+        return "qwen_decode_bypass_baseline_fwd"
+    if "decode_bypass_tp16_fwd" in base:
+        return "qwen_decode_bypass_tp16_fwd"
     if "decode_bypass_tp16" in base:
         return "qwen_decode_bypass_tp16"
     if "decode_bypass" in base:
@@ -155,6 +163,11 @@ def build_trace_cmd(main_script: Path, trace_cfg: dict) -> list[str]:
         "tpsp",
         "mixed_precision",
         "print_gpu_vram",
+        "tp_h",
+        "tp_s",
+        "head_dim",
+        "cache_seq",
+        "rank_remap",
     ]
     for key in flag_keys:
         if key in trace_cfg and trace_cfg[key] is not None:
@@ -179,7 +192,8 @@ def run_trace_from_config(
         return 0
     cmd = build_trace_cmd(main_script, trace_cfg)
     print(f"[TRACE] {trace_path.name} -> {output_dir}/{output_name}.%d.et")
-    result = subprocess.run(cmd, check=False)
+    trace_cwd = main_script.resolve().parent
+    result = subprocess.run(cmd, check=False, cwd=trace_cwd)
     return result.returncode
 
 
@@ -270,7 +284,7 @@ def main() -> int:
     trace_script = (project_dir / "symbolic_tensor_graph_picasso/main.py").resolve()
     configs_dir = Path(args.configs_dir) if args.configs_dir else (script_dir / "configs")
     trace_configs_dir = Path(args.trace_configs_dir) if args.trace_configs_dir else (script_dir / "trace_configs")
-    cache_dir = script_dir / "cache_db_test"
+    cache_dir = script_dir / "cache_db_v131"
     db_path = Path(args.db) if args.db else (cache_dir / "results.sqlite")
     csv_path = Path(args.csv) if args.csv else (cache_dir / "results_cache.csv")
 

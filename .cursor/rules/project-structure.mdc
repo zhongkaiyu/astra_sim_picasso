@@ -1,0 +1,142 @@
+---
+description: ASTRA-sim Picasso 项目整体架构，防止 agent 重构现有代码
+alwaysApply: true
+---
+
+# 项目架构 — 禁止重构，使用现有脚本
+
+## 核心原则
+
+- **禁止重构**: 不要重写、合并或重组现有 Python 脚本。每个脚本职责单一且已稳定。
+- **使用现有入口**: 所有仿真任务通过 `bulk_run_configs.py` 执行，不要创建新的执行脚本。
+- **配置驱动**: 新实验通过添加 JSON 配置文件实现，不要修改执行逻辑。
+
+## 目录结构
+
+```
+astra_sim_picasso/
+├── symbolic_tensor_graph_picasso/        # Trace 生成 (main.py)
+│   ├── main.py                           # Chakra trace 生成入口
+│   ├── visualize_csv.py                  # 计算图可视化 (graphviz)
+│   ├── sharding_spreadsheets/            # CSV 计算图 (符号形状)
+│   │   └── module3/qwen/
+│   │       ├── decode_bypass_hmp_fwd/    # HMP GQA 计算图
+│   │       ├── decode_bypass_baseline_fwd/  # Baseline GQA 计算图
+│   │       └── decode_bypass_tp16_fwd/   # TP16 GQA 计算图
+│   └── et_trace/                         # 生成的 trace 文件
+│       ├── gqa/                          # 单层 GQA trace
+│       └── e2e/                          # 端到端 94 层 trace
+├── examples/
+│   ├── network/analytical/               # 物理拓扑 *.yml (Mesh2D/Torus/FC/Sparse)
+│   ├── system/native_collectives/        # 逻辑拓扑 *.json (ring/onering/direct)
+│   ├── workloads/                        # 通信原语 trace
+│   └── run_scripts/analytical/congestion_aware/  # 仿真执行系统
+│       ├── configs/                      # 仿真配置 JSON
+│       │   ├── tp16_gqa/                 # GQA 单层仿真配置
+│       │   ├── tp16_e2e/                 # E2E 仿真配置
+│       │   ├── gqa_seq_scaling/          # GQA seq scaling 仿真配置
+│       │   ├── dp16/                     # DP16 仿真配置
+│       │   ├── comm_allreduce/           # AllReduce 通信原语配置
+│       │   └── comm_tp16/               # TP16 通信原语配置
+│       ├── trace_configs/                # Trace 生成配置 JSON
+│       │   ├── e2e/                      # 端到端 trace 配置
+│       │   │   ├── hmp/                  # HMP 策略
+│       │   │   ├── baseline/             # Baseline 策略
+│       │   │   ├── tp16/                 # TP16 策略
+│       │   │   └── dp16/                 # DP16 策略
+│       │   └── gqa/                      # 单层 GQA trace 配置
+│       │       ├── hmp/                  # HMP 策略 (含 seq scaling sl*)
+│       │       ├── baseline/             # Baseline 策略 (含 seq scaling sl*)
+│       │       └── tp16/                 # TP16 策略
+│       ├── cal_configs/                  # 延迟计算配置 (YAML/JSON) + 结果 JSON
+│       ├── cache_db_v131/                # 仿真结果缓存 (SQLite + CSV)
+│       ├── cache_db_seq_scaling/         # seq scaling 结果缓存
+│       ├── reports/                      # 分析报告 (.md/.txt)
+│       ├── bulk_run_configs.py           # 【主入口】批量仿真执行
+│       ├── seq_scale.py                  # GQA seq scaling 批量配置生成 + 执行
+│       ├── cache_db.py                   # 缓存读写模块
+│       ├── latency_cal.py               # 单层延迟解析计算 (roofline)
+│       ├── analyze_comm.py              # 通信延迟分析
+│       ├── query_db.py                  # 查询缓存结果
+│       ├── roofline_gqa_calc.py        # GQA 单层 roofline (含权重加载)
+│       ├── collect_gqa_data.py         # 解析 AstraSim GQA 日志 → JSON
+│       └── merge_gqa_results.py        # 合并 AstraSim + roofline → 混合估算
+├── build/                                # AstraSim 二进制
+└── output_qwen/                          # 仿真输出
+```
+
+## 脚本职责 (不要重复实现)
+
+| 脚本 | 用途 | 调用方式 |
+|------|------|----------|
+| `bulk_run_configs.py` | 批量运行仿真 + 可选 trace 生成 | `python3 bulk_run_configs.py --pattern "*.json"` |
+| `seq_scale.py` | GQA seq scaling 批量配置生成 + 执行 | 见下方 seq_scale.py 用法 |
+| `cache_db.py` | 缓存读写、配置名解析 | 被其他脚本 import |
+| `latency_cal.py` | 单层 GQA 延迟 roofline 计算 (输出 ns) | `python3 latency_cal.py --config cal_configs/xxx.yml -o result.json` |
+| `analyze_comm.py` | 逐层通信延迟分析 | `python3 analyze_comm.py <logs> --layers 2` |
+| `query_db.py` | 查询缓存结果 | `python3 query_db.py --db cache_db_v131/results.sqlite --pattern "%xxx%"` |
+| `generate_scaling_configs.py` | 生成 AllReduce 扩展配置 | 直接执行 |
+| `generate_scaling_resources.py` | 生成网络/系统资源文件 | 直接执行 |
+| `csv_to_sqlite.py` | CSV → SQLite 导入 | `python3 csv_to_sqlite.py --csv ... --db ...` |
+| `roofline_gqa_calc.py` | GQA 单层 roofline (含权重加载) | `python3 roofline_gqa_calc.py --peak-perf 80` |
+| `collect_gqa_data.py` | 解析 AstraSim GQA 日志 → JSON | `python3 collect_gqa_data.py -o reports/gqa_seq_scaling_data.json` |
+| `merge_gqa_results.py` | 合并 AstraSim + roofline 数据 | `python3 merge_gqa_results.py --astrasim-data ... --roofline-data ...` |
+
+## seq_scale.py 用法
+
+批量生成 trace_configs 和仿真 configs，然后通过 `bulk_run_configs.py` 执行。
+生成的 trace_configs 放入 `trace_configs/gqa/{strategy}/`，仿真 configs 放入 `configs/gqa_seq_scaling/`。
+
+```bash
+# 仅生成配置（预览，不执行）
+python3 seq_scale.py --seq 1024 2048 4096 65536 --dry-run
+
+# 生成并执行全部（HMP + Baseline，默认 HBM4 Mesh2D 4x4 OneRing）
+python3 seq_scale.py --seq 1024 2048 4096 65536
+
+# 只跑 HMP 策略
+python3 seq_scale.py --seq 1024 2048 --strategies hmp
+
+# 只跑 Baseline 策略，强制重新生成 trace
+python3 seq_scale.py --seq 1024 2048 --strategies baseline --trace-force
+
+# 自定义 batch 和设备
+python3 seq_scale.py --seq 1024 2048 --batch 128 --device H100
+
+# 指定自定义缓存目录
+python3 seq_scale.py --seq 1024 2048 --cache-db cache_db_my_test
+```
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `--seq` | (必填) | 序列长度列表，空格分隔 |
+| `--batch` | 64 | Batch 大小 |
+| `--strategies` | hmp baseline | 策略列表 (可选: hmp, baseline) |
+| `--tp-h` | 4 | tp_h 并行度 |
+| `--tp-s` | 4 | tp_s 并行度 |
+| `--device` | HBM4 | 设备类型 (HBM4 / H100) |
+| `--cache-db` | cache_db_seq_scaling | 结果缓存目录名 |
+| `--dry-run` | false | 仅生成配置，不执行仿真 |
+| `--force-run` | false | 忽略缓存，强制重新仿真 |
+| `--trace-force` | false | 强制重新生成 trace |
+
+## 符号形状系统
+
+CSV 计算图使用 sympy 符号变量描述张量形状。关键符号:
+- **HeadDim**: 每头维度（独立参数，通过 `--head_dim` 或 trace config 的 `head_dim` 指定）
+- **Dmodel, Head, KVHead, Batch, Seq**: 模型/序列维度
+- **CacheSeq**: 每 GPU 的 KV cache 序列长度，`main.py` 自动计算为 `ceil(Seq / tp_s)`，也可通过 `--cache_seq` 手动指定。HMP 和 Baseline 的 GQA kernel CSV 均使用 `CacheSeq` 表示 cache 维度
+- **dp, tp, tp_h, tp_s, pp, ep**: 并行度因子
+
+详见 trace-generation.mdc 中的完整参数表。
+
+## 工作流
+
+1. **新实验** → 在 `configs/` 添加 JSON，不修改脚本
+2. **生成 Trace** → `bulk_run_configs.py --gen-trace --trace-pattern "..."` 或 `main.py`
+3. **运行仿真** → `bulk_run_configs.py --pattern "..." [--force-run]`
+4. **查看结果** → `query_db.py` 或 `analyze_comm.py`
+5. **延迟计算** → `latency_cal.py --config cal_configs/xxx.yml [-o result.json]`，配置放 `cal_configs/`
+6. **Seq Scaling** → `seq_scale.py --seq 1024 2048 4096 65536` 一键生成配置 + 执行仿真
+7. **可视化计算图** → `visualize_csv.py` 生成 graphviz PNG/PDF（组装模式连接 surrounding + kernel）
+8. **混合 GQA 估算** → `roofline_gqa_calc.py --peak-perf 80` + `collect_gqa_data.py` + `merge_gqa_results.py`（详见 simulation-workflow.mdc）

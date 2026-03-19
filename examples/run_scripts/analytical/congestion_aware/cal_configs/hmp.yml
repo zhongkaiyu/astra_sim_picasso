@@ -1,0 +1,43 @@
+# HMP (NMP) strategy: Duplicate Wo inside each Cube Group
+# Compute is local (SRAM), only lightweight reduction needed.
+
+model:
+  B: 64
+  D: 4096
+  Hq: 64
+  Hkv: 4
+  G: 4
+  Cg: 4
+  dk: 128
+  Lq: 1024
+  Lk: 1024
+
+dtype:
+  act_bytes: 2
+  w_bytes: 2
+  scalar_bytes: 4
+
+hardware:
+  BW_hbm_gbs: 2000
+  BW_sram_gbs: 2500
+  BW_ip_gbs: 2000
+  alpha_ns: 100
+  compute_tflops: 30
+
+efficiency:
+  eta_compute: 1.0
+  eta_hbm: 1.0
+  eta_sram: 1.0
+  eta_ip: 1.0
+
+schedule:
+  overlap_q_kv: false
+
+strategy:
+  name: hmp
+  wo_mode: duplicate            # Wo^g duplicated inside each group (4 cubes)
+  attn_kv_seq_shard: 4          # KV seq split across Cg
+  attn_q_seq_shard: 1           # Q keeps full Lq inside group
+  softmax_reduce: stats_only    # only max/sum scalars across Cg
+  final_reduce: addtree         # pure add-tree on (B,Lq,D)
+

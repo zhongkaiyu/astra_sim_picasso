@@ -9,7 +9,7 @@ topology: [ Mesh2D ]  # Auto-converted to SparseMesh2D when npu_placement is pre
 
 npus_count: [ 2 ]
 bandwidth: [ 400 ]
-latency: [ 900 ]
+latency: [ 1 ]
 
 # Grid dimensions
 width: 2

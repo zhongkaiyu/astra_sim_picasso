@@ -1,0 +1,363 @@
+{
+  "_source": "AstraSim simulation logs, parsed by collect_gqa_batch_data.py (analyze_comm.parse_log), system=onering16_HBM4.json peak-perf=40, sl=65536",
+  "baseline": {
+    "label": "Baseline (block2x2 Mesh2D)",
+    "seq": 65536,
+    "data": [
+      {
+        "batch": 1,
+        "wall_ns": 22534,
+        "gpu_ns": 4294,
+        "comm_ns": 18240,
+        "modules": {
+          "qkv_comp": 313.0,
+          "attn_comp": 3912.0,
+          "output_comp": 69.0,
+          "attn_comm": 5360.0,
+          "output_comm": 12880.0
+        }
+      },
+      {
+        "batch": 2,
+        "wall_ns": 26835,
+        "gpu_ns": 8595,
+        "comm_ns": 18240,
+        "modules": {
+          "qkv_comp": 628.0,
+          "attn_comp": 7828.0,
+          "output_comp": 139.0,
+          "attn_comm": 5360.0,
+          "output_comm": 12880.0
+        }
+      },
+      {
+        "batch": 4,
+        "wall_ns": 35434,
+        "gpu_ns": 17194,
+        "comm_ns": 18240,
+        "modules": {
+          "qkv_comp": 1257.0,
+          "attn_comp": 15658.0,
+          "output_comp": 279.0,
+          "attn_comm": 5360.0,
+          "output_comm": 12880.0
+        }
+      },
+      {
+        "batch": 8,
+        "wall_ns": 52632,
+        "gpu_ns": 34392,
+        "comm_ns": 18240,
+        "modules": {
+          "qkv_comp": 2515.0,
+          "attn_comp": 31318.0,
+          "output_comp": 559.0,
+          "attn_comm": 5360.0,
+          "output_comm": 12880.0
+        }
+      },
+      {
+        "batch": 16,
+        "wall_ns": 87026,
+        "gpu_ns": 68786,
+        "comm_ns": 18240,
+        "modules": {
+          "qkv_comp": 5032.0,
+          "attn_comp": 62636.0,
+          "output_comp": 1118.0,
+          "attn_comm": 5360.0,
+          "output_comm": 12880.0
+        }
+      },
+      {
+        "batch": 32,
+        "wall_ns": 155819,
+        "gpu_ns": 137579,
+        "comm_ns": 18240,
+        "modules": {
+          "qkv_comp": 10065.0,
+          "attn_comp": 125276.0,
+          "output_comp": 2236.0,
+          "attn_comm": 5360.0,
+          "output_comm": 12880.0
+        }
+      },
+      {
+        "batch": 64,
+        "wall_ns": 293429,
+        "gpu_ns": 275164,
+        "comm_ns": 18265,
+        "modules": {
+          "qkv_comp": 20131.0,
+          "attn_comp": 250554.0,
+          "output_comp": 4473.0,
+          "attn_comm": 5360.0,
+          "output_comm": 12905.0
+        }
+      }
+    ]
+  },
+  "hmp": {
+    "label": "HMP (block2x2 Mesh2D)",
+    "seq": 65536,
+    "data": [
+      {
+        "batch": 1,
+        "wall_ns": 4505,
+        "gpu_ns": 4505,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 313.0,
+          "attn_comp": 3912.0,
+          "output_comp": 279.0
+        }
+      },
+      {
+        "batch": 2,
+        "wall_ns": 9018,
+        "gpu_ns": 9018,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 628.0,
+          "attn_comp": 7828.0,
+          "output_comp": 559.0
+        }
+      },
+      {
+        "batch": 4,
+        "wall_ns": 18039,
+        "gpu_ns": 18039,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 1257.0,
+          "attn_comp": 15658.0,
+          "output_comp": 1118.0
+        }
+      },
+      {
+        "batch": 8,
+        "wall_ns": 36082,
+        "gpu_ns": 36082,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 2515.0,
+          "attn_comp": 31318.0,
+          "output_comp": 2249.0
+        }
+      },
+      {
+        "batch": 16,
+        "wall_ns": 72167,
+        "gpu_ns": 72167,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 5032.0,
+          "attn_comp": 62636.0,
+          "output_comp": 4499.0
+        }
+      },
+      {
+        "batch": 32,
+        "wall_ns": 144342,
+        "gpu_ns": 144342,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 10065.0,
+          "attn_comp": 125276.0,
+          "output_comp": 8999.0
+        }
+      },
+      {
+        "batch": 64,
+        "wall_ns": 288690,
+        "gpu_ns": 288690,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 20131.0,
+          "attn_comp": 250554.0,
+          "output_comp": 17999.0
+        }
+      }
+    ]
+  },
+  "tp16": {
+    "label": "TP16 (Torus OneRing)",
+    "seq": 65536,
+    "data": [
+      {
+        "batch": 1,
+        "wall_ns": 53121,
+        "gpu_ns": 4058,
+        "comm_ns": 49063,
+        "modules": {
+          "qkv_comp": 69.0,
+          "attn_comp": 3912.0,
+          "output_comp": 69.0,
+          "attn_comm": 21543.0,
+          "output_comm": 27520.0
+        }
+      },
+      {
+        "batch": 2,
+        "wall_ns": 59232,
+        "gpu_ns": 8121,
+        "comm_ns": 51111,
+        "modules": {
+          "qkv_comp": 156.0,
+          "attn_comp": 7826.0,
+          "output_comp": 139.0,
+          "attn_comm": 23591.0,
+          "output_comm": 27520.0
+        }
+      },
+      {
+        "batch": 4,
+        "wall_ns": 71190,
+        "gpu_ns": 16248,
+        "comm_ns": 54942,
+        "modules": {
+          "qkv_comp": 313.0,
+          "attn_comp": 15656.0,
+          "output_comp": 279.0,
+          "attn_comm": 27422.0,
+          "output_comm": 27520.0
+        }
+      },
+      {
+        "batch": 8,
+        "wall_ns": 95298,
+        "gpu_ns": 32501,
+        "comm_ns": 62797,
+        "modules": {
+          "qkv_comp": 628.0,
+          "attn_comp": 31314.0,
+          "output_comp": 559.0,
+          "attn_comm": 35277.0,
+          "output_comm": 27520.0
+        }
+      },
+      {
+        "batch": 16,
+        "wall_ns": 146695,
+        "gpu_ns": 65007,
+        "comm_ns": 81688,
+        "modules": {
+          "qkv_comp": 1257.0,
+          "attn_comp": 62632.0,
+          "output_comp": 1118.0,
+          "attn_comm": 54168.0,
+          "output_comm": 27520.0
+        }
+      },
+      {
+        "batch": 32,
+        "wall_ns": 263187,
+        "gpu_ns": 130019,
+        "comm_ns": 133168,
+        "modules": {
+          "qkv_comp": 2515.0,
+          "attn_comp": 125268.0,
+          "output_comp": 2236.0,
+          "attn_comm": 105648.0,
+          "output_comm": 7760.0
+        }
+      },
+      {
+        "batch": 64,
+        "wall_ns": 496581,
+        "gpu_ns": 260043,
+        "comm_ns": 236538,
+        "modules": {
+          "qkv_comp": 5032.0,
+          "attn_comp": 250538.0,
+          "output_comp": 4473.0,
+          "attn_comm": 208608.0,
+          "output_comm": 7905.0
+        }
+      }
+    ]
+  },
+  "rubin": {
+    "label": "Rubin (1GPU, no weight load)",
+    "seq": 65536,
+    "data": [
+      {
+        "batch": 1,
+        "wall_ns": 3059,
+        "gpu_ns": 3059,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 4.3,
+          "attn_comp": 3050.4,
+          "output_comp": 3.8
+        }
+      },
+      {
+        "batch": 2,
+        "wall_ns": 6117,
+        "gpu_ns": 6117,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 8.6,
+          "attn_comp": 6100.9,
+          "output_comp": 7.7
+        }
+      },
+      {
+        "batch": 4,
+        "wall_ns": 12234,
+        "gpu_ns": 12234,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 17.3,
+          "attn_comp": 12201.8,
+          "output_comp": 15.3
+        }
+      },
+      {
+        "batch": 8,
+        "wall_ns": 24469,
+        "gpu_ns": 24469,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 34.5,
+          "attn_comp": 24403.6,
+          "output_comp": 30.7
+        }
+      },
+      {
+        "batch": 16,
+        "wall_ns": 48938,
+        "gpu_ns": 48938,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 69.0,
+          "attn_comp": 48807.2,
+          "output_comp": 61.4
+        }
+      },
+      {
+        "batch": 32,
+        "wall_ns": 97875,
+        "gpu_ns": 97875,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 138.1,
+          "attn_comp": 97614.4,
+          "output_comp": 122.7
+        }
+      },
+      {
+        "batch": 64,
+        "wall_ns": 195750,
+        "gpu_ns": 195750,
+        "comm_ns": 0,
+        "modules": {
+          "qkv_comp": 276.1,
+          "attn_comp": 195228.8,
+          "output_comp": 245.4
+        }
+      }
+    ]
+  }
+}

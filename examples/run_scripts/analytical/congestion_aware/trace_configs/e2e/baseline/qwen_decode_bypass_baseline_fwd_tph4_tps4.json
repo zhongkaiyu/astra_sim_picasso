@@ -1,0 +1,17 @@
+{
+  "output_dir": "{PROJECT_DIR}/symbolic_tensor_graph_picasso/et_trace/e2e/baseline_fwd_tph4_tps4",
+  "output_name": "baseline_fwd_tph4_tps4",
+  "model_type": "qwen_decode_bypass_baseline_fwd",
+  "dp": 1,
+  "tp": 1,
+  "tp_h": 4,
+  "tp_s": 4,
+  "kvhead": 4,
+  "head": 64,
+  "num_stacks": 94,
+  "dmodel": 4096,
+  "batch": 64,
+  "seq": 1024,
+  "tpsp": true,
+  "head_dim": 128
+}

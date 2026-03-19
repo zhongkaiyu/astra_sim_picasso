@@ -1,0 +1,126 @@
+---
+description: 仿真执行与结果缓存的标准流程
+globs: examples/run_scripts/analytical/congestion_aware/**/*.py
+alwaysApply: false
+---
+
+# 仿真执行标准流程
+
+## 核心命令 — bulk_run_configs.py
+
+所有仿真通过此脚本执行，不要创建替代脚本。
+
+### 关键参数
+| 参数 | 说明 |
+|------|------|
+| `--pattern` | glob 匹配 `configs/` 下的配置文件 |
+| `--force-run` | 忽略缓存强制重跑 |
+| `--gen-trace` | 启用 trace 生成阶段 |
+| `--trace-pattern` | glob 匹配 `trace_configs/` 下的 trace 配置 |
+| `--trace-force` | 强制重生成 trace |
+| `--limit N` | 限制运行数量 |
+
+### 常用命令
+
+```bash
+cd examples/run_scripts/analytical/congestion_aware
+
+# 生成 trace + 运行仿真
+python3 bulk_run_configs.py --gen-trace --trace-pattern "*tph4_tps4.json" --pattern "tp16_hbm4_*_onering_*.json" --force-run
+
+# 仅运行仿真
+python3 bulk_run_configs.py --pattern "comm_all_reduce_*.json"
+
+# 查询结果
+python3 query_db.py --db cache_db_v131/results.sqlite --pattern "%hmp%"
+
+# 通信分析
+python3 analyze_comm.py <log1> <log2> --layers 2
+
+# 单层延迟 roofline 计算 (所有时间单位: ns)
+python3 latency_cal.py --config cal_configs/qwen_decode.yml -o cal_configs/qwen_decode_result.json
+```
+
+## 延迟计算 — latency_cal.py
+
+单层 GQA roofline 延迟模型，配置放 `cal_configs/` (支持 YAML/JSON/TOML)。
+
+| 参数 | 说明 |
+|------|------|
+| `--config` | 配置文件路径 (.yml/.json/.toml) |
+| `--output / -o` | 保存结果为 JSON (所有时间字段统一 ns) |
+
+输出 JSON 包含: `config` (输入快照), `derived`, `stages` (各阶段 name/flops/bytes/time_ns), `total_time_ns`。
+
+## 结果缓存
+
+- 存储: `cache_db_v131/results.sqlite` + `results_cache.csv`
+- 字段: `config_name`, `wall_time`, `gpu_time`, `comm_time`, `overlap`, `status`
+- 自动去重: 相同配置不会重复运行 (除非 `--force-run`)
+
+## 添加新实验的正确方式
+
+1. 在 `configs/` 创建新 JSON 配置 (遵循命名规则)
+2. 如需新 trace，在 `trace_configs/` 创建 trace 配置
+3. 如需新拓扑，在 `examples/network/analytical/` 和 `examples/system/native_collectives/` 添加
+4. 如需延迟计算，在 `cal_configs/` 创建 YAML/JSON 配置
+5. 运行 `bulk_run_configs.py` / `latency_cal.py`
+6. **不要修改** `bulk_run_configs.py`, `cache_db.py`, `run_from_config.py`, `latency_cal.py` 的核心逻辑
+
+## GQA 混合延迟估算 (Hybrid Roofline + AstraSim)
+
+AstraSim 不建模权重加载延迟，roofline 不建模通信拓扑/拥塞。混合工作流取两者各自准确的部分。
+
+### 工具职责
+
+| 工具 | 提供 | 不提供 |
+|------|------|--------|
+| AstraSim (`bulk_run_configs.py` → `collect_gqa_data.py`) | 通信延迟 (拓扑+拥塞), Attention (含 KV cache 加载) | 权重加载 (QKV/Output 投影) |
+| `roofline_gqa_calc.py` | 权重加载 roofline, Rubin 单 GPU 基线 | 通信延迟 |
+| `attention.py` | 快速 compute-only 预测 (无权重/无通信) | 权重加载, 通信 |
+
+### 混合合并逻辑
+
+对每个操作 per-strategy per-seq 取最优数据源：
+
+```
+QKV    = max(AstraSim qkv_comp, roofline qkv.memory_ns)
+Attn   = AstraSim attn_comp (已含 KV cache 加载)
+Output = max(AstraSim output_comp, roofline output.memory_ns)
+Comm   = AstraSim (attn_comm + output_comm, 拓扑+拥塞感知)
+Wall   = (QKV + Attn + Output) + comm_exposed
+```
+
+### 标准 4 步流程
+
+```bash
+cd examples/run_scripts/analytical/congestion_aware
+
+# 1. AstraSim 仿真 (若已有缓存可跳过)
+python3 bulk_run_configs.py --gen-trace --trace-pattern "*gqa*block2x2*.json" --pattern "gqa_seq_scaling/*.json"
+
+# 2. 解析 AstraSim 日志 → JSON
+python3 collect_gqa_data.py -o reports/gqa_seq_scaling_data.json
+
+# 3. Roofline 权重加载计算
+python3 roofline_gqa_calc.py --peak-perf 80 -o reports/gqa_roofline_with_weights_bs1_80T.json
+
+# 4. 合并 → 混合估算 JSON (含 Rubin 对比)
+python3 merge_gqa_results.py \
+  --astrasim-data reports/gqa_seq_scaling_data.json \
+  --roofline-data reports/gqa_roofline_with_weights_bs1_80T.json \
+  -o reports/gqa_hybrid_merged_80T.json
+```
+
+### reports/ 目录 `_source` 约定
+
+所有 `reports/*.json` 必须包含 `_source` 或 `_sources` 字段标明数据来源，便于追溯：
+- AstraSim 仿真数据 → `"_source": "AstraSim simulation logs, parsed by collect_gqa_data.py ..."`
+- Roofline 分析 → `"_source": "roofline_gqa_calc.py ..."`
+- 混合估算 → `"_sources": {"qkv": "max(AstraSim compute, roofline weight_load)", ...}"`
+- `attention.py` 预测 → `"_source": "attention.py (compute-only, no weight loading)"`
+
+## Python 环境注意事项
+
+- **仿真/数据脚本**: 使用 venv Python (`python3`, 即 `/opt/venv/astra-sim/bin/python3`)
+- **绘图脚本** (`plot_*.py`): 必须使用 **`/usr/bin/python3`**，因为 matplotlib 仅安装在系统 Python 中，venv 无此包且无 install 权限

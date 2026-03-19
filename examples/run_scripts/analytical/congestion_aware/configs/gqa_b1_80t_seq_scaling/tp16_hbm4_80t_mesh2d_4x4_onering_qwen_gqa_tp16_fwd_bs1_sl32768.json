@@ -1,0 +1,10 @@
+{
+  "output_dir": "{PROJECT_DIR}/output_qwen/gqa_seq_scaling/tp16_fwd_bs1_sl32768",
+  "astra_sim": "{PROJECT_DIR}/build/astra_analytical/build/bin/AstraSim_Analytical_Congestion_Aware",
+  "system": "{EXAMPLE_DIR}/system/native_collectives/onering16_HBM4_80T.json",
+  "network": "{EXAMPLE_DIR}/network/analytical/Mesh2D_16gpus_4x4_HBM4.yml",
+  "remote_memory": "{EXAMPLE_DIR}/remote_memory/analytical/no_memory_expansion.json",
+  "workload_dir": "{PROJECT_DIR}/symbolic_tensor_graph_picasso/et_trace/gqa/tp16_fwd_tph4_tps4_bs1_sl32768",
+  "workload_base": "tp16_fwd_tph4_tps4_bs1_sl32768",
+  "log_file": "simulation_log_gqa_tp16_fwd_bs1_sl32768.txt"
+}
