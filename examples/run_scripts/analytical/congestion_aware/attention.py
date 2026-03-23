@@ -18,6 +18,8 @@ ours_config = hardware_config.ours_config
 
 rubin_config = hardware_config.rubin_config
 
+H100_fp8_config = hardware_config.H100_fp8_config
+
 # ---------------------------------------------------------------------------
 # Strategy-aware per-NPU model configs for single-layer GQA analysis
 #   tp_h=4 groups, tp_s=4 cubes per group, 16 NPUs total
@@ -561,11 +563,6 @@ def _build_scaling_json(strategies, hbm4, rubin_hw, mode, **kwargs):
     return result
 
 
-if __name__ == "__main__":
-    verify_against_sim(batch_sizes=[1, 64])
-    print()
-    generate_comparison_json()
-
 # compute cost for QKV projection for single step in decode
 def calculate_compute_cost_qkv(config, batch_size, t):
     d_model = config["d_model"]
@@ -965,3 +962,96 @@ def calculate_total_memory_bytes_transfer_attention(hardware_config, config, bat
     for i in range(sequence_length):
         total_memory_bytes_transfer += calculate_memory_bytes_transfer_attention(config, batch_size, i)
     return total_memory_bytes_transfer
+
+
+def sweep_seq_roofline(hw_configs, model_config, batch_size=1,
+                       seq_lengths=None, label="Seq Sweep"):
+    """Roofline sweep across sequence lengths for multiple hardware configs.
+
+    Prints a table with per-step decode time breakdown (QKV, Attention, Output)
+    and identifies compute-bound vs memory-bound for each stage.
+
+    hw_configs: dict of {name: hardware_config}
+    """
+    if seq_lengths is None:
+        seq_lengths = [1024, 2048, 4096, 8192, 16384, 32768, 65536,
+                       131072, 262144, 524288, 1048576]
+
+    d = model_config["d_model"]
+    Hq = model_config["num_attention_heads"]
+    Hkv = model_config["num_kv_heads"]
+    dk = model_config["d_head"]
+    n_layers = model_config["num_layers"]
+
+    print(f"\n{'='*110}")
+    print(f"  {label}  |  Qwen3-235B FP8 Decode (B={batch_size})")
+    print(f"  d_model={d}, Hq={Hq}, Hkv={Hkv}, dk={dk}, layers={n_layers}")
+    print(f"{'='*110}")
+
+    for hw_name, hw in hw_configs.items():
+        compute_tflops = hw["compute"] * hw["num_devices"]
+        bw_tbs = hw["Bandwidth"] * hw["num_devices"]
+        cap = hw["capacity"] * hw["num_devices"]
+        kv_cap = hw.get("kv_cache_size", cap)
+
+        print(f"\n  [{hw_name}]  compute={compute_tflops} TFLOPS, BW={bw_tbs} TB/s, "
+              f"capacity={cap} GB, KV budget={kv_cap:.1f} GB")
+        print(f"  {'Seq':>8s}  {'QKV(us)':>10s} {'Attn(us)':>10s} {'Out(us)':>10s}"
+              f"  {'Total(us)':>10s}  {'Total(ms)':>10s}  {'KV$(GB)':>8s}  {'Bound':>12s}")
+        print(f"  {'-'*95}")
+
+        for seq in seq_lengths:
+            # per-step compute time
+            comp_qkv = calculate_compute_time_qkv(hw, model_config, batch_size, seq)
+            comp_attn = calculate_compute_time_attention(hw, model_config, batch_size, seq)
+            comp_o = calculate_compute_time_o(hw, model_config, batch_size, seq)
+
+            # per-step memory time
+            mem_qkv = calculate_memory_latency_qkv(hw, model_config, batch_size, seq)
+            mem_attn = calculate_memory_latency_attention(hw, model_config, batch_size, seq)
+            mem_o = calculate_memory_latency_o(hw, model_config, batch_size, seq)
+
+            # roofline: max(compute, memory) per stage
+            t_qkv = max(comp_qkv, mem_qkv)
+            t_attn = max(comp_attn, mem_attn)
+            t_o = max(comp_o, mem_o)
+            t_total = t_qkv + t_attn + t_o
+
+            # determine dominant bound
+            bounds = []
+            if comp_attn > mem_attn:
+                bounds.append("attn:comp")
+            else:
+                bounds.append("attn:mem")
+            if comp_qkv > mem_qkv:
+                bounds.append("qkv:comp")
+            else:
+                bounds.append("qkv:mem")
+            bound_str = ", ".join(bounds)
+
+            # KV cache size at this seq
+            kv_bytes = calculate_total_kv_bytes(model_config, batch_size, seq)
+            kv_gb = kv_bytes / 1e9
+
+            oom = " OOM" if kv_cap and kv_gb > kv_cap else ""
+
+            print(f"  {seq:>8d}  {t_qkv*1e6:>10.2f} {t_attn*1e6:>10.2f} {t_o*1e6:>10.2f}"
+                  f"  {t_total*1e6:>10.2f}  {t_total*1e3:>10.4f}  {kv_gb:>8.2f}  {bound_str}{oom}")
+
+    print()
+
+
+if __name__ == "__main__":
+    verify_against_sim(batch_sizes=[1, 64])
+    print()
+    generate_comparison_json()
+
+    # --- H100 FP8 vs others: seq sweep from 1K to 1M ---
+    hw_configs = {
+        "H100_FP8":  H100_fp8_config,
+        "B200":      B200_config,
+        "Ours":      ours_config,
+        "Rubin":     rubin_config,
+    }
+    sweep_seq_roofline(hw_configs, config, batch_size=1)
+    sweep_seq_roofline(hw_configs, config, batch_size=64, label="Seq Sweep BS=64")

@@ -50,6 +50,19 @@ hbm4_npu_config = {
     "kv_bytes_per_element": 1,  # element count = byte count at FP8
 }
 
+H100_fp8_config = {
+    "compute": 1979,        # TFLOPS (H100 SXM FP8 dense Tensor Core)
+    "Bandwidth": 3.35,      # TB/s (HBM3)
+    "capacity": 80,         # GB per GPU
+    "power": 700,           # W
+    "kv_cache_size": None,  # GB (set below, assumes 8-way TP for Qwen3 235B)
+    "num_devices": 1,       # per-GPU roofline (1 GPU)
+    "device_link_bw": 0.9,  # TB/s NVLink per direction (900 GB/s)
+    "kv_bytes_per_element": 1,
+}
+# 8-way TP: each GPU holds 235/8 ≈ 29.4 GB weights, rest for KV cache
+H100_fp8_config["kv_cache_size"] = H100_fp8_config["capacity"] - 235 / 8 - 5
+
 rubin_single_layer_config = {
     "compute": 17500,       # TFLOPS (Rubin spec)
     "Bandwidth": 22,        # TB/s (= T-elements/s at FP8)

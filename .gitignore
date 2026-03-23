@@ -5,6 +5,13 @@
 # CMake
 cmake-build-debug/
 compile_commands.json
+build/.cmake/
+build/CMakeCache.txt
+build/CMakeFiles/
+build/Makefile
+build/_deps/
+build/cmake_install.cmake
+build/extern/
 
 # JetBrains
 .idea/

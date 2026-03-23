@@ -1,0 +1,1 @@
+model,dtype,num_gpus,batch,seq_len,stage,time_ms,time_pct,TFLOPS,compute_util_pct,bytes_GB,BW_TBs,bw_util_pct
