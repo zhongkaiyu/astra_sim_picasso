@@ -48,6 +48,6 @@ __pycache__/
 # NCU profiling raw outputs (too large for git)
 *.ncu-rep
 # Large NCU CSV dumps
-examples/run_scripts/analytical/congestion_aware/H100_results/attn_scaling_tp1.csv
-examples/run_scripts/analytical/congestion_aware/H100_results/attn_scaling_tp2.csv
+examples/run_scripts/analytical/congestion_aware/profiling/H100_results/attn_scaling_tp1.csv
+examples/run_scripts/analytical/congestion_aware/profiling/H100_results/attn_scaling_tp2.csv
 

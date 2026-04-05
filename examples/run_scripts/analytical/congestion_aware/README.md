@@ -4,32 +4,100 @@
 
 ## 目录结构
 
+脚本按功能划分为 **3 大类**：
+
 ```
 congestion_aware/
-├── configs/                     # 仿真配置 (78 个 JSON)
-│   ├── comm_allreduce/          #   ├── AllReduce 通信原语扩展测试 (28)
-│   ├── comm_tp16/               #   ├── TP16 通信原语测试 (21)
-│   ├── tp16_e2e/                #   ├── TP16 端到端工作负载仿真 (13)
-│   ├── tp16_gqa/                #   ├── TP16 GQA-Only 单层仿真 (12)
-│   └── dp16/                    #   └── DP16 端到端工作负载仿真 (4)
-├── trace_configs/               # Chakra Trace 生成配置 (8 个 JSON)
-├── reports/                     # 分析报告
-│   ├── gqa_analysis_hbm4_onering.md          # GQA-Only 综合分析报告
-│   ├── gqa_only_hbm4_onering_comparison.txt  # GQA-Only 通信详情
-│   └── e2e_hbm4_onering_comparison.txt       # 端到端通信详情
-├── cache_db_v131/               # 结果缓存 (SQLite + CSV)
-├── bulk_run_configs.py          # 批量执行入口
-├── run_from_config.py           # 单配置执行器
-├── cache_db.py                  # 缓存读写 + 命名解析
-├── generate_scaling_configs.py  # AllReduce 扩展配置生成器
-├── generate_scaling_resources.py# 网络/系统资源生成器
-├── generate_scaling_traces.py   # AllReduce Trace 生成器
-├── csv_to_sqlite.py             # CSV → SQLite 转换
-├── query_db.py                  # 查询缓存结果
-├── decode_et_to_json.py         # ET trace 解析工具
-├── print_comm_type.py           # 通信类型打印工具
-├── analyze_comm.py              # 逐层通信延迟分析工具 (支持 --output)
-└── README.md                    # 本文件
+├── backend/                     # 【1】Hybrid 数据生成后端
+│   ├── roofline/                #     解析 roofline model
+│   │   ├── roofline_gqa_calc.py         # GQA 单层 roofline
+│   │   ├── deepseek_v3_mla_roofline.py  # MLA (DeepSeek-V3) roofline
+│   │   ├── attention.py                 # GQA 单层模型 + trace 生成 (核心)
+│   │   ├── hardware_config.py           # 硬件常量 (B200/Ours/Rubin/H100)
+│   │   ├── latency_cal.py               # 配置驱动的 latency 估计
+│   │   ├── main.py                      # SA utilization 计算主循环
+│   │   ├── util.py                      # 生成 {model}_util_{N}.json
+│   │   └── utilization_profiles/        # 各模型 utilization JSONs
+│   │       ├── qwen3/                   #   Qwen3-235B util_{8..256}.json
+│   │       ├── llama4/                  #   Llama4-Maverick
+│   │       ├── deepseek3/               #   DeepSeek-V3 MLA
+│   │       └── h100/                    #   H100 baseline
+│   ├── astrasim_runner/         #     AstraSim trace/config 生成 + 执行
+│   │   ├── generate_scaling_{configs,traces,resources}.py
+│   │   ├── seq_scale.py                 # GQA seq 扩展批量生成
+│   │   ├── batch_run_configs.py, bulk_run_configs.py
+│   │   ├── run_from_config.py, run_with_cache.py
+│   │   ├── cache_db.py                  # SQLite/CSV 缓存库
+│   │   ├── csv_to_sqlite.py, query_db.py
+│   │   ├── update_csv_topology.py, test_cache_flow.py
+│   │   └── decode_et_to_json.py, print_comm_type.py
+│   └── hybrid_merge/            #     Merge AstraSim + roofline + 功耗
+│       ├── analyze_comm.py              # AstraSim 日志解析库
+│       ├── collect_gqa_data.py, collect_gqa_batch_data.py
+│       ├── merge_gqa_results.py         # Hybrid 合并 (AstraSim+roofline)
+│       ├── add_rubin_tp2.py             # 注入 Rubin/H100 TP2
+│       ├── power_model.py, query_power.py
+│       └── gen_report.py, get_util.py
+│
+├── profiling/                   # 【2】实卡 H100 profiling
+│   ├── ncu/                     #     NCU profile 脚本
+│   │   ├── ncu_attn_profile{,_dsv3}.py
+│   │   ├── ncu_decode_profile{,_dsv3}.py
+│   │   ├── ncu_absorbed_mla_profile_dsv3.py
+│   │   ├── analyze_ncu_report.py
+│   │   └── analyze_attn_scaling.py
+│   ├── microbench/              #     PyTorch GPU microbenchmarks
+│   │   ├── attention2.py, batch_gemm_1_gemm.py
+│   └── H100_results/            #     profiling raw outputs (.ncu-rep 已 gitignore)
+│
+├── figures/                     # 【3】论文画图
+│   ├── paper_figures/           #     fig1-6 完整目录（scripts/data/plots）
+│   │   ├── fig1_e2e_latency/
+│   │   ├── fig2_energy_power/
+│   │   ├── fig3_ablation_study/
+│   │   ├── fig4_batch_exploration/
+│   │   ├── fig5_time_breakdown/
+│   │   └── fig6_design_exploration/
+│   └── legacy_plots/            #     早期 plot 脚本
+│       ├── plot_hybrid_merged.py, plot_batch_sweep.py
+│       ├── plot_gqa_batch_comparison.py, plot_gqa_comparison.py
+│       └── plot_power.py
+│
+├── configs/                     # ASTRA-sim 仿真配置 JSON (78 个)
+├── trace_configs/               # Chakra Trace 生成配置
+├── reports/                     # 模型结果: {qwen3-235B,llama4,deepseek-v3}/{hybrid,power,...}
+├── cache_db_*/                  # 仿真结果 SQLite + CSV 缓存
+├── Deppseek-v3.md, SETUP_LOCALE.md, README.md
+└── SparseMesh2D_random.sh       # Shell 测试脚本
+```
+
+### 端到端数据流
+
+```
+[backend/roofline/]                                      [profiling/ncu/]
+  util.py ──→ utilization_profiles/{model}/*.json           ncu_*_profile*.py
+       │                                                    ↓
+       ▼                                              H100_results/*.ncu-rep
+  roofline_gqa_calc.py ──→ reports/{model}/roofline/*.json
+                                │
+[backend/astrasim_runner/]      │
+  seq_scale.py ──→ configs/ ──→ bulk_run_configs.py ──→ SQLite cache
+                                                │
+[backend/hybrid_merge/]                         ▼
+  collect_gqa_data.py ──→ reports/{model}/astrasim/*.json
+                                │
+                                ▼
+  merge_gqa_results.py ──→ reports/{model}/hybrid/*.json
+       + add_rubin_tp2.py (注入 Rubin/H100 TP2 baseline)
+                                │
+                                ▼
+  power_model.py ──→ reports/{model}/power/*.json
+
+[figures/paper_figures/]
+  fig{1-6}/scripts/plot_*.py  ←── 读取 reports/ 和 H100_results/
+                 │
+                 ▼
+  fig{1-6}/plots/*.pdf + *.png
 ```
 
 ---
