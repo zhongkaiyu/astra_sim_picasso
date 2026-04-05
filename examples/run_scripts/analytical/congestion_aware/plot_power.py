@@ -9,10 +9,11 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 
-STRAT_KEYS = ["HMP_reo", "hmp_reo_new", "hmp", "tp16", "rubin"]
+STRAT_KEYS = ["HMP_reo", "hmp_reo_new", "hmp", "tp16", "rubin", "rubin_tp2", "h100", "h100_tp2"]
 STRAT_LABELS = {
     "HMP_reo": "HMP_RO", "hmp_reo_new": "RO_new",
-    "hmp": "HMP", "tp16": "TP16", "rubin": "Rubin",
+    "hmp": "HMP", "tp16": "TP16", "rubin": "Rubin", "rubin_tp2": "Rubin_TP2",
+    "h100": "H100", "h100_tp2": "H100_TP2",
 }
 STRAT_COLORS = {
     "HMP_reo":     "#E67E22",
@@ -20,13 +21,17 @@ STRAT_COLORS = {
     "hmp":         "#2E86C1",
     "tp16":        "#27AE60",
     "rubin":       "#C0392B",
+    "rubin_tp2":   "#922B21",
+    "h100":        "#7F8C8D",
+    "h100_tp2":    "#566573",
 }
 STRAT_MARKERS = {
     "HMP_reo": "s", "hmp_reo_new": "P", "hmp": "D", "tp16": "^", "rubin": "o",
+    "rubin_tp2": "v", "h100": "X", "h100_tp2": "p",
 }
 
-COMP_COLORS = {"hbm": "#3498DB", "cmpt": "#E74C3C", "d2d": "#F39C12"}
-COMP_LABELS = {"hbm": "HBM", "cmpt": "Compute", "d2d": "D2D Link"}
+COMP_COLORS = {"static": "#95A5A6", "hbm": "#3498DB", "cmpt": "#E74C3C", "d2d": "#F39C12"}
+COMP_LABELS = {"static": "Static", "hbm": "Memory", "cmpt": "Compute", "d2d": "D2D Link"}
 
 
 def load_data(path: str) -> dict:
@@ -162,37 +167,42 @@ def plot_power_breakdown_bars(summary, out_dir: Path, title_suffix: str):
     x = np.arange(n_seq)
 
     for si, sk in enumerate(strats):
-        hbm_vals, cmpt_vals, d2d_vals = [], [], []
+        static_vals, hbm_vals, cmpt_vals, d2d_vals = [], [], [], []
         for row in summary:
             d = row.get(sk, {})
+            static_vals.append(d.get("static_power_w", 0))
             hbm_vals.append(d.get("hbm_power_w", 0))
             cmpt_vals.append(d.get("cmpt_power_w", 0))
             d2d_vals.append(d.get("d2d_power_w", 0))
 
         offset = (si - n_strat / 2 + 0.5) * bar_w
+        static_arr = np.array(static_vals)
         hbm_arr = np.array(hbm_vals)
         cmpt_arr = np.array(cmpt_vals)
         d2d_arr = np.array(d2d_vals)
 
-        p1 = ax.bar(x + offset, hbm_arr, bar_w, color=COMP_COLORS["hbm"],
-                     edgecolor="white", linewidth=0.5)
-        p2 = ax.bar(x + offset, cmpt_arr, bar_w, bottom=hbm_arr,
-                     color=COMP_COLORS["cmpt"], edgecolor="white", linewidth=0.5)
-        p3 = ax.bar(x + offset, d2d_arr, bar_w, bottom=hbm_arr + cmpt_arr,
-                     color=COMP_COLORS["d2d"], edgecolor="white", linewidth=0.5)
+        ax.bar(x + offset, static_arr, bar_w, color=COMP_COLORS["static"],
+               edgecolor="white", linewidth=0.5)
+        ax.bar(x + offset, hbm_arr, bar_w, bottom=static_arr,
+               color=COMP_COLORS["hbm"], edgecolor="white", linewidth=0.5)
+        ax.bar(x + offset, cmpt_arr, bar_w, bottom=static_arr + hbm_arr,
+               color=COMP_COLORS["cmpt"], edgecolor="white", linewidth=0.5)
+        ax.bar(x + offset, d2d_arr, bar_w, bottom=static_arr + hbm_arr + cmpt_arr,
+               color=COMP_COLORS["d2d"], edgecolor="white", linewidth=0.5)
 
         for xi in range(n_seq):
-            total = hbm_arr[xi] + cmpt_arr[xi] + d2d_arr[xi]
+            total = static_arr[xi] + hbm_arr[xi] + cmpt_arr[xi] + d2d_arr[xi]
             if total > 0:
                 ax.text(x[xi] + offset, total + 8, STRAT_LABELS[sk],
                         ha="center", va="bottom", fontsize=7, rotation=45)
 
     comp_handles = [
+        plt.Rectangle((0, 0), 1, 1, fc=COMP_COLORS["static"]),
         plt.Rectangle((0, 0), 1, 1, fc=COMP_COLORS["hbm"]),
         plt.Rectangle((0, 0), 1, 1, fc=COMP_COLORS["cmpt"]),
         plt.Rectangle((0, 0), 1, 1, fc=COMP_COLORS["d2d"]),
     ]
-    ax.legend(comp_handles, [COMP_LABELS[k] for k in ["hbm", "cmpt", "d2d"]],
+    ax.legend(comp_handles, [COMP_LABELS[k] for k in ["static", "hbm", "cmpt", "d2d"]],
               fontsize=10, loc="upper left")
 
     ax.set_xticks(x)
@@ -218,22 +228,26 @@ def plot_power_breakdown_single_seq(summary, strategies_data, out_dir: Path,
     y_pos = np.arange(len(strats))
     bar_h = 0.5
 
+    static_vals = [row.get(sk, {}).get("static_power_w", 0) for sk in strats]
     hbm_vals = [row.get(sk, {}).get("hbm_power_w", 0) for sk in strats]
     cmpt_vals = [row.get(sk, {}).get("cmpt_power_w", 0) for sk in strats]
     d2d_vals = [row.get(sk, {}).get("d2d_power_w", 0) for sk in strats]
 
+    static_arr = np.array(static_vals)
     hbm_arr = np.array(hbm_vals)
     cmpt_arr = np.array(cmpt_vals)
     d2d_arr = np.array(d2d_vals)
 
-    ax.barh(y_pos, hbm_arr, bar_h, color=COMP_COLORS["hbm"], label=COMP_LABELS["hbm"])
-    ax.barh(y_pos, cmpt_arr, bar_h, left=hbm_arr, color=COMP_COLORS["cmpt"],
-            label=COMP_LABELS["cmpt"])
-    ax.barh(y_pos, d2d_arr, bar_h, left=hbm_arr + cmpt_arr, color=COMP_COLORS["d2d"],
-            label=COMP_LABELS["d2d"])
+    ax.barh(y_pos, static_arr, bar_h, color=COMP_COLORS["static"], label=COMP_LABELS["static"])
+    ax.barh(y_pos, hbm_arr, bar_h, left=static_arr,
+            color=COMP_COLORS["hbm"], label=COMP_LABELS["hbm"])
+    ax.barh(y_pos, cmpt_arr, bar_h, left=static_arr + hbm_arr,
+            color=COMP_COLORS["cmpt"], label=COMP_LABELS["cmpt"])
+    ax.barh(y_pos, d2d_arr, bar_h, left=static_arr + hbm_arr + cmpt_arr,
+            color=COMP_COLORS["d2d"], label=COMP_LABELS["d2d"])
 
     for i, sk in enumerate(strats):
-        total = hbm_arr[i] + cmpt_arr[i] + d2d_arr[i]
+        total = static_arr[i] + hbm_arr[i] + cmpt_arr[i] + d2d_arr[i]
         ax.text(total + 5, i, f"{total:.0f}W", va="center", fontsize=10, fontweight="bold")
 
     ax.set_yticks(y_pos)
@@ -426,14 +440,22 @@ def plot_hbm_breakdown(summary, strategies_data, out_dir: Path, title_suffix: st
 
 
 def _static_power_w(sk: str, meta: dict) -> float:
-    """Static power (W) from config. D2D has no static component."""
-    if sk == "rubin":
-        cfg = meta.get("rubin_config", {})
-        sr = cfg.get("static_ratio", 0.1)
+    """Static power (W) from power coefficients in metadata."""
+    if sk in ("rubin", "rubin_tp2"):
+        coeffs = meta.get("rubin_power_coeffs", {})
+        if "static_w" in coeffs:
+            return coeffs["static_w"]
+        # fallback: old format
+        cfg = meta.get("rubin_config", meta.get("rubin_hw", {}))
+        sr = cfg.get("static_ratio", 0.177)
         return (cfg.get("n_hbm_cubes", 8) * cfg.get("hbm_tdp_per_cube", 75)
                 + cfg.get("n_cmpt_dies", 2) * cfg.get("cmpt_tdp_per_die", 800)) * sr
-    cfg = meta.get("ours_config", {})
-    sr = cfg.get("static_ratio", 0.1)
+    coeffs = meta.get("ours_power_coeffs", {})
+    if "static_w" in coeffs:
+        return coeffs["static_w"]
+    # fallback: old format
+    cfg = meta.get("ours_config", meta.get("ours_hw", {}))
+    sr = cfg.get("static_ratio", 0.177)
     n = cfg.get("n_cubes", 16)
     return n * (cfg.get("hbm_tdp_per_cube", 75) + cfg.get("cmpt_tdp_per_cube", 15)) * sr
 
@@ -595,7 +617,7 @@ def print_static_dynamic_table(data: dict):
 
     print("\n" + "=" * 100)
     print("  Static vs Dynamic Power & Energy per Token (per strategy)")
-    print("  P_static = static_ratio × TDP (HBM+Compute), P_dynamic = P_total - P_static, E = P × time")
+    print("  P_static = 17.7% × TDP, P_dynamic = P_cmpt + P_mem [+ P_d2d], E = P × time")
     print("=" * 100)
 
     for sk in strats:

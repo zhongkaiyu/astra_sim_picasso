@@ -1,0 +1,6244 @@
+{
+  "metadata": {
+    "_source": "roofline_gqa_calc.py (roofline_qkv + roofline_attention + roofline_output + comm)",
+    "description": "GQA single-layer roofline WITH weight loading + comm, bs=1, peak-perf=96.0T",
+    "model": "qwen3 (d=4096, Hq=64, Hkv=4, dk=128)",
+    "batch_size": 1,
+    "strategies": [
+      "HMP_reo",
+      "hmp_reo_new",
+      "hmp",
+      "tp16",
+      "rubin",
+      "h100"
+    ],
+    "device_hw": {
+      "peak_perf_tflops": 96.0,
+      "bandwidth_tb_s": 2.5,
+      "link_bw_tb_s": 1.5,
+      "crossover_oi": 38.4
+    },
+    "rubin_hw": {
+      "peak_perf_tflops": 17500,
+      "bandwidth_tb_s": 22,
+      "crossover_oi": 795.45
+    },
+    "h100_hw": {
+      "peak_perf_tflops": 1979,
+      "bandwidth_tb_s": 3.35,
+      "crossover_oi": 590.75
+    },
+    "comm_model": "QKV AllGather(tp_s) ring + final tree-reduce log2(tp_h*tp_s) steps",
+    "output_ar_chunking": {
+      "dataset_splits": 1,
+      "active_chunks": 1
+    },
+    "d2d_latency": {
+      "hop_latency_ns": 15.0,
+      "endpoint_delay_ns": 10
+    }
+  },
+  "strategies": {
+    "HMP_reo": {
+      "strategy": "HMP_reo",
+      "config": {
+        "d_model": 4096,
+        "num_attention_heads": 16,
+        "num_kv_heads": 1,
+        "d_head": 32,
+        "d_head_full": 128,
+        "num_layers": 1,
+        "tp_s": 4,
+        "tp_hd": 4,
+        "tp_h": 4,
+        "wo_mode": "duplicate"
+      },
+      "hardware": {
+        "peak_perf_tflops": 96.0,
+        "bandwidth_tb_s": 2.5,
+        "roofline_crossover_oi": 38.4,
+        "link_bw_tb_s": 1.5
+      },
+      "comm": {
+        "qkv_allgather": {
+          "time_ns": 76.15,
+          "tp_hd": 4,
+          "per_cube_chunk_elems": 576,
+          "total_ag_elems": 2304,
+          "steps": 3,
+          "fixed_per_step_ns": 25.0,
+          "bw_per_step_ns": 0.384
+        },
+        "attn_rs": {
+          "time_ns": 76.02,
+          "tp_s": 4,
+          "total_elems": 2048,
+          "chunk_elems_per_step": 512,
+          "steps": 3,
+          "fixed_per_step_ns": 25.0,
+          "bw_per_step_ns": 0.3413
+        },
+        "final_reduce": {
+          "time_ns": 110.92,
+          "n_total": 16,
+          "num_steps": 4,
+          "msg_elems_per_step": 4096,
+          "fixed_per_step_ns": 25.0,
+          "bw_per_step_ns": 2.7307
+        },
+        "output_ar": {
+          "time_ns": 0,
+          "description": "no sharded wo / no tp_s split"
+        },
+        "output_ag": {
+          "time_ns": 0,
+          "description": "no sharded wo / no tp_s split"
+        },
+        "total_comm_ns": 187.07
+      },
+      "data": [
+        {
+          "seq": 1024,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 48.06,
+            "total_ns_fused": 26.21,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 256,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 13.11,
+                "elems": 32768,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 10.92,
+                "memory_ns": 13.11,
+                "fused_ns": 13.11,
+                "macs": 524288,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 13.11,
+                "elems": 32768,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 10.92,
+                "memory_ns": 13.11,
+                "fused_ns": 13.11,
+                "macs": 524288,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 3357.9,
+            "compute_ns": 174.76,
+            "memory_ns": 3357.9,
+            "bound": "memory",
+            "weight_elems": 8388608,
+            "activation_elems": 6144,
+            "total_macs": 8388608,
+            "wo_mode": "duplicate",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 4351.55,
+          "gpu_total_fused_ns": 4329.7,
+          "wall_total_serial_ns": 4538.62,
+          "wall_total_fused_ns": 4516.77
+        },
+        {
+          "seq": 2048,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 96.12,
+            "total_ns_fused": 52.43,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 512,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 26.21,
+                "elems": 65536,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 21.85,
+                "memory_ns": 26.21,
+                "fused_ns": 26.21,
+                "macs": 1048576,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 26.21,
+                "elems": 65536,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 21.85,
+                "memory_ns": 26.21,
+                "fused_ns": 26.21,
+                "macs": 1048576,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 3357.9,
+            "compute_ns": 174.76,
+            "memory_ns": 3357.9,
+            "bound": "memory",
+            "weight_elems": 8388608,
+            "activation_elems": 6144,
+            "total_macs": 8388608,
+            "wo_mode": "duplicate",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 4399.61,
+          "gpu_total_fused_ns": 4355.92,
+          "wall_total_serial_ns": 4586.68,
+          "wall_total_fused_ns": 4542.99
+        },
+        {
+          "seq": 4096,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 192.24,
+            "total_ns_fused": 104.86,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 1024,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 52.43,
+                "elems": 131072,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 43.69,
+                "memory_ns": 52.43,
+                "fused_ns": 52.43,
+                "macs": 2097152,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 52.43,
+                "elems": 131072,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 43.69,
+                "memory_ns": 52.43,
+                "fused_ns": 52.43,
+                "macs": 2097152,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 3357.9,
+            "compute_ns": 174.76,
+            "memory_ns": 3357.9,
+            "bound": "memory",
+            "weight_elems": 8388608,
+            "activation_elems": 6144,
+            "total_macs": 8388608,
+            "wo_mode": "duplicate",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 4495.73,
+          "gpu_total_fused_ns": 4408.35,
+          "wall_total_serial_ns": 4682.8,
+          "wall_total_fused_ns": 4595.42
+        },
+        {
+          "seq": 8192,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 384.48,
+            "total_ns_fused": 209.72,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 2048,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 104.86,
+                "elems": 262144,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 87.38,
+                "memory_ns": 104.86,
+                "fused_ns": 104.86,
+                "macs": 4194304,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 104.86,
+                "elems": 262144,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 87.38,
+                "memory_ns": 104.86,
+                "fused_ns": 104.86,
+                "macs": 4194304,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 3357.9,
+            "compute_ns": 174.76,
+            "memory_ns": 3357.9,
+            "bound": "memory",
+            "weight_elems": 8388608,
+            "activation_elems": 6144,
+            "total_macs": 8388608,
+            "wo_mode": "duplicate",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 4687.97,
+          "gpu_total_fused_ns": 4513.21,
+          "wall_total_serial_ns": 4875.04,
+          "wall_total_fused_ns": 4700.28
+        },
+        {
+          "seq": 16384,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 768.96,
+            "total_ns_fused": 419.43,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 4096,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 209.72,
+                "elems": 524288,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 174.76,
+                "memory_ns": 209.72,
+                "fused_ns": 209.72,
+                "macs": 8388608,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 209.72,
+                "elems": 524288,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 174.76,
+                "memory_ns": 209.72,
+                "fused_ns": 209.72,
+                "macs": 8388608,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 3357.9,
+            "compute_ns": 174.76,
+            "memory_ns": 3357.9,
+            "bound": "memory",
+            "weight_elems": 8388608,
+            "activation_elems": 6144,
+            "total_macs": 8388608,
+            "wo_mode": "duplicate",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 5072.45,
+          "gpu_total_fused_ns": 4722.92,
+          "wall_total_serial_ns": 5259.52,
+          "wall_total_fused_ns": 4909.99
+        },
+        {
+          "seq": 32768,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 1537.91,
+            "total_ns_fused": 838.86,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 8192,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 419.43,
+                "elems": 1048576,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 349.53,
+                "memory_ns": 419.43,
+                "fused_ns": 419.43,
+                "macs": 16777216,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 419.43,
+                "elems": 1048576,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 349.53,
+                "memory_ns": 419.43,
+                "fused_ns": 419.43,
+                "macs": 16777216,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 3357.9,
+            "compute_ns": 174.76,
+            "memory_ns": 3357.9,
+            "bound": "memory",
+            "weight_elems": 8388608,
+            "activation_elems": 6144,
+            "total_macs": 8388608,
+            "wo_mode": "duplicate",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 5841.4,
+          "gpu_total_fused_ns": 5142.35,
+          "wall_total_serial_ns": 6028.47,
+          "wall_total_fused_ns": 5329.42
+        },
+        {
+          "seq": 65536,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 3075.82,
+            "total_ns_fused": 1677.72,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 16384,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 838.86,
+                "elems": 2097152,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 699.05,
+                "memory_ns": 838.86,
+                "fused_ns": 838.86,
+                "macs": 33554432,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 838.86,
+                "elems": 2097152,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 699.05,
+                "memory_ns": 838.86,
+                "fused_ns": 838.86,
+                "macs": 33554432,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 3357.9,
+            "compute_ns": 174.76,
+            "memory_ns": 3357.9,
+            "bound": "memory",
+            "weight_elems": 8388608,
+            "activation_elems": 6144,
+            "total_macs": 8388608,
+            "wo_mode": "duplicate",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 7379.31,
+          "gpu_total_fused_ns": 5981.21,
+          "wall_total_serial_ns": 7566.38,
+          "wall_total_fused_ns": 6168.28
+        },
+        {
+          "seq": 131072,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 6151.65,
+            "total_ns_fused": 3355.44,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 32768,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 1677.72,
+                "elems": 4194304,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 1398.1,
+                "memory_ns": 1677.72,
+                "fused_ns": 1677.72,
+                "macs": 67108864,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 1677.72,
+                "elems": 4194304,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 1398.1,
+                "memory_ns": 1677.72,
+                "fused_ns": 1677.72,
+                "macs": 67108864,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 3357.9,
+            "compute_ns": 174.76,
+            "memory_ns": 3357.9,
+            "bound": "memory",
+            "weight_elems": 8388608,
+            "activation_elems": 6144,
+            "total_macs": 8388608,
+            "wo_mode": "duplicate",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 10455.14,
+          "gpu_total_fused_ns": 7658.93,
+          "wall_total_serial_ns": 10642.21,
+          "wall_total_fused_ns": 7846.0
+        },
+        {
+          "seq": 262144,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 12303.29,
+            "total_ns_fused": 6710.89,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 65536,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 3355.44,
+                "elems": 8388608,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 2796.2,
+                "memory_ns": 3355.44,
+                "fused_ns": 3355.44,
+                "macs": 134217728,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 3355.44,
+                "elems": 8388608,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 2796.2,
+                "memory_ns": 3355.44,
+                "fused_ns": 3355.44,
+                "macs": 134217728,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 3357.9,
+            "compute_ns": 174.76,
+            "memory_ns": 3357.9,
+            "bound": "memory",
+            "weight_elems": 8388608,
+            "activation_elems": 6144,
+            "total_macs": 8388608,
+            "wo_mode": "duplicate",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 16606.78,
+          "gpu_total_fused_ns": 11014.38,
+          "wall_total_serial_ns": 16793.85,
+          "wall_total_fused_ns": 11201.45
+        },
+        {
+          "seq": 524288,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 24606.58,
+            "total_ns_fused": 13421.77,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 131072,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 6710.89,
+                "elems": 16777216,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 5592.41,
+                "memory_ns": 6710.89,
+                "fused_ns": 6710.89,
+                "macs": 268435456,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 6710.89,
+                "elems": 16777216,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 5592.41,
+                "memory_ns": 6710.89,
+                "fused_ns": 6710.89,
+                "macs": 268435456,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 3357.9,
+            "compute_ns": 174.76,
+            "memory_ns": 3357.9,
+            "bound": "memory",
+            "weight_elems": 8388608,
+            "activation_elems": 6144,
+            "total_macs": 8388608,
+            "wo_mode": "duplicate",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 28910.07,
+          "gpu_total_fused_ns": 17725.26,
+          "wall_total_serial_ns": 29097.14,
+          "wall_total_fused_ns": 17912.33
+        },
+        {
+          "seq": 1048576,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 49213.17,
+            "total_ns_fused": 26843.55,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 262144,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 13421.77,
+                "elems": 33554432,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 11184.81,
+                "memory_ns": 13421.77,
+                "fused_ns": 13421.77,
+                "macs": 536870912,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 13421.77,
+                "elems": 33554432,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 11184.81,
+                "memory_ns": 13421.77,
+                "fused_ns": 13421.77,
+                "macs": 536870912,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 3357.9,
+            "compute_ns": 174.76,
+            "memory_ns": 3357.9,
+            "bound": "memory",
+            "weight_elems": 8388608,
+            "activation_elems": 6144,
+            "total_macs": 8388608,
+            "wo_mode": "duplicate",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 53516.66,
+          "gpu_total_fused_ns": 31147.04,
+          "wall_total_serial_ns": 53703.73,
+          "wall_total_fused_ns": 31334.11
+        }
+      ]
+    },
+    "hmp_reo_new": {
+      "strategy": "hmp_reo_new",
+      "config": {
+        "d_model": 4096,
+        "num_attention_heads": 16,
+        "num_kv_heads": 1,
+        "d_head": 32,
+        "d_head_full": 128,
+        "num_layers": 1,
+        "tp_s": 4,
+        "tp_hd": 4,
+        "tp_h": 4,
+        "wo_mode": "row_sharded"
+      },
+      "hardware": {
+        "peak_perf_tflops": 96.0,
+        "bandwidth_tb_s": 2.5,
+        "roofline_crossover_oi": 38.4,
+        "link_bw_tb_s": 1.5
+      },
+      "comm": {
+        "qkv_allgather": {
+          "time_ns": 76.15,
+          "tp_hd": 4,
+          "per_cube_chunk_elems": 576,
+          "total_ag_elems": 2304,
+          "steps": 3,
+          "fixed_per_step_ns": 25.0,
+          "bw_per_step_ns": 0.384
+        },
+        "attn_rs": {
+          "time_ns": 76.02,
+          "tp_s": 4,
+          "total_elems": 2048,
+          "chunk_elems_per_step": 512,
+          "steps": 3,
+          "fixed_per_step_ns": 25.0,
+          "bw_per_step_ns": 0.3413
+        },
+        "final_reduce": {
+          "time_ns": 110.92,
+          "n_total": 16,
+          "num_steps": 4,
+          "msg_elems_per_step": 4096,
+          "fixed_per_step_ns": 25.0,
+          "bw_per_step_ns": 2.7307
+        },
+        "output_ar": {
+          "time_ns": 0,
+          "description": "no sharded wo / no tp_s split"
+        },
+        "output_ag": {
+          "time_ns": 0,
+          "description": "no sharded wo / no tp_s split"
+        },
+        "total_comm_ns": 263.09
+      },
+      "data": [
+        {
+          "seq": 1024,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 48.06,
+            "total_ns_fused": 26.21,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 256,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 13.11,
+                "elems": 32768,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 10.92,
+                "memory_ns": 13.11,
+                "fused_ns": 13.11,
+                "macs": 524288,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 13.11,
+                "elems": 32768,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 10.92,
+                "memory_ns": 13.11,
+                "fused_ns": 13.11,
+                "macs": 524288,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "row_sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 1834.97,
+          "gpu_total_fused_ns": 1813.12,
+          "wall_total_serial_ns": 2098.06,
+          "wall_total_fused_ns": 2076.21
+        },
+        {
+          "seq": 2048,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 96.12,
+            "total_ns_fused": 52.43,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 512,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 26.21,
+                "elems": 65536,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 21.85,
+                "memory_ns": 26.21,
+                "fused_ns": 26.21,
+                "macs": 1048576,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 26.21,
+                "elems": 65536,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 21.85,
+                "memory_ns": 26.21,
+                "fused_ns": 26.21,
+                "macs": 1048576,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "row_sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 1883.03,
+          "gpu_total_fused_ns": 1839.34,
+          "wall_total_serial_ns": 2146.12,
+          "wall_total_fused_ns": 2102.43
+        },
+        {
+          "seq": 4096,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 192.24,
+            "total_ns_fused": 104.86,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 1024,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 52.43,
+                "elems": 131072,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 43.69,
+                "memory_ns": 52.43,
+                "fused_ns": 52.43,
+                "macs": 2097152,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 52.43,
+                "elems": 131072,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 43.69,
+                "memory_ns": 52.43,
+                "fused_ns": 52.43,
+                "macs": 2097152,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "row_sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 1979.15,
+          "gpu_total_fused_ns": 1891.77,
+          "wall_total_serial_ns": 2242.24,
+          "wall_total_fused_ns": 2154.86
+        },
+        {
+          "seq": 8192,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 384.48,
+            "total_ns_fused": 209.72,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 2048,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 104.86,
+                "elems": 262144,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 87.38,
+                "memory_ns": 104.86,
+                "fused_ns": 104.86,
+                "macs": 4194304,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 104.86,
+                "elems": 262144,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 87.38,
+                "memory_ns": 104.86,
+                "fused_ns": 104.86,
+                "macs": 4194304,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "row_sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 2171.39,
+          "gpu_total_fused_ns": 1996.63,
+          "wall_total_serial_ns": 2434.48,
+          "wall_total_fused_ns": 2259.72
+        },
+        {
+          "seq": 16384,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 768.96,
+            "total_ns_fused": 419.43,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 4096,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 209.72,
+                "elems": 524288,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 174.76,
+                "memory_ns": 209.72,
+                "fused_ns": 209.72,
+                "macs": 8388608,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 209.72,
+                "elems": 524288,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 174.76,
+                "memory_ns": 209.72,
+                "fused_ns": 209.72,
+                "macs": 8388608,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "row_sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 2555.87,
+          "gpu_total_fused_ns": 2206.34,
+          "wall_total_serial_ns": 2818.96,
+          "wall_total_fused_ns": 2469.43
+        },
+        {
+          "seq": 32768,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 1537.91,
+            "total_ns_fused": 838.86,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 8192,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 419.43,
+                "elems": 1048576,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 349.53,
+                "memory_ns": 419.43,
+                "fused_ns": 419.43,
+                "macs": 16777216,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 419.43,
+                "elems": 1048576,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 349.53,
+                "memory_ns": 419.43,
+                "fused_ns": 419.43,
+                "macs": 16777216,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "row_sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 3324.82,
+          "gpu_total_fused_ns": 2625.77,
+          "wall_total_serial_ns": 3587.91,
+          "wall_total_fused_ns": 2888.86
+        },
+        {
+          "seq": 65536,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 3075.82,
+            "total_ns_fused": 1677.72,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 16384,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 838.86,
+                "elems": 2097152,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 699.05,
+                "memory_ns": 838.86,
+                "fused_ns": 838.86,
+                "macs": 33554432,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 838.86,
+                "elems": 2097152,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 699.05,
+                "memory_ns": 838.86,
+                "fused_ns": 838.86,
+                "macs": 33554432,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "row_sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 4862.73,
+          "gpu_total_fused_ns": 3464.63,
+          "wall_total_serial_ns": 5125.82,
+          "wall_total_fused_ns": 3727.72
+        },
+        {
+          "seq": 131072,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 6151.65,
+            "total_ns_fused": 3355.44,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 32768,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 1677.72,
+                "elems": 4194304,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 1398.1,
+                "memory_ns": 1677.72,
+                "fused_ns": 1677.72,
+                "macs": 67108864,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 1677.72,
+                "elems": 4194304,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 1398.1,
+                "memory_ns": 1677.72,
+                "fused_ns": 1677.72,
+                "macs": 67108864,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "row_sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 7938.56,
+          "gpu_total_fused_ns": 5142.35,
+          "wall_total_serial_ns": 8201.65,
+          "wall_total_fused_ns": 5405.44
+        },
+        {
+          "seq": 262144,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 12303.29,
+            "total_ns_fused": 6710.89,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 65536,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 3355.44,
+                "elems": 8388608,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 2796.2,
+                "memory_ns": 3355.44,
+                "fused_ns": 3355.44,
+                "macs": 134217728,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 3355.44,
+                "elems": 8388608,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 2796.2,
+                "memory_ns": 3355.44,
+                "fused_ns": 3355.44,
+                "macs": 134217728,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "row_sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 14090.2,
+          "gpu_total_fused_ns": 8497.8,
+          "wall_total_serial_ns": 14353.29,
+          "wall_total_fused_ns": 8760.89
+        },
+        {
+          "seq": 524288,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 24606.58,
+            "total_ns_fused": 13421.77,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 131072,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 6710.89,
+                "elems": 16777216,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 5592.41,
+                "memory_ns": 6710.89,
+                "fused_ns": 6710.89,
+                "macs": 268435456,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 6710.89,
+                "elems": 16777216,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 5592.41,
+                "memory_ns": 6710.89,
+                "fused_ns": 6710.89,
+                "macs": 268435456,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "row_sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 26393.49,
+          "gpu_total_fused_ns": 15208.68,
+          "wall_total_serial_ns": 26656.58,
+          "wall_total_fused_ns": 15471.77
+        },
+        {
+          "seq": 1048576,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 49213.17,
+            "total_ns_fused": 26843.55,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 262144,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 13421.77,
+                "elems": 33554432,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 11184.81,
+                "memory_ns": 13421.77,
+                "fused_ns": 13421.77,
+                "macs": 536870912,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 13421.77,
+                "elems": 33554432,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 11184.81,
+                "memory_ns": 13421.77,
+                "fused_ns": 13421.77,
+                "macs": 536870912,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "row_sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 51000.08,
+          "gpu_total_fused_ns": 28630.46,
+          "wall_total_serial_ns": 51263.17,
+          "wall_total_fused_ns": 28893.55
+        }
+      ]
+    },
+    "hmp": {
+      "strategy": "hmp",
+      "config": {
+        "d_model": 4096,
+        "num_attention_heads": 16,
+        "num_kv_heads": 1,
+        "d_head": 32,
+        "d_head_full": 128,
+        "num_layers": 1,
+        "tp_s": 4,
+        "tp_hd": 4,
+        "tp_h": 4,
+        "wo_mode": "sharded"
+      },
+      "hardware": {
+        "peak_perf_tflops": 96.0,
+        "bandwidth_tb_s": 2.5,
+        "roofline_crossover_oi": 38.4,
+        "link_bw_tb_s": 1.5
+      },
+      "comm": {
+        "qkv_allgather": {
+          "time_ns": 76.15,
+          "tp_hd": 4,
+          "per_cube_chunk_elems": 576,
+          "total_ag_elems": 2304,
+          "steps": 3,
+          "fixed_per_step_ns": 25.0,
+          "bw_per_step_ns": 0.384
+        },
+        "attn_rs": {
+          "time_ns": 76.02,
+          "tp_s": 4,
+          "total_elems": 2048,
+          "chunk_elems_per_step": 512,
+          "steps": 3,
+          "fixed_per_step_ns": 25.0,
+          "bw_per_step_ns": 0.3413
+        },
+        "final_reduce": {
+          "time_ns": 110.92,
+          "n_total": 16,
+          "num_steps": 4,
+          "msg_elems_per_step": 4096,
+          "fixed_per_step_ns": 25.0,
+          "bw_per_step_ns": 2.7307
+        },
+        "output_ar": {
+          "time_ns": 154.1,
+          "tp_s": 4,
+          "msg_elems": 4096,
+          "dataset_splits": 1,
+          "active_chunks": 1,
+          "chunk_per_step": 1024.0,
+          "n_steps": 6,
+          "fixed_per_step_ns": 25.0,
+          "bw_per_step_ns": 0.6827,
+          "hops_per_step": 1
+        },
+        "output_ag": {
+          "time_ns": 77.05,
+          "tp_s": 4,
+          "per_cube_chunk_elems": 1024,
+          "total_ag_elems": 4096,
+          "steps": 3,
+          "fixed_per_step_ns": 25.0,
+          "bw_per_step_ns": 0.6827
+        },
+        "total_comm_ns": 418.22
+      },
+      "data": [
+        {
+          "seq": 1024,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 48.06,
+            "total_ns_fused": 26.21,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 256,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 13.11,
+                "elems": 32768,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 10.92,
+                "memory_ns": 13.11,
+                "fused_ns": 13.11,
+                "macs": 524288,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 13.11,
+                "elems": 32768,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 10.92,
+                "memory_ns": 13.11,
+                "fused_ns": 13.11,
+                "macs": 524288,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 154.1,
+            "tp_s": 4,
+            "msg_elems": 4096,
+            "dataset_splits": 1,
+            "active_chunks": 1,
+            "chunk_per_step": 1024.0,
+            "n_steps": 6,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827,
+            "hops_per_step": 1
+          },
+          "output_ag_comm": {
+            "time_ns": 77.05,
+            "tp_s": 4,
+            "per_cube_chunk_elems": 1024,
+            "total_ag_elems": 4096,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827
+          },
+          "gpu_total_serial_ns": 1834.97,
+          "gpu_total_fused_ns": 1813.12,
+          "wall_total_serial_ns": 2253.19,
+          "wall_total_fused_ns": 2231.34
+        },
+        {
+          "seq": 2048,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 96.12,
+            "total_ns_fused": 52.43,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 512,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 26.21,
+                "elems": 65536,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 21.85,
+                "memory_ns": 26.21,
+                "fused_ns": 26.21,
+                "macs": 1048576,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 26.21,
+                "elems": 65536,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 21.85,
+                "memory_ns": 26.21,
+                "fused_ns": 26.21,
+                "macs": 1048576,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 154.1,
+            "tp_s": 4,
+            "msg_elems": 4096,
+            "dataset_splits": 1,
+            "active_chunks": 1,
+            "chunk_per_step": 1024.0,
+            "n_steps": 6,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827,
+            "hops_per_step": 1
+          },
+          "output_ag_comm": {
+            "time_ns": 77.05,
+            "tp_s": 4,
+            "per_cube_chunk_elems": 1024,
+            "total_ag_elems": 4096,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827
+          },
+          "gpu_total_serial_ns": 1883.03,
+          "gpu_total_fused_ns": 1839.34,
+          "wall_total_serial_ns": 2301.25,
+          "wall_total_fused_ns": 2257.56
+        },
+        {
+          "seq": 4096,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 192.24,
+            "total_ns_fused": 104.86,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 1024,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 52.43,
+                "elems": 131072,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 43.69,
+                "memory_ns": 52.43,
+                "fused_ns": 52.43,
+                "macs": 2097152,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 52.43,
+                "elems": 131072,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 43.69,
+                "memory_ns": 52.43,
+                "fused_ns": 52.43,
+                "macs": 2097152,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 154.1,
+            "tp_s": 4,
+            "msg_elems": 4096,
+            "dataset_splits": 1,
+            "active_chunks": 1,
+            "chunk_per_step": 1024.0,
+            "n_steps": 6,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827,
+            "hops_per_step": 1
+          },
+          "output_ag_comm": {
+            "time_ns": 77.05,
+            "tp_s": 4,
+            "per_cube_chunk_elems": 1024,
+            "total_ag_elems": 4096,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827
+          },
+          "gpu_total_serial_ns": 1979.15,
+          "gpu_total_fused_ns": 1891.77,
+          "wall_total_serial_ns": 2397.37,
+          "wall_total_fused_ns": 2309.99
+        },
+        {
+          "seq": 8192,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 384.48,
+            "total_ns_fused": 209.72,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 2048,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 104.86,
+                "elems": 262144,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 87.38,
+                "memory_ns": 104.86,
+                "fused_ns": 104.86,
+                "macs": 4194304,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 104.86,
+                "elems": 262144,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 87.38,
+                "memory_ns": 104.86,
+                "fused_ns": 104.86,
+                "macs": 4194304,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 154.1,
+            "tp_s": 4,
+            "msg_elems": 4096,
+            "dataset_splits": 1,
+            "active_chunks": 1,
+            "chunk_per_step": 1024.0,
+            "n_steps": 6,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827,
+            "hops_per_step": 1
+          },
+          "output_ag_comm": {
+            "time_ns": 77.05,
+            "tp_s": 4,
+            "per_cube_chunk_elems": 1024,
+            "total_ag_elems": 4096,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827
+          },
+          "gpu_total_serial_ns": 2171.39,
+          "gpu_total_fused_ns": 1996.63,
+          "wall_total_serial_ns": 2589.61,
+          "wall_total_fused_ns": 2414.85
+        },
+        {
+          "seq": 16384,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 768.96,
+            "total_ns_fused": 419.43,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 4096,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 209.72,
+                "elems": 524288,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 174.76,
+                "memory_ns": 209.72,
+                "fused_ns": 209.72,
+                "macs": 8388608,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 209.72,
+                "elems": 524288,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 174.76,
+                "memory_ns": 209.72,
+                "fused_ns": 209.72,
+                "macs": 8388608,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 154.1,
+            "tp_s": 4,
+            "msg_elems": 4096,
+            "dataset_splits": 1,
+            "active_chunks": 1,
+            "chunk_per_step": 1024.0,
+            "n_steps": 6,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827,
+            "hops_per_step": 1
+          },
+          "output_ag_comm": {
+            "time_ns": 77.05,
+            "tp_s": 4,
+            "per_cube_chunk_elems": 1024,
+            "total_ag_elems": 4096,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827
+          },
+          "gpu_total_serial_ns": 2555.87,
+          "gpu_total_fused_ns": 2206.34,
+          "wall_total_serial_ns": 2974.09,
+          "wall_total_fused_ns": 2624.56
+        },
+        {
+          "seq": 32768,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 1537.91,
+            "total_ns_fused": 838.86,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 8192,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 419.43,
+                "elems": 1048576,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 349.53,
+                "memory_ns": 419.43,
+                "fused_ns": 419.43,
+                "macs": 16777216,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 419.43,
+                "elems": 1048576,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 349.53,
+                "memory_ns": 419.43,
+                "fused_ns": 419.43,
+                "macs": 16777216,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 154.1,
+            "tp_s": 4,
+            "msg_elems": 4096,
+            "dataset_splits": 1,
+            "active_chunks": 1,
+            "chunk_per_step": 1024.0,
+            "n_steps": 6,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827,
+            "hops_per_step": 1
+          },
+          "output_ag_comm": {
+            "time_ns": 77.05,
+            "tp_s": 4,
+            "per_cube_chunk_elems": 1024,
+            "total_ag_elems": 4096,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827
+          },
+          "gpu_total_serial_ns": 3324.82,
+          "gpu_total_fused_ns": 2625.77,
+          "wall_total_serial_ns": 3743.04,
+          "wall_total_fused_ns": 3043.99
+        },
+        {
+          "seq": 65536,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 3075.82,
+            "total_ns_fused": 1677.72,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 16384,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 838.86,
+                "elems": 2097152,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 699.05,
+                "memory_ns": 838.86,
+                "fused_ns": 838.86,
+                "macs": 33554432,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 838.86,
+                "elems": 2097152,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 699.05,
+                "memory_ns": 838.86,
+                "fused_ns": 838.86,
+                "macs": 33554432,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 154.1,
+            "tp_s": 4,
+            "msg_elems": 4096,
+            "dataset_splits": 1,
+            "active_chunks": 1,
+            "chunk_per_step": 1024.0,
+            "n_steps": 6,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827,
+            "hops_per_step": 1
+          },
+          "output_ag_comm": {
+            "time_ns": 77.05,
+            "tp_s": 4,
+            "per_cube_chunk_elems": 1024,
+            "total_ag_elems": 4096,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827
+          },
+          "gpu_total_serial_ns": 4862.73,
+          "gpu_total_fused_ns": 3464.63,
+          "wall_total_serial_ns": 5280.95,
+          "wall_total_fused_ns": 3882.85
+        },
+        {
+          "seq": 131072,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 6151.65,
+            "total_ns_fused": 3355.44,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 32768,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 1677.72,
+                "elems": 4194304,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 1398.1,
+                "memory_ns": 1677.72,
+                "fused_ns": 1677.72,
+                "macs": 67108864,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 1677.72,
+                "elems": 4194304,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 1398.1,
+                "memory_ns": 1677.72,
+                "fused_ns": 1677.72,
+                "macs": 67108864,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 154.1,
+            "tp_s": 4,
+            "msg_elems": 4096,
+            "dataset_splits": 1,
+            "active_chunks": 1,
+            "chunk_per_step": 1024.0,
+            "n_steps": 6,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827,
+            "hops_per_step": 1
+          },
+          "output_ag_comm": {
+            "time_ns": 77.05,
+            "tp_s": 4,
+            "per_cube_chunk_elems": 1024,
+            "total_ag_elems": 4096,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827
+          },
+          "gpu_total_serial_ns": 7938.56,
+          "gpu_total_fused_ns": 5142.35,
+          "wall_total_serial_ns": 8356.78,
+          "wall_total_fused_ns": 5560.57
+        },
+        {
+          "seq": 262144,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 12303.29,
+            "total_ns_fused": 6710.89,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 65536,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 3355.44,
+                "elems": 8388608,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 2796.2,
+                "memory_ns": 3355.44,
+                "fused_ns": 3355.44,
+                "macs": 134217728,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 3355.44,
+                "elems": 8388608,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 2796.2,
+                "memory_ns": 3355.44,
+                "fused_ns": 3355.44,
+                "macs": 134217728,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 154.1,
+            "tp_s": 4,
+            "msg_elems": 4096,
+            "dataset_splits": 1,
+            "active_chunks": 1,
+            "chunk_per_step": 1024.0,
+            "n_steps": 6,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827,
+            "hops_per_step": 1
+          },
+          "output_ag_comm": {
+            "time_ns": 77.05,
+            "tp_s": 4,
+            "per_cube_chunk_elems": 1024,
+            "total_ag_elems": 4096,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827
+          },
+          "gpu_total_serial_ns": 14090.2,
+          "gpu_total_fused_ns": 8497.8,
+          "wall_total_serial_ns": 14508.42,
+          "wall_total_fused_ns": 8916.02
+        },
+        {
+          "seq": 524288,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 24606.58,
+            "total_ns_fused": 13421.77,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 131072,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 6710.89,
+                "elems": 16777216,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 5592.41,
+                "memory_ns": 6710.89,
+                "fused_ns": 6710.89,
+                "macs": 268435456,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 6710.89,
+                "elems": 16777216,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 5592.41,
+                "memory_ns": 6710.89,
+                "fused_ns": 6710.89,
+                "macs": 268435456,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 154.1,
+            "tp_s": 4,
+            "msg_elems": 4096,
+            "dataset_splits": 1,
+            "active_chunks": 1,
+            "chunk_per_step": 1024.0,
+            "n_steps": 6,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827,
+            "hops_per_step": 1
+          },
+          "output_ag_comm": {
+            "time_ns": 77.05,
+            "tp_s": 4,
+            "per_cube_chunk_elems": 1024,
+            "total_ag_elems": 4096,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827
+          },
+          "gpu_total_serial_ns": 26393.49,
+          "gpu_total_fused_ns": 15208.68,
+          "wall_total_serial_ns": 26811.71,
+          "wall_total_fused_ns": 15626.9
+        },
+        {
+          "seq": 1048576,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0,
+            "qkv_allgather": {
+              "tp_hd": 4,
+              "per_cube_elems": 576,
+              "total_elems": 2304
+            }
+          },
+          "attention": {
+            "total_ns_serial": 49213.17,
+            "total_ns_fused": 26843.55,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 262144,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 13421.77,
+                "elems": 33554432,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 11184.81,
+                "memory_ns": 13421.77,
+                "fused_ns": 13421.77,
+                "macs": 536870912,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 13421.77,
+                "elems": 33554432,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 11184.81,
+                "memory_ns": 13421.77,
+                "fused_ns": 13421.77,
+                "macs": 536870912,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 841.32,
+            "compute_ns": 43.69,
+            "memory_ns": 841.32,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 6144,
+            "total_macs": 2097152,
+            "wo_mode": "sharded",
+            "oi": 1.99
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 76.15,
+            "tp_hd": 4,
+            "per_cube_chunk_elems": 576,
+            "total_ag_elems": 2304,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.384
+          },
+          "attn_rs_comm": {
+            "time_ns": 76.02,
+            "tp_s": 4,
+            "total_elems": 2048,
+            "chunk_elems_per_step": 512,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.3413
+          },
+          "final_reduce_comm": {
+            "time_ns": 110.92,
+            "n_total": 16,
+            "num_steps": 4,
+            "msg_elems_per_step": 4096,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 2.7307
+          },
+          "output_ar_comm": {
+            "time_ns": 154.1,
+            "tp_s": 4,
+            "msg_elems": 4096,
+            "dataset_splits": 1,
+            "active_chunks": 1,
+            "chunk_per_step": 1024.0,
+            "n_steps": 6,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827,
+            "hops_per_step": 1
+          },
+          "output_ag_comm": {
+            "time_ns": 77.05,
+            "tp_s": 4,
+            "per_cube_chunk_elems": 1024,
+            "total_ag_elems": 4096,
+            "steps": 3,
+            "fixed_per_step_ns": 25.0,
+            "bw_per_step_ns": 0.6827
+          },
+          "gpu_total_serial_ns": 51000.08,
+          "gpu_total_fused_ns": 28630.46,
+          "wall_total_serial_ns": 51418.3,
+          "wall_total_fused_ns": 29048.68
+        }
+      ]
+    },
+    "tp16": {
+      "strategy": "tp16",
+      "config": {
+        "d_model": 4096,
+        "num_attention_heads": 16,
+        "num_kv_heads": 1,
+        "d_head": 32,
+        "num_layers": 1,
+        "tp_s": 1,
+        "tp_hd": 4,
+        "wo_mode": "full"
+      },
+      "hardware": {
+        "peak_perf_tflops": 96.0,
+        "bandwidth_tb_s": 2.5,
+        "roofline_crossover_oi": 38.4,
+        "link_bw_tb_s": 1.5
+      },
+      "comm": {
+        "qkv_allgather": {
+          "time_ns": 0,
+          "description": "no d_head split"
+        },
+        "attn_rs": {
+          "time_ns": 0,
+          "description": "no tp_s split"
+        },
+        "final_reduce": {
+          "time_ns": 0,
+          "description": "single NPU"
+        },
+        "output_ar": {
+          "time_ns": 0,
+          "description": "no sharded wo / no tp_s split"
+        },
+        "output_ag": {
+          "time_ns": 0,
+          "description": "no sharded wo / no tp_s split"
+        },
+        "total_comm_ns": 0
+      },
+      "data": [
+        {
+          "seq": 1024,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns_serial": 48.06,
+            "total_ns_fused": 26.21,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 1024,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 13.11,
+                "elems": 32768,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 10.92,
+                "memory_ns": 13.11,
+                "fused_ns": 13.11,
+                "macs": 524288,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 13.11,
+                "elems": 32768,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 10.92,
+                "memory_ns": 13.11,
+                "fused_ns": 13.11,
+                "macs": 524288,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 840.7,
+            "compute_ns": 43.69,
+            "memory_ns": 840.7,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 4608,
+            "total_macs": 2097152,
+            "wo_mode": "full",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 1834.35,
+          "gpu_total_fused_ns": 1812.5,
+          "wall_total_serial_ns": 1834.35,
+          "wall_total_fused_ns": 1812.5
+        },
+        {
+          "seq": 2048,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns_serial": 96.12,
+            "total_ns_fused": 52.43,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 2048,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 26.21,
+                "elems": 65536,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 21.85,
+                "memory_ns": 26.21,
+                "fused_ns": 26.21,
+                "macs": 1048576,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 26.21,
+                "elems": 65536,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 21.85,
+                "memory_ns": 26.21,
+                "fused_ns": 26.21,
+                "macs": 1048576,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 840.7,
+            "compute_ns": 43.69,
+            "memory_ns": 840.7,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 4608,
+            "total_macs": 2097152,
+            "wo_mode": "full",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 1882.41,
+          "gpu_total_fused_ns": 1838.72,
+          "wall_total_serial_ns": 1882.41,
+          "wall_total_fused_ns": 1838.72
+        },
+        {
+          "seq": 4096,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns_serial": 192.24,
+            "total_ns_fused": 104.86,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 4096,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 52.43,
+                "elems": 131072,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 43.69,
+                "memory_ns": 52.43,
+                "fused_ns": 52.43,
+                "macs": 2097152,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 52.43,
+                "elems": 131072,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 43.69,
+                "memory_ns": 52.43,
+                "fused_ns": 52.43,
+                "macs": 2097152,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 840.7,
+            "compute_ns": 43.69,
+            "memory_ns": 840.7,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 4608,
+            "total_macs": 2097152,
+            "wo_mode": "full",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 1978.53,
+          "gpu_total_fused_ns": 1891.15,
+          "wall_total_serial_ns": 1978.53,
+          "wall_total_fused_ns": 1891.15
+        },
+        {
+          "seq": 8192,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns_serial": 384.48,
+            "total_ns_fused": 209.72,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 8192,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 104.86,
+                "elems": 262144,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 87.38,
+                "memory_ns": 104.86,
+                "fused_ns": 104.86,
+                "macs": 4194304,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 104.86,
+                "elems": 262144,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 87.38,
+                "memory_ns": 104.86,
+                "fused_ns": 104.86,
+                "macs": 4194304,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 840.7,
+            "compute_ns": 43.69,
+            "memory_ns": 840.7,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 4608,
+            "total_macs": 2097152,
+            "wo_mode": "full",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 2170.77,
+          "gpu_total_fused_ns": 1996.01,
+          "wall_total_serial_ns": 2170.77,
+          "wall_total_fused_ns": 1996.01
+        },
+        {
+          "seq": 16384,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns_serial": 768.96,
+            "total_ns_fused": 419.43,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 16384,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 209.72,
+                "elems": 524288,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 174.76,
+                "memory_ns": 209.72,
+                "fused_ns": 209.72,
+                "macs": 8388608,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 209.72,
+                "elems": 524288,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 174.76,
+                "memory_ns": 209.72,
+                "fused_ns": 209.72,
+                "macs": 8388608,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 840.7,
+            "compute_ns": 43.69,
+            "memory_ns": 840.7,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 4608,
+            "total_macs": 2097152,
+            "wo_mode": "full",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 2555.25,
+          "gpu_total_fused_ns": 2205.72,
+          "wall_total_serial_ns": 2555.25,
+          "wall_total_fused_ns": 2205.72
+        },
+        {
+          "seq": 32768,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns_serial": 1537.91,
+            "total_ns_fused": 838.86,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 32768,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 419.43,
+                "elems": 1048576,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 349.53,
+                "memory_ns": 419.43,
+                "fused_ns": 419.43,
+                "macs": 16777216,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 419.43,
+                "elems": 1048576,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 349.53,
+                "memory_ns": 419.43,
+                "fused_ns": 419.43,
+                "macs": 16777216,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 840.7,
+            "compute_ns": 43.69,
+            "memory_ns": 840.7,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 4608,
+            "total_macs": 2097152,
+            "wo_mode": "full",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 3324.2,
+          "gpu_total_fused_ns": 2625.15,
+          "wall_total_serial_ns": 3324.2,
+          "wall_total_fused_ns": 2625.15
+        },
+        {
+          "seq": 65536,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns_serial": 3075.82,
+            "total_ns_fused": 1677.72,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 65536,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 838.86,
+                "elems": 2097152,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 699.05,
+                "memory_ns": 838.86,
+                "fused_ns": 838.86,
+                "macs": 33554432,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 838.86,
+                "elems": 2097152,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 699.05,
+                "memory_ns": 838.86,
+                "fused_ns": 838.86,
+                "macs": 33554432,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 840.7,
+            "compute_ns": 43.69,
+            "memory_ns": 840.7,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 4608,
+            "total_macs": 2097152,
+            "wo_mode": "full",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 4862.11,
+          "gpu_total_fused_ns": 3464.01,
+          "wall_total_serial_ns": 4862.11,
+          "wall_total_fused_ns": 3464.01
+        },
+        {
+          "seq": 131072,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns_serial": 6151.65,
+            "total_ns_fused": 3355.44,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 131072,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 1677.72,
+                "elems": 4194304,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 1398.1,
+                "memory_ns": 1677.72,
+                "fused_ns": 1677.72,
+                "macs": 67108864,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 1677.72,
+                "elems": 4194304,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 1398.1,
+                "memory_ns": 1677.72,
+                "fused_ns": 1677.72,
+                "macs": 67108864,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 840.7,
+            "compute_ns": 43.69,
+            "memory_ns": 840.7,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 4608,
+            "total_macs": 2097152,
+            "wo_mode": "full",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 7937.94,
+          "gpu_total_fused_ns": 5141.73,
+          "wall_total_serial_ns": 7937.94,
+          "wall_total_fused_ns": 5141.73
+        },
+        {
+          "seq": 262144,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns_serial": 12303.29,
+            "total_ns_fused": 6710.89,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 262144,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 3355.44,
+                "elems": 8388608,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 2796.2,
+                "memory_ns": 3355.44,
+                "fused_ns": 3355.44,
+                "macs": 134217728,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 3355.44,
+                "elems": 8388608,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 2796.2,
+                "memory_ns": 3355.44,
+                "fused_ns": 3355.44,
+                "macs": 134217728,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 840.7,
+            "compute_ns": 43.69,
+            "memory_ns": 840.7,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 4608,
+            "total_macs": 2097152,
+            "wo_mode": "full",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 14089.58,
+          "gpu_total_fused_ns": 8497.18,
+          "wall_total_serial_ns": 14089.58,
+          "wall_total_fused_ns": 8497.18
+        },
+        {
+          "seq": 524288,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns_serial": 24606.58,
+            "total_ns_fused": 13421.77,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 524288,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 6710.89,
+                "elems": 16777216,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 5592.41,
+                "memory_ns": 6710.89,
+                "fused_ns": 6710.89,
+                "macs": 268435456,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 6710.89,
+                "elems": 16777216,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 5592.41,
+                "memory_ns": 6710.89,
+                "fused_ns": 6710.89,
+                "macs": 268435456,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 840.7,
+            "compute_ns": 43.69,
+            "memory_ns": 840.7,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 4608,
+            "total_macs": 2097152,
+            "wo_mode": "full",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 26392.87,
+          "gpu_total_fused_ns": 15208.06,
+          "wall_total_serial_ns": 26392.87,
+          "wall_total_fused_ns": 15208.06
+        },
+        {
+          "seq": 1048576,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 945.59,
+            "compute_ns": 49.15,
+            "memory_ns": 945.59,
+            "bound": "memory",
+            "weight_elems": 2359296,
+            "activation_elems": 4672,
+            "total_macs": 2359296,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns_serial": 49213.17,
+            "total_ns_fused": 26843.55,
+            "model": "serial(astrasim) + fused(gemv_roofline)",
+            "cache_seq": 1048576,
+            "gqa_oi": 32.0,
+            "sub_ops": {
+              "concat_k": {
+                "time_ns": 13421.77,
+                "elems": 33554432,
+                "bound": "memory"
+              },
+              "score_gemv": {
+                "compute_ns": 11184.81,
+                "memory_ns": 13421.77,
+                "fused_ns": 13421.77,
+                "macs": 536870912,
+                "bound": "memory"
+              },
+              "concat_v": {
+                "time_ns": 13421.77,
+                "elems": 33554432,
+                "bound": "memory"
+              },
+              "attn_v_gemv": {
+                "compute_ns": 11184.81,
+                "memory_ns": 13421.77,
+                "fused_ns": 13421.77,
+                "macs": 536870912,
+                "bound": "memory"
+              }
+            }
+          },
+          "Proj_O": {
+            "total_ns": 840.7,
+            "compute_ns": 43.69,
+            "memory_ns": 840.7,
+            "bound": "memory",
+            "weight_elems": 2097152,
+            "activation_elems": 4608,
+            "total_macs": 2097152,
+            "wo_mode": "full",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_serial_ns": 50999.46,
+          "gpu_total_fused_ns": 28629.84,
+          "wall_total_serial_ns": 50999.46,
+          "wall_total_fused_ns": 28629.84
+        }
+      ]
+    },
+    "rubin": {
+      "strategy": "rubin",
+      "config": {
+        "d_model": 4096,
+        "num_attention_heads": 64,
+        "num_kv_heads": 4,
+        "d_head": 128,
+        "num_layers": 1,
+        "tp_s": 1,
+        "wo_mode": "none",
+        "fused_attention": true
+      },
+      "hardware": {
+        "peak_perf_tflops": 17500,
+        "bandwidth_tb_s": 22,
+        "roofline_crossover_oi": 795.45,
+        "link_bw_tb_s": 1.8
+      },
+      "comm": {
+        "qkv_allgather": {
+          "time_ns": 0,
+          "description": "no d_head split"
+        },
+        "attn_rs": {
+          "time_ns": 0,
+          "description": "no tp_s split"
+        },
+        "final_reduce": {
+          "time_ns": 0,
+          "description": "single NPU"
+        },
+        "output_ar": {
+          "time_ns": 0,
+          "description": "no sharded wo / no tp_s split"
+        },
+        "output_ag": {
+          "time_ns": 0,
+          "description": "no sharded wo / no tp_s split"
+        },
+        "total_comm_ns": 0
+      },
+      "data": [
+        {
+          "seq": 1024,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 1716.46,
+            "compute_ns": 4.31,
+            "memory_ns": 1716.46,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 47.66,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 1048576,
+            "einsum_macs": 16777216,
+            "kv_mem_ns": 47.66,
+            "einsum_comp_ns": 1.92,
+            "cache_seq": 1024,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 1525.76,
+            "compute_ns": 3.83,
+            "memory_ns": 1525.76,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 3289.88,
+          "wall_total_ns": 3289.88
+        },
+        {
+          "seq": 2048,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 1716.46,
+            "compute_ns": 4.31,
+            "memory_ns": 1716.46,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 95.33,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 2097152,
+            "einsum_macs": 33554432,
+            "kv_mem_ns": 95.33,
+            "einsum_comp_ns": 3.83,
+            "cache_seq": 2048,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 1525.76,
+            "compute_ns": 3.83,
+            "memory_ns": 1525.76,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 3337.54,
+          "wall_total_ns": 3337.54
+        },
+        {
+          "seq": 4096,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 1716.46,
+            "compute_ns": 4.31,
+            "memory_ns": 1716.46,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 190.65,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 4194304,
+            "einsum_macs": 67108864,
+            "kv_mem_ns": 190.65,
+            "einsum_comp_ns": 7.67,
+            "cache_seq": 4096,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 1525.76,
+            "compute_ns": 3.83,
+            "memory_ns": 1525.76,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 3432.87,
+          "wall_total_ns": 3432.87
+        },
+        {
+          "seq": 8192,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 1716.46,
+            "compute_ns": 4.31,
+            "memory_ns": 1716.46,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 381.3,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 8388608,
+            "einsum_macs": 134217728,
+            "kv_mem_ns": 381.3,
+            "einsum_comp_ns": 15.34,
+            "cache_seq": 8192,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 1525.76,
+            "compute_ns": 3.83,
+            "memory_ns": 1525.76,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 3623.52,
+          "wall_total_ns": 3623.52
+        },
+        {
+          "seq": 16384,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 1716.46,
+            "compute_ns": 4.31,
+            "memory_ns": 1716.46,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 762.6,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 16777216,
+            "einsum_macs": 268435456,
+            "kv_mem_ns": 762.6,
+            "einsum_comp_ns": 30.68,
+            "cache_seq": 16384,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 1525.76,
+            "compute_ns": 3.83,
+            "memory_ns": 1525.76,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 4004.82,
+          "wall_total_ns": 4004.82
+        },
+        {
+          "seq": 32768,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 1716.46,
+            "compute_ns": 4.31,
+            "memory_ns": 1716.46,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 1525.2,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 33554432,
+            "einsum_macs": 536870912,
+            "kv_mem_ns": 1525.2,
+            "einsum_comp_ns": 61.36,
+            "cache_seq": 32768,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 1525.76,
+            "compute_ns": 3.83,
+            "memory_ns": 1525.76,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 4767.42,
+          "wall_total_ns": 4767.42
+        },
+        {
+          "seq": 65536,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 1716.46,
+            "compute_ns": 4.31,
+            "memory_ns": 1716.46,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 3050.4,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 67108864,
+            "einsum_macs": 1073741824,
+            "kv_mem_ns": 3050.4,
+            "einsum_comp_ns": 122.71,
+            "cache_seq": 65536,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 1525.76,
+            "compute_ns": 3.83,
+            "memory_ns": 1525.76,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 6292.62,
+          "wall_total_ns": 6292.62
+        },
+        {
+          "seq": 131072,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 1716.46,
+            "compute_ns": 4.31,
+            "memory_ns": 1716.46,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 6100.81,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 134217728,
+            "einsum_macs": 2147483648,
+            "kv_mem_ns": 6100.81,
+            "einsum_comp_ns": 245.43,
+            "cache_seq": 131072,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 1525.76,
+            "compute_ns": 3.83,
+            "memory_ns": 1525.76,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 9343.02,
+          "wall_total_ns": 9343.02
+        },
+        {
+          "seq": 262144,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 1716.46,
+            "compute_ns": 4.31,
+            "memory_ns": 1716.46,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 12201.61,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 268435456,
+            "einsum_macs": 4294967296,
+            "kv_mem_ns": 12201.61,
+            "einsum_comp_ns": 490.85,
+            "cache_seq": 262144,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 1525.76,
+            "compute_ns": 3.83,
+            "memory_ns": 1525.76,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 15443.83,
+          "wall_total_ns": 15443.83
+        },
+        {
+          "seq": 524288,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 1716.46,
+            "compute_ns": 4.31,
+            "memory_ns": 1716.46,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 24403.22,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 536870912,
+            "einsum_macs": 8589934592,
+            "kv_mem_ns": 24403.22,
+            "einsum_comp_ns": 981.71,
+            "cache_seq": 524288,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 1525.76,
+            "compute_ns": 3.83,
+            "memory_ns": 1525.76,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 27645.44,
+          "wall_total_ns": 27645.44
+        },
+        {
+          "seq": 1048576,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 1716.46,
+            "compute_ns": 4.31,
+            "memory_ns": 1716.46,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 48806.45,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 1073741824,
+            "einsum_macs": 17179869184,
+            "kv_mem_ns": 48806.45,
+            "einsum_comp_ns": 1963.41,
+            "cache_seq": 1048576,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 1525.76,
+            "compute_ns": 3.83,
+            "memory_ns": 1525.76,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 52048.66,
+          "wall_total_ns": 52048.66
+        }
+      ]
+    },
+    "h100": {
+      "strategy": "h100",
+      "config": {
+        "d_model": 4096,
+        "num_attention_heads": 64,
+        "num_kv_heads": 4,
+        "d_head": 128,
+        "num_layers": 1,
+        "tp_s": 1,
+        "wo_mode": "none",
+        "fused_attention": true
+      },
+      "hardware": {
+        "peak_perf_tflops": 1979,
+        "bandwidth_tb_s": 3.35,
+        "roofline_crossover_oi": 590.75,
+        "link_bw_tb_s": 0.9
+      },
+      "comm": {
+        "qkv_allgather": {
+          "time_ns": 0,
+          "description": "no d_head split"
+        },
+        "attn_rs": {
+          "time_ns": 0,
+          "description": "no tp_s split"
+        },
+        "final_reduce": {
+          "time_ns": 0,
+          "description": "single NPU"
+        },
+        "output_ar": {
+          "time_ns": 0,
+          "description": "no sharded wo / no tp_s split"
+        },
+        "output_ag": {
+          "time_ns": 0,
+          "description": "no sharded wo / no tp_s split"
+        },
+        "total_comm_ns": 0
+      },
+      "data": [
+        {
+          "seq": 1024,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 11272.25,
+            "compute_ns": 38.15,
+            "memory_ns": 11272.25,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 313.01,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 1048576,
+            "einsum_macs": 16777216,
+            "kv_mem_ns": 313.01,
+            "einsum_comp_ns": 16.96,
+            "cache_seq": 1024,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 10019.92,
+            "compute_ns": 33.91,
+            "memory_ns": 10019.92,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 21605.18,
+          "wall_total_ns": 21605.18
+        },
+        {
+          "seq": 2048,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 11272.25,
+            "compute_ns": 38.15,
+            "memory_ns": 11272.25,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 626.02,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 2097152,
+            "einsum_macs": 33554432,
+            "kv_mem_ns": 626.02,
+            "einsum_comp_ns": 33.91,
+            "cache_seq": 2048,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 10019.92,
+            "compute_ns": 33.91,
+            "memory_ns": 10019.92,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 21918.19,
+          "wall_total_ns": 21918.19
+        },
+        {
+          "seq": 4096,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 11272.25,
+            "compute_ns": 38.15,
+            "memory_ns": 11272.25,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 1252.03,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 4194304,
+            "einsum_macs": 67108864,
+            "kv_mem_ns": 1252.03,
+            "einsum_comp_ns": 67.82,
+            "cache_seq": 4096,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 10019.92,
+            "compute_ns": 33.91,
+            "memory_ns": 10019.92,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 22544.2,
+          "wall_total_ns": 22544.2
+        },
+        {
+          "seq": 8192,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 11272.25,
+            "compute_ns": 38.15,
+            "memory_ns": 11272.25,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 2504.06,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 8388608,
+            "einsum_macs": 134217728,
+            "kv_mem_ns": 2504.06,
+            "einsum_comp_ns": 135.64,
+            "cache_seq": 8192,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 10019.92,
+            "compute_ns": 33.91,
+            "memory_ns": 10019.92,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 23796.23,
+          "wall_total_ns": 23796.23
+        },
+        {
+          "seq": 16384,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 11272.25,
+            "compute_ns": 38.15,
+            "memory_ns": 11272.25,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 5008.12,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 16777216,
+            "einsum_macs": 268435456,
+            "kv_mem_ns": 5008.12,
+            "einsum_comp_ns": 271.28,
+            "cache_seq": 16384,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 10019.92,
+            "compute_ns": 33.91,
+            "memory_ns": 10019.92,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 26300.29,
+          "wall_total_ns": 26300.29
+        },
+        {
+          "seq": 32768,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 11272.25,
+            "compute_ns": 38.15,
+            "memory_ns": 11272.25,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 10016.25,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 33554432,
+            "einsum_macs": 536870912,
+            "kv_mem_ns": 10016.25,
+            "einsum_comp_ns": 542.57,
+            "cache_seq": 32768,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 10019.92,
+            "compute_ns": 33.91,
+            "memory_ns": 10019.92,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 31308.42,
+          "wall_total_ns": 31308.42
+        },
+        {
+          "seq": 65536,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 11272.25,
+            "compute_ns": 38.15,
+            "memory_ns": 11272.25,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 20032.5,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 67108864,
+            "einsum_macs": 1073741824,
+            "kv_mem_ns": 20032.5,
+            "einsum_comp_ns": 1085.14,
+            "cache_seq": 65536,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 10019.92,
+            "compute_ns": 33.91,
+            "memory_ns": 10019.92,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 41324.67,
+          "wall_total_ns": 41324.67
+        },
+        {
+          "seq": 131072,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 11272.25,
+            "compute_ns": 38.15,
+            "memory_ns": 11272.25,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 40064.99,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 134217728,
+            "einsum_macs": 2147483648,
+            "kv_mem_ns": 40064.99,
+            "einsum_comp_ns": 2170.27,
+            "cache_seq": 131072,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 10019.92,
+            "compute_ns": 33.91,
+            "memory_ns": 10019.92,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 61357.16,
+          "wall_total_ns": 61357.16
+        },
+        {
+          "seq": 262144,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 11272.25,
+            "compute_ns": 38.15,
+            "memory_ns": 11272.25,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 80129.99,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 268435456,
+            "einsum_macs": 4294967296,
+            "kv_mem_ns": 80129.99,
+            "einsum_comp_ns": 4340.54,
+            "cache_seq": 262144,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 10019.92,
+            "compute_ns": 33.91,
+            "memory_ns": 10019.92,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 101422.16,
+          "wall_total_ns": 101422.16
+        },
+        {
+          "seq": 524288,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 11272.25,
+            "compute_ns": 38.15,
+            "memory_ns": 11272.25,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 160259.97,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 536870912,
+            "einsum_macs": 8589934592,
+            "kv_mem_ns": 160259.97,
+            "einsum_comp_ns": 8681.09,
+            "cache_seq": 524288,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 10019.92,
+            "compute_ns": 33.91,
+            "memory_ns": 10019.92,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 181552.14,
+          "wall_total_ns": 181552.14
+        },
+        {
+          "seq": 1048576,
+          "batch": 1,
+          "Proj_QKV": {
+            "total_ns": 11272.25,
+            "compute_ns": 38.15,
+            "memory_ns": 11272.25,
+            "bound": "memory",
+            "weight_elems": 37748736,
+            "activation_elems": 13312,
+            "total_macs": 37748736,
+            "oi": 2.0
+          },
+          "attention": {
+            "total_ns": 320519.95,
+            "model": "fused_roofline",
+            "bound": "memory",
+            "kv_cache_elems": 1073741824,
+            "einsum_macs": 17179869184,
+            "kv_mem_ns": 320519.95,
+            "einsum_comp_ns": 17362.17,
+            "cache_seq": 1048576,
+            "gqa_oi": 32.0
+          },
+          "Proj_O": {
+            "total_ns": 10019.92,
+            "compute_ns": 33.91,
+            "memory_ns": 10019.92,
+            "bound": "memory",
+            "weight_elems": 33554432,
+            "activation_elems": 12288,
+            "total_macs": 33554432,
+            "wo_mode": "none",
+            "oi": 2.0
+          },
+          "qkv_allgather_comm": {
+            "time_ns": 0,
+            "description": "no d_head split"
+          },
+          "attn_rs_comm": {
+            "time_ns": 0,
+            "description": "no tp_s split"
+          },
+          "final_reduce_comm": {
+            "time_ns": 0,
+            "description": "single NPU"
+          },
+          "output_ar_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "output_ag_comm": {
+            "time_ns": 0,
+            "description": "no sharded wo / no tp_s split"
+          },
+          "gpu_total_ns": 341812.12,
+          "wall_total_ns": 341812.12
+        }
+      ]
+    }
+  },
+  "summary_comparison": [
+    {
+      "seq": 1024,
+      "HMP_reo_serial_ns": 4352,
+      "HMP_reo_fused_ns": 4330,
+      "HMP_reo_wall_serial_ns": 4539,
+      "HMP_reo_wall_fused_ns": 4517,
+      "hmp_reo_new_serial_ns": 1835,
+      "hmp_reo_new_fused_ns": 1813,
+      "hmp_reo_new_wall_serial_ns": 2098,
+      "hmp_reo_new_wall_fused_ns": 2076,
+      "hmp_serial_ns": 1835,
+      "hmp_fused_ns": 1813,
+      "hmp_wall_serial_ns": 2253,
+      "hmp_wall_fused_ns": 2231,
+      "tp16_serial_ns": 1834,
+      "tp16_fused_ns": 1812,
+      "tp16_wall_serial_ns": 1834,
+      "tp16_wall_fused_ns": 1812,
+      "rubin_ns": 3290
+    },
+    {
+      "seq": 2048,
+      "HMP_reo_serial_ns": 4400,
+      "HMP_reo_fused_ns": 4356,
+      "HMP_reo_wall_serial_ns": 4587,
+      "HMP_reo_wall_fused_ns": 4543,
+      "hmp_reo_new_serial_ns": 1883,
+      "hmp_reo_new_fused_ns": 1839,
+      "hmp_reo_new_wall_serial_ns": 2146,
+      "hmp_reo_new_wall_fused_ns": 2102,
+      "hmp_serial_ns": 1883,
+      "hmp_fused_ns": 1839,
+      "hmp_wall_serial_ns": 2301,
+      "hmp_wall_fused_ns": 2258,
+      "tp16_serial_ns": 1882,
+      "tp16_fused_ns": 1839,
+      "tp16_wall_serial_ns": 1882,
+      "tp16_wall_fused_ns": 1839,
+      "rubin_ns": 3338
+    },
+    {
+      "seq": 4096,
+      "HMP_reo_serial_ns": 4496,
+      "HMP_reo_fused_ns": 4408,
+      "HMP_reo_wall_serial_ns": 4683,
+      "HMP_reo_wall_fused_ns": 4595,
+      "hmp_reo_new_serial_ns": 1979,
+      "hmp_reo_new_fused_ns": 1892,
+      "hmp_reo_new_wall_serial_ns": 2242,
+      "hmp_reo_new_wall_fused_ns": 2155,
+      "hmp_serial_ns": 1979,
+      "hmp_fused_ns": 1892,
+      "hmp_wall_serial_ns": 2397,
+      "hmp_wall_fused_ns": 2310,
+      "tp16_serial_ns": 1979,
+      "tp16_fused_ns": 1891,
+      "tp16_wall_serial_ns": 1979,
+      "tp16_wall_fused_ns": 1891,
+      "rubin_ns": 3433
+    },
+    {
+      "seq": 8192,
+      "HMP_reo_serial_ns": 4688,
+      "HMP_reo_fused_ns": 4513,
+      "HMP_reo_wall_serial_ns": 4875,
+      "HMP_reo_wall_fused_ns": 4700,
+      "hmp_reo_new_serial_ns": 2171,
+      "hmp_reo_new_fused_ns": 1997,
+      "hmp_reo_new_wall_serial_ns": 2434,
+      "hmp_reo_new_wall_fused_ns": 2260,
+      "hmp_serial_ns": 2171,
+      "hmp_fused_ns": 1997,
+      "hmp_wall_serial_ns": 2590,
+      "hmp_wall_fused_ns": 2415,
+      "tp16_serial_ns": 2171,
+      "tp16_fused_ns": 1996,
+      "tp16_wall_serial_ns": 2171,
+      "tp16_wall_fused_ns": 1996,
+      "rubin_ns": 3624
+    },
+    {
+      "seq": 16384,
+      "HMP_reo_serial_ns": 5072,
+      "HMP_reo_fused_ns": 4723,
+      "HMP_reo_wall_serial_ns": 5260,
+      "HMP_reo_wall_fused_ns": 4910,
+      "hmp_reo_new_serial_ns": 2556,
+      "hmp_reo_new_fused_ns": 2206,
+      "hmp_reo_new_wall_serial_ns": 2819,
+      "hmp_reo_new_wall_fused_ns": 2469,
+      "hmp_serial_ns": 2556,
+      "hmp_fused_ns": 2206,
+      "hmp_wall_serial_ns": 2974,
+      "hmp_wall_fused_ns": 2625,
+      "tp16_serial_ns": 2555,
+      "tp16_fused_ns": 2206,
+      "tp16_wall_serial_ns": 2555,
+      "tp16_wall_fused_ns": 2206,
+      "rubin_ns": 4005
+    },
+    {
+      "seq": 32768,
+      "HMP_reo_serial_ns": 5841,
+      "HMP_reo_fused_ns": 5142,
+      "HMP_reo_wall_serial_ns": 6028,
+      "HMP_reo_wall_fused_ns": 5329,
+      "hmp_reo_new_serial_ns": 3325,
+      "hmp_reo_new_fused_ns": 2626,
+      "hmp_reo_new_wall_serial_ns": 3588,
+      "hmp_reo_new_wall_fused_ns": 2889,
+      "hmp_serial_ns": 3325,
+      "hmp_fused_ns": 2626,
+      "hmp_wall_serial_ns": 3743,
+      "hmp_wall_fused_ns": 3044,
+      "tp16_serial_ns": 3324,
+      "tp16_fused_ns": 2625,
+      "tp16_wall_serial_ns": 3324,
+      "tp16_wall_fused_ns": 2625,
+      "rubin_ns": 4767
+    },
+    {
+      "seq": 65536,
+      "HMP_reo_serial_ns": 7379,
+      "HMP_reo_fused_ns": 5981,
+      "HMP_reo_wall_serial_ns": 7566,
+      "HMP_reo_wall_fused_ns": 6168,
+      "hmp_reo_new_serial_ns": 4863,
+      "hmp_reo_new_fused_ns": 3465,
+      "hmp_reo_new_wall_serial_ns": 5126,
+      "hmp_reo_new_wall_fused_ns": 3728,
+      "hmp_serial_ns": 4863,
+      "hmp_fused_ns": 3465,
+      "hmp_wall_serial_ns": 5281,
+      "hmp_wall_fused_ns": 3883,
+      "tp16_serial_ns": 4862,
+      "tp16_fused_ns": 3464,
+      "tp16_wall_serial_ns": 4862,
+      "tp16_wall_fused_ns": 3464,
+      "rubin_ns": 6293
+    },
+    {
+      "seq": 131072,
+      "HMP_reo_serial_ns": 10455,
+      "HMP_reo_fused_ns": 7659,
+      "HMP_reo_wall_serial_ns": 10642,
+      "HMP_reo_wall_fused_ns": 7846,
+      "hmp_reo_new_serial_ns": 7939,
+      "hmp_reo_new_fused_ns": 5142,
+      "hmp_reo_new_wall_serial_ns": 8202,
+      "hmp_reo_new_wall_fused_ns": 5405,
+      "hmp_serial_ns": 7939,
+      "hmp_fused_ns": 5142,
+      "hmp_wall_serial_ns": 8357,
+      "hmp_wall_fused_ns": 5561,
+      "tp16_serial_ns": 7938,
+      "tp16_fused_ns": 5142,
+      "tp16_wall_serial_ns": 7938,
+      "tp16_wall_fused_ns": 5142,
+      "rubin_ns": 9343
+    },
+    {
+      "seq": 262144,
+      "HMP_reo_serial_ns": 16607,
+      "HMP_reo_fused_ns": 11014,
+      "HMP_reo_wall_serial_ns": 16794,
+      "HMP_reo_wall_fused_ns": 11201,
+      "hmp_reo_new_serial_ns": 14090,
+      "hmp_reo_new_fused_ns": 8498,
+      "hmp_reo_new_wall_serial_ns": 14353,
+      "hmp_reo_new_wall_fused_ns": 8761,
+      "hmp_serial_ns": 14090,
+      "hmp_fused_ns": 8498,
+      "hmp_wall_serial_ns": 14508,
+      "hmp_wall_fused_ns": 8916,
+      "tp16_serial_ns": 14090,
+      "tp16_fused_ns": 8497,
+      "tp16_wall_serial_ns": 14090,
+      "tp16_wall_fused_ns": 8497,
+      "rubin_ns": 15444
+    },
+    {
+      "seq": 524288,
+      "HMP_reo_serial_ns": 28910,
+      "HMP_reo_fused_ns": 17725,
+      "HMP_reo_wall_serial_ns": 29097,
+      "HMP_reo_wall_fused_ns": 17912,
+      "hmp_reo_new_serial_ns": 26393,
+      "hmp_reo_new_fused_ns": 15209,
+      "hmp_reo_new_wall_serial_ns": 26657,
+      "hmp_reo_new_wall_fused_ns": 15472,
+      "hmp_serial_ns": 26393,
+      "hmp_fused_ns": 15209,
+      "hmp_wall_serial_ns": 26812,
+      "hmp_wall_fused_ns": 15627,
+      "tp16_serial_ns": 26393,
+      "tp16_fused_ns": 15208,
+      "tp16_wall_serial_ns": 26393,
+      "tp16_wall_fused_ns": 15208,
+      "rubin_ns": 27645
+    },
+    {
+      "seq": 1048576,
+      "HMP_reo_serial_ns": 53517,
+      "HMP_reo_fused_ns": 31147,
+      "HMP_reo_wall_serial_ns": 53704,
+      "HMP_reo_wall_fused_ns": 31334,
+      "hmp_reo_new_serial_ns": 51000,
+      "hmp_reo_new_fused_ns": 28630,
+      "hmp_reo_new_wall_serial_ns": 51263,
+      "hmp_reo_new_wall_fused_ns": 28894,
+      "hmp_serial_ns": 51000,
+      "hmp_fused_ns": 28630,
+      "hmp_wall_serial_ns": 51418,
+      "hmp_wall_fused_ns": 29049,
+      "tp16_serial_ns": 50999,
+      "tp16_fused_ns": 28630,
+      "tp16_wall_serial_ns": 50999,
+      "tp16_wall_fused_ns": 28630,
+      "rubin_ns": 52049
+    }
+  ]
+}

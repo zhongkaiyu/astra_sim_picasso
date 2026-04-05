@@ -1,0 +1,7 @@
+# Fig 6 Design Exploration -- LaTeX Report
+
+Fig.~6 explores the sensitivity of decode latency and throughput to per-NPU compute power (8 to 256\,TFLOPS) and D2D link bandwidth (0.5 to 2.5\,TB/s) on a 4$\times$4 Mesh2D with Qwen3-235B under the RO\_new strategy.
+
+The wall-time heatmaps reveal a striking asymmetry: compute power dominates performance while D2D bandwidth has negligible impact. At bs=4, seq=8K, increasing compute from 8T to 96T reduces wall time from 7.2 to 1.4\,$\mu$s (5.1$\times$), yet sweeping D2D bandwidth from 0.5 to 2.5\,TB/s at any fixed compute level changes latency by less than 0.5\%. This insensitivity holds across all batch sizes and sequence lengths because RO\_new communication messages are extremely compact ($<$5\,KB), making latency dominated by the fixed per-hop delay (15\,ns) rather than link bandwidth.
+
+However, compute scaling exhibits a clear saturation ceiling. Beyond 96\,TFLOPS, doubling to 256T yields virtually no improvement, as QKV and Proj\_O operations transition from compute-bound to memory-bound, with their latency floor set by the fixed 2.5\,TB/s HBM bandwidth. The throughput heatmaps confirm this: at bs=16, seq=128K, throughput plateaus at $\sim$550\,tokens/$\mu$s beyond 96T. These results suggest that the optimal design point lies near 64 to 96\,TFLOPS per NPU, and that HBM bandwidth, not D2D interconnect, is the binding constraint for further scaling.

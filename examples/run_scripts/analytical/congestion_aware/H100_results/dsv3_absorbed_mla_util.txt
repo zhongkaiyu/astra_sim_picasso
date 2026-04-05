@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/home/haotian/waferchip/mesh2D/astra_sim_picasso/examples/run_scripts/analytical/congestion_aware/ncu_absorbed_mla_profile_dsv3.py", line 243, in <module>
+    main()
+  File "/home/haotian/waferchip/mesh2D/astra_sim_picasso/examples/run_scripts/analytical/congestion_aware/ncu_absorbed_mla_profile_dsv3.py", line 101, in main
+    torch.cuda.set_device(dev)
+  File "/home/haotian/miniconda3/envs/bench/lib/python3.10/site-packages/torch/cuda/__init__.py", line 476, in set_device
+    torch._C._cuda_setDevice(device)
+  File "/home/haotian/miniconda3/envs/bench/lib/python3.10/site-packages/torch/cuda/__init__.py", line 319, in _lazy_init
+    torch._C._cuda_init()
+RuntimeError: No CUDA GPUs are available

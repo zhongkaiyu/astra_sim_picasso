@@ -84,8 +84,8 @@ def _print_per_strategy(pw_lookup, hy_lookup, strats, seqs, has_hybrid):
 
         # Main table header
         cols = [
-            ("Seq", 8), ("Wall(ns)", 10), ("Total(W)", 10), ("HBM(W)", 10),
-            ("Cmpt(W)", 10), ("D2D(W)", 10), ("E/tok(nJ)", 14),
+            ("Seq", 8), ("Wall(ns)", 10), ("Total(W)", 10), ("Static(W)", 10),
+            ("Mem(W)", 10), ("Cmpt(W)", 10), ("D2D(W)", 10), ("E/tok(nJ)", 14),
         ]
         if has_hybrid:
             cols += [
@@ -112,6 +112,7 @@ def _print_per_strategy(pw_lookup, hy_lookup, strats, seqs, has_hybrid):
                 f"{_seq_label(seq):>8}",
                 f"{pe['time_ns']:>10.1f}",
                 f"{pe['total_power_w']:>10.2f}",
+                f"{pe.get('static_power_w', 0):>10.2f}",
                 f"{pe['hbm_power_total_w']:>10.2f}",
                 f"{pe['cmpt_power_total_w']:>10.2f}",
                 f"{pe.get('d2d_power_w', 0):>10.4f}",
@@ -132,9 +133,9 @@ def _print_per_strategy(pw_lookup, hy_lookup, strats, seqs, has_hybrid):
             for s in seqs
         )
         if has_bd:
-            print(f"\n  HBM Power Breakdown (by module):")
+            print(f"\n  Mem Power Breakdown (by module):")
             bd_hdr = (
-                f"{'Seq':>8} | {'HBM Total(W)':>12} | {'Proj_QKV(W)':>12} | "
+                f"{'Seq':>8} | {'Mem Total(W)':>12} | {'Proj_QKV(W)':>12} | "
                 f"{'Attn(W)':>12} | {'Proj_O(W)':>12} | "
                 f"{'QKV%':>7} | {'Attn%':>7} | {'ProjO%':>7}"
             )
@@ -233,22 +234,14 @@ def main():
 
     # Metadata
     meta = pw_data.get("metadata", {})
-    ours_cfg = meta.get("ours_config", {})
-    rubin_cfg = meta.get("rubin_config", {})
-    if ours_cfg:
-        ours_tdp = ours_cfg.get("n_cubes", 16) * (
-            ours_cfg.get("hbm_tdp_per_cube", 75) + ours_cfg.get("cmpt_tdp_per_cube", 15)
-        )
-        print(f"  Ours TDP:  {ours_tdp:.0f}W  "
-              f"({ours_cfg.get('n_cubes', 16)} cubes × "
-              f"({ours_cfg.get('hbm_tdp_per_cube', 75)}W HBM + "
-              f"{ours_cfg.get('cmpt_tdp_per_cube', 15)}W Cmpt))")
-    if rubin_cfg:
-        rubin_tdp = (rubin_cfg.get("n_hbm_cubes", 8) * rubin_cfg.get("hbm_tdp_per_cube", 75)
-                     + rubin_cfg.get("n_cmpt_dies", 2) * rubin_cfg.get("cmpt_tdp_per_die", 800))
-        print(f"  Rubin TDP: {rubin_tdp:.0f}W  "
-              f"({rubin_cfg.get('n_hbm_cubes', 8)}×{rubin_cfg.get('hbm_tdp_per_cube', 75)}W HBM"
-              f" + {rubin_cfg.get('n_cmpt_dies', 2)}×{rubin_cfg.get('cmpt_tdp_per_die', 800)}W Cmpt)")
+    ours_pwr = meta.get("ours_power_coeffs", {})
+    rubin_pwr = meta.get("rubin_power_coeffs", {})
+    if ours_pwr:
+        print(f"  Ours:  {ours_pwr.get('formula', 'N/A')}  "
+              f"(Static={ours_pwr.get('static_w', 0):.1f}W, TDP={ours_pwr.get('tdp_w', 0)}W)")
+    if rubin_pwr:
+        print(f"  Rubin: {rubin_pwr.get('formula', 'N/A')}  "
+              f"(Static={rubin_pwr.get('static_w', 0):.1f}W, TDP={rubin_pwr.get('tdp_w', 0)}W)")
 
     # --- Per-strategy detail ---
     if not args.no_detail:

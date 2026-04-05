@@ -635,8 +635,13 @@ def bench_decode(seq_lengths, csv_writer,
                     Wo = torch.randn(q_dim_per_gpu,   d_model,  device=dev, dtype=torch_dtype)
 
                 # TP-sharded KV cache: each GPU holds its kv_heads slice
-                K_cache = torch.randn(B, kv_heads_per_gpu, S, d_head, device=dev, dtype=torch.float16)
-                V_cache = torch.randn(B, kv_heads_per_gpu, S, d_head, device=dev, dtype=torch.float16)
+                # FP8 mode: store KV cache in FP8 (consistent with roofline model)
+                if is_fp8:
+                    K_cache = torch.randn(B, kv_heads_per_gpu, S, d_head, device=dev, dtype=torch.float16).to(torch.float8_e4m3fn)
+                    V_cache = torch.randn(B, kv_heads_per_gpu, S, d_head, device=dev, dtype=torch.float16).to(torch.float8_e4m3fn)
+                else:
+                    K_cache = torch.randn(B, kv_heads_per_gpu, S, d_head, device=dev, dtype=torch.float16)
+                    V_cache = torch.randn(B, kv_heads_per_gpu, S, d_head, device=dev, dtype=torch.float16)
 
                 per_dev.append({
                     "x": x, "Wq": Wq, "Wk": Wk, "Wv": Wv, "Wo": Wo,
@@ -661,8 +666,8 @@ def bench_decode(seq_lengths, csv_writer,
                         q_4d = q.float().view(B, q_heads_per_gpu, 1, d_head)
                         k_new_4d = k_new.float().view(B, kv_heads_per_gpu, 1, d_head)
                         v_new_4d = v_new.float().view(B, kv_heads_per_gpu, 1, d_head)
-                        k_full = torch.cat([p["K_cache"], k_new_4d.half()], dim=2)
-                        v_full = torch.cat([p["V_cache"], v_new_4d.half()], dim=2)
+                        k_full = torch.cat([p["K_cache"].half(), k_new_4d.half()], dim=2)
+                        v_full = torch.cat([p["V_cache"].half(), v_new_4d.half()], dim=2)
                         attn_out = F.scaled_dot_product_attention(
                             q_4d.half(), k_full, v_full, enable_gqa=True)
                         attn_out = attn_out.contiguous().view(1, q_dim_per_gpu)
@@ -697,8 +702,8 @@ def bench_decode(seq_lengths, csv_writer,
                     q_4d = q.float().view(B, q_heads_per_gpu, 1, d_head)
                     k_new_4d = k_new.float().view(B, kv_heads_per_gpu, 1, d_head)
                     v_new_4d = v_new.float().view(B, kv_heads_per_gpu, 1, d_head)
-                    k_full = torch.cat([p["K_cache"], k_new_4d.half()], dim=2)
-                    v_full = torch.cat([p["V_cache"], v_new_4d.half()], dim=2)
+                    k_full = torch.cat([p["K_cache"].half(), k_new_4d.half()], dim=2)
+                    v_full = torch.cat([p["V_cache"].half(), v_new_4d.half()], dim=2)
                     attn_out = F.scaled_dot_product_attention(
                         q_4d.half(), k_full, v_full, enable_gqa=True)
                     attn_out = attn_out.contiguous().view(1, q_dim_per_gpu)
@@ -746,11 +751,13 @@ def bench_decode(seq_lengths, csv_writer,
                 + 1 * q_dim_per_gpu + 2 * 1 * kv_dim_per_gpu) * dtype_bytes
             bytes_per_gpu["proj_o"] = (
                 1 * q_dim_per_gpu + q_dim_per_gpu * d_model + 1 * d_model) * dtype_bytes
+        # KV cache stored in dtype_bytes (FP8=1B, FP16=2B); q/output always fp16
+        kv_cache_bytes = dtype_bytes  # 1 for FP8, 2 for FP16
         bytes_per_gpu["attn"] = (
-            B * q_heads_per_gpu * 1 * d_head * 2
-            + B * kv_heads_per_gpu * S1 * d_head * 2
-            + B * kv_heads_per_gpu * S1 * d_head * 2
-            + B * q_heads_per_gpu * 1 * d_head * 2
+            B * q_heads_per_gpu * 1 * d_head * 2              # read q (fp16)
+            + B * kv_heads_per_gpu * S1 * d_head * kv_cache_bytes  # read K cache
+            + B * kv_heads_per_gpu * S1 * d_head * kv_cache_bytes  # read V cache
+            + B * q_heads_per_gpu * 1 * d_head * 2              # write output (fp16)
         )
 
         # Total bytes (all GPUs combined)

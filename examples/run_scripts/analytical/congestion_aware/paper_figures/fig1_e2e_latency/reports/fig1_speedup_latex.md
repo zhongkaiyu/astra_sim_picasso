@@ -1,0 +1,7 @@
+# Fig 1 E2E Latency Speedup -- LaTeX Report
+
+Fig.~1 compares per-layer decode latency across H100, H100 TP2, Rubin, Rubin TP2, and our architecture on three models (Qwen3-235B, Llama4-Maverick, DeepSeek-V3 MLA) with batch sizes 1 to 32 and sequence lengths from 4K to 1M. Across all configurations, our architecture achieves the highest speedup: 12$\times$--16$\times$ over H100 at bs=1, sustaining 13--20$\times$ as batch size scales to 32. The root cause is the 16-NPU design aggregating 40\,TB/s HBM bandwidth, 11.9$\times$ that of a single H100.
+
+Compared to Rubin (22\,TB/s), we maintain a stable 1.8--2.5$\times$ advantage. Against Rubin TP2 (44\,TB/s aggregate), our lead is 1.5--2.4$\times$ at short-to-medium sequences but narrows to 1.1$\times$ at 1M, where KV-cache bandwidth dominates and effective bandwidths converge. The speedup trends generalize across both GQA models despite their different architectures (Qwen3: $d$=4096, $H_{kv}$=4; Llama4: $d$=5120, $H_{kv}$=8).
+
+For DeepSeek-V3 MLA, the compressed KV representation ($d_c$=512, $d'_c$=1536) shifts the bottleneck from KV-cache loading to weight projection. The up-projection $W^{UK}$/$W^{UV}$ matrices are significantly larger than standard GQA weights, making the QKV and output projection stages dominate latency. Our architecture still achieves 4--7$\times$ speedup over H100 on MLA, lower than the 12--16$\times$ on GQA because the enlarged weight matrices reduce the relative benefit of distributed HBM bandwidth. Nevertheless, our design remains the fastest across all three attention mechanisms.

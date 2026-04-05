@@ -1,0 +1,29 @@
+{
+    "_description": "H100 TP2 GQA attention block profiling: BW utilization + communication fraction. From attn_scaling_tp1_vs_tp2_report.txt + e2e_tp2.txt",
+    "bw_util": {
+      "proj_qkv": {"1": 0.520},
+      "attn_fused": {
+        "1024": 0.023,
+        "4096": 0.083,
+        "16384": 0.203,
+        "32768": 0.440,
+        "65536": 0.440,
+        "131072": 0.580,
+        "262144": 0.652,
+        "524288": 0.830,
+        "1048576": 0.879
+      },
+      "proj_o": {"1": 0.560}
+    },
+    "comm_fraction": {
+      "_description": "allreduce_attn / (qkv+attn+o_proj+allreduce_attn) from H100 TP2 e2e",
+      "1024": 0.613,
+      "2048": 0.637,
+      "4096": 0.736,
+      "8192": 0.753,
+      "16384": 0.759,
+      "32768": 0.734,
+      "65536": 0.752,
+      "131072": 0.668
+    }
+  }

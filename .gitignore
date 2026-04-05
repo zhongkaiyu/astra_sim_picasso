@@ -40,3 +40,14 @@ symbolic_tensor_graph_picasso/
 output_qwen/
 output/
 
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# NCU profiling raw outputs (too large for git)
+*.ncu-rep
+# Large NCU CSV dumps
+examples/run_scripts/analytical/congestion_aware/H100_results/attn_scaling_tp1.csv
+examples/run_scripts/analytical/congestion_aware/H100_results/attn_scaling_tp2.csv
+

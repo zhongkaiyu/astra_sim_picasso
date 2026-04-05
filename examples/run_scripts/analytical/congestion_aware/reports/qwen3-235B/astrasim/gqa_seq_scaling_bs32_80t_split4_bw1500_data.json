@@ -1,0 +1,418 @@
+{
+  "hmp": {
+    "label": "HMP (block2x2 Mesh2D, bs=32)",
+    "log_pattern": "output_qwen/gqa_seq_scaling/baseline_block2x2_fwd_bs32_sl{seq}/logs/simulation_log_gqa_baseline_block2x2_fwd_bs32_sl{seq}.txt",
+    "sim_config_pattern": "examples/run_scripts/analytical/congestion_aware/configs/gqa_seq_scaling/tp16_hbm4_80t_mesh2d_4x4_onering_qwen_gqa_baseline_fwd_block2x2_bs32_sl{seq}.json",
+    "trace_config_pattern": "examples/run_scripts/analytical/congestion_aware/trace_configs/gqa/baseline/qwen_gqa_baseline_fwd_tph4_tps4_bs32_sl{seq}_block2x2.json",
+    "data": [
+      {
+        "seq": 1024,
+        "wall_ns": 6445,
+        "gpu_ns": 5878,
+        "comm_ns": 567,
+        "modules": {
+          "attn_comm": 187.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 380.0,
+          "output_comm_bytes": 65536.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 265.0,
+          "output_ar_comm_bytes": 32768.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 115.0,
+          "output_ag_comm_bytes": 32768.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 4096,
+        "wall_ns": 11477,
+        "gpu_ns": 10910,
+        "comm_ns": 567,
+        "modules": {
+          "attn_comm": 187.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 380.0,
+          "output_comm_bytes": 65536.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 265.0,
+          "output_ar_comm_bytes": 32768.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 115.0,
+          "output_ag_comm_bytes": 32768.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 16384,
+        "wall_ns": 31609,
+        "gpu_ns": 31042,
+        "comm_ns": 567,
+        "modules": {
+          "attn_comm": 187.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 380.0,
+          "output_comm_bytes": 65536.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 265.0,
+          "output_ar_comm_bytes": 32768.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 115.0,
+          "output_ag_comm_bytes": 32768.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 65536,
+        "wall_ns": 112141,
+        "gpu_ns": 111574,
+        "comm_ns": 567,
+        "modules": {
+          "attn_comm": 187.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 380.0,
+          "output_comm_bytes": 65536.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 265.0,
+          "output_ar_comm_bytes": 32768.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 115.0,
+          "output_ag_comm_bytes": 32768.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 262144,
+        "wall_ns": 434261,
+        "gpu_ns": 433694,
+        "comm_ns": 567,
+        "modules": {
+          "attn_comm": 187.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 380.0,
+          "output_comm_bytes": 65536.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 265.0,
+          "output_ar_comm_bytes": 32768.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 115.0,
+          "output_ag_comm_bytes": 32768.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 1048576,
+        "wall_ns": 1722753,
+        "gpu_ns": 1722186,
+        "comm_ns": 567,
+        "modules": {
+          "attn_comm": 187.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 380.0,
+          "output_comm_bytes": 65536.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 265.0,
+          "output_ar_comm_bytes": 32768.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 115.0,
+          "output_ag_comm_bytes": 32768.0,
+          "output_ag_comm_group_id": 21
+        }
+      }
+    ]
+  },
+  "HMP_reo": {
+    "label": "HMP_reo (block2x2 Mesh2D, bs=32)",
+    "log_pattern": "output_qwen/gqa_seq_scaling/hmp_block2x2_fwd_bs32_sl{seq}/logs/simulation_log_gqa_hmp_block2x2_fwd_bs32_sl{seq}.txt",
+    "sim_config_pattern": "examples/run_scripts/analytical/congestion_aware/configs/gqa_seq_scaling/tp16_hbm4_80t_mesh2d_4x4_onering_qwen_gqa_hmp_fwd_block2x2_bs32_sl{seq}.json",
+    "trace_config_pattern": "examples/run_scripts/analytical/congestion_aware/trace_configs/gqa/hmp/qwen_gqa_hmp_fwd_tph4_tps4_bs32_sl{seq}_block2x2.json",
+    "data": [
+      {
+        "seq": 1024,
+        "wall_ns": 10963,
+        "gpu_ns": 10963,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 4096,
+        "wall_ns": 15995,
+        "gpu_ns": 15995,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 16384,
+        "wall_ns": 36127,
+        "gpu_ns": 36127,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 65536,
+        "wall_ns": 116659,
+        "gpu_ns": 116659,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 262144,
+        "wall_ns": 438779,
+        "gpu_ns": 438779,
+        "comm_ns": 0,
+        "modules": {}
+      },
+      {
+        "seq": 1048576,
+        "wall_ns": 1727271,
+        "gpu_ns": 1727271,
+        "comm_ns": 0,
+        "modules": {}
+      }
+    ]
+  },
+  "hmp_reo_new": {
+    "label": "HMP_reo_new (block2x2 Mesh2D, bs=32, RS+TreeReduce)",
+    "log_pattern": "output_qwen/gqa_seq_scaling/baseline_block2x2_fwd_bs32_sl{seq}/logs/simulation_log_gqa_baseline_block2x2_fwd_bs32_sl{seq}.txt",
+    "sim_config_pattern": "examples/run_scripts/analytical/congestion_aware/configs/gqa_seq_scaling/tp16_hbm4_80t_mesh2d_4x4_onering_qwen_gqa_baseline_fwd_block2x2_bs32_sl{seq}.json",
+    "trace_config_pattern": "examples/run_scripts/analytical/congestion_aware/trace_configs/gqa/baseline/qwen_gqa_baseline_fwd_tph4_tps4_bs32_sl{seq}_block2x2.json",
+    "data": [
+      {
+        "seq": 1024,
+        "wall_ns": 6445,
+        "gpu_ns": 5878,
+        "comm_ns": 567,
+        "modules": {
+          "attn_comm": 187.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 380.0,
+          "output_comm_bytes": 65536.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 265.0,
+          "output_ar_comm_bytes": 32768.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 115.0,
+          "output_ag_comm_bytes": 32768.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 4096,
+        "wall_ns": 11477,
+        "gpu_ns": 10910,
+        "comm_ns": 567,
+        "modules": {
+          "attn_comm": 187.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 380.0,
+          "output_comm_bytes": 65536.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 265.0,
+          "output_ar_comm_bytes": 32768.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 115.0,
+          "output_ag_comm_bytes": 32768.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 16384,
+        "wall_ns": 31609,
+        "gpu_ns": 31042,
+        "comm_ns": 567,
+        "modules": {
+          "attn_comm": 187.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 380.0,
+          "output_comm_bytes": 65536.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 265.0,
+          "output_ar_comm_bytes": 32768.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 115.0,
+          "output_ag_comm_bytes": 32768.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 65536,
+        "wall_ns": 112141,
+        "gpu_ns": 111574,
+        "comm_ns": 567,
+        "modules": {
+          "attn_comm": 187.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 380.0,
+          "output_comm_bytes": 65536.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 265.0,
+          "output_ar_comm_bytes": 32768.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 115.0,
+          "output_ag_comm_bytes": 32768.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 262144,
+        "wall_ns": 434261,
+        "gpu_ns": 433694,
+        "comm_ns": 567,
+        "modules": {
+          "attn_comm": 187.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 380.0,
+          "output_comm_bytes": 65536.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 265.0,
+          "output_ar_comm_bytes": 32768.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 115.0,
+          "output_ag_comm_bytes": 32768.0,
+          "output_ag_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 1048576,
+        "wall_ns": 1722753,
+        "gpu_ns": 1722186,
+        "comm_ns": 567,
+        "modules": {
+          "attn_comm": 187.0,
+          "attn_comm_bytes": 65536.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 380.0,
+          "output_comm_bytes": 65536.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 265.0,
+          "output_ar_comm_bytes": 32768.0,
+          "output_ar_comm_group_id": 17,
+          "output_ag_comm": 115.0,
+          "output_ag_comm_bytes": 32768.0,
+          "output_ag_comm_group_id": 21
+        }
+      }
+    ]
+  },
+  "tp16": {
+    "label": "TP16 (Mesh2D, bs=32)",
+    "log_pattern": "output_qwen/gqa_seq_scaling/tp16_block2x2_fwd_bs32_sl{seq}/logs/simulation_log_gqa_tp16_block2x2_fwd_bs32_sl{seq}.txt",
+    "sim_config_pattern": "examples/run_scripts/analytical/congestion_aware/configs/gqa_seq_scaling/tp16_hbm4_80t_mesh2d_4x4_onering_qwen_gqa_tp16_fwd_block2x2_bs32_sl{seq}.json",
+    "trace_config_pattern": "examples/run_scripts/analytical/congestion_aware/trace_configs/gqa/tp16/qwen_gqa_tp16_fwd_tph4_tps4_bs32_sl{seq}_block2x2.json",
+    "data": [
+      {
+        "seq": 1024,
+        "wall_ns": 6350,
+        "gpu_ns": 5239,
+        "comm_ns": 1111,
+        "modules": {
+          "attn_comm": 527.0,
+          "attn_comm_bytes": 524288.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 584.0,
+          "output_comm_bytes": 262144.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 584.0,
+          "output_ar_comm_bytes": 262144.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 4096,
+        "wall_ns": 12834,
+        "gpu_ns": 10271,
+        "comm_ns": 2563,
+        "modules": {
+          "attn_comm": 1979.0,
+          "attn_comm_bytes": 2097152.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 584.0,
+          "output_comm_bytes": 262144.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 584.0,
+          "output_ar_comm_bytes": 262144.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 16384,
+        "wall_ns": 38822,
+        "gpu_ns": 30403,
+        "comm_ns": 8419,
+        "modules": {
+          "attn_comm": 7835.0,
+          "attn_comm_bytes": 8388608.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 584.0,
+          "output_comm_bytes": 262144.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 584.0,
+          "output_ar_comm_bytes": 262144.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 65536,
+        "wall_ns": 142802,
+        "gpu_ns": 110935,
+        "comm_ns": 31867,
+        "modules": {
+          "attn_comm": 31283.0,
+          "attn_comm_bytes": 33554432.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 584.0,
+          "output_comm_bytes": 262144.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 584.0,
+          "output_ar_comm_bytes": 262144.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 262144,
+        "wall_ns": 558670,
+        "gpu_ns": 433059,
+        "comm_ns": 125611,
+        "modules": {
+          "attn_comm": 125027.0,
+          "attn_comm_bytes": 134217728.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 584.0,
+          "output_comm_bytes": 262144.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 584.0,
+          "output_ar_comm_bytes": 262144.0,
+          "output_ar_comm_group_id": 21
+        }
+      },
+      {
+        "seq": 1048576,
+        "wall_ns": 2222158,
+        "gpu_ns": 1721547,
+        "comm_ns": 500611,
+        "modules": {
+          "attn_comm": 500027.0,
+          "attn_comm_bytes": 536870912.0,
+          "attn_comm_group_id": 21,
+          "output_comm": 584.0,
+          "output_comm_bytes": 262144.0,
+          "output_comm_group_id": 17,
+          "output_ar_comm": 584.0,
+          "output_ar_comm_bytes": 262144.0,
+          "output_ar_comm_group_id": 21
+        }
+      }
+    ]
+  }
+}

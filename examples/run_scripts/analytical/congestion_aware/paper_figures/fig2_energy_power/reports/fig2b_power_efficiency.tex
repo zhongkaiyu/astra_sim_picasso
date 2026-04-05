@@ -1,0 +1,10 @@
+% Report for Fig 2b: Token/J Power Efficiency Analysis
+% To include in LaTeX: \input{fig2b_power_efficiency.tex}
+
+Fig.~\ref{fig:power_efficiency} compares the power efficiency (Token/J) of our proposed architecture against Rubin, H100, and their TP2 variants across varying sequence lengths on Qwen3-235B and Llama4-Maverick.
+Our architecture achieves 2.5--4.1$\times$ higher energy efficiency than Rubin~TP2 across all evaluated configurations.
+At short context lengths (seq=4K), the advantage is most pronounced: our design reaches 305~Token/J on Qwen3-235B and 330~Token/J on Llama4, compared to 74 and 76~Token/J for Rubin~TP2 respectively, representing a 4.1--4.4$\times$ improvement.
+As sequence length increases to 1M, the gap narrows to 2.5$\times$ due to the growing dominance of attention computation, which scales linearly with context and is bounded by per-NPU HBM bandwidth.
+Compared to H100~TP2, our architecture delivers 6.5--8.0$\times$ higher Token/J, primarily because the aggregate HBM bandwidth of 16~NPUs (40~TB/s) is 11.9$\times$ that of a single H100 (3.35~TB/s), enabling proportionally faster completion of memory-bound decode operations.
+Notably, H100~TP2 shows marginally \emph{lower} efficiency than H100~TP1 at short sequences, as the NVLink communication overhead is not fully amortized when compute time is small.
+These results are consistent across both model architectures, confirming that the efficiency advantage is architecture-driven rather than model-specific.

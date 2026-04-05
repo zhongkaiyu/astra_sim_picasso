@@ -1,0 +1,18 @@
+{
+  "output_dir": "{PROJECT_DIR}/symbolic_tensor_graph_picasso/et_trace/gqa/tp16_fwd_tph4_tps4_bs64_sl65536_block2x2",
+  "output_name": "tp16_fwd_tph4_tps4_bs64_sl65536_block2x2",
+  "model_type": "qwen_gqa_tp16_fwd",
+  "dp": 1,
+  "tp": 1,
+  "tp_h": 4,
+  "tp_s": 4,
+  "kvhead": 4,
+  "head": 64,
+  "num_stacks": 1,
+  "dmodel": 4096,
+  "batch": 64,
+  "seq": 65536,
+  "tpsp": true,
+  "head_dim": 128,
+  "args": "--rank_remap block2x2"
+}

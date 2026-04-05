@@ -1,0 +1,18 @@
+{
+  "output_dir": "{PROJECT_DIR}/symbolic_tensor_graph_picasso/et_trace/gqa/llama4_hmp_fwd_tph4_tps4_bs1_sl524288_block2x2",
+  "output_name": "llama4_hmp_fwd_tph4_tps4_bs1_sl524288_block2x2",
+  "model_type": "qwen_gqa_hmp_fwd",
+  "dp": 1,
+  "tp": 1,
+  "tp_h": 4,
+  "tp_s": 4,
+  "kvhead": 8,
+  "head": 40,
+  "num_stacks": 1,
+  "dmodel": 5120,
+  "batch": 1,
+  "seq": 524288,
+  "tpsp": true,
+  "head_dim": 128,
+  "args": "--rank_remap block2x2"
+}

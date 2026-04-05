@@ -1,0 +1,23 @@
+{
+  "hmp": {
+    "label": "HMP (block2x2 Mesh2D)",
+    "log_pattern": "output_qwen/gqa_seq_scaling/baseline_block2x2_fwd_sl{seq}/logs/simulation_log_gqa_baseline_block2x2_fwd_sl{seq}.txt",
+    "sim_config_pattern": "examples/run_scripts/analytical/congestion_aware/configs/gqa_seq_scaling/tp16_hbm4_mesh2d_4x4_onering_qwen_gqa_baseline_fwd_block2x2_bs64_sl{seq}.json",
+    "trace_config_pattern": "examples/run_scripts/analytical/congestion_aware/trace_configs/gqa/baseline/qwen_gqa_baseline_fwd_tph4_tps4_sl{seq}_block2x2.json",
+    "data": []
+  },
+  "HMP_reo": {
+    "label": "HMP_reo (block2x2 Mesh2D)",
+    "log_pattern": "output_qwen/gqa_seq_scaling/hmp_block2x2_fwd_sl{seq}/logs/simulation_log_gqa_hmp_block2x2_fwd_sl{seq}.txt",
+    "sim_config_pattern": "examples/run_scripts/analytical/congestion_aware/configs/gqa_seq_scaling/tp16_hbm4_mesh2d_4x4_onering_qwen_gqa_hmp_fwd_block2x2_bs64_sl{seq}.json",
+    "trace_config_pattern": "examples/run_scripts/analytical/congestion_aware/trace_configs/gqa/hmp/qwen_gqa_hmp_fwd_tph4_tps4_sl{seq}_block2x2.json",
+    "data": []
+  },
+  "tp16": {
+    "label": "TP16 (Torus OneRing)",
+    "log_pattern": "output_qwen/gqa_seq_scaling/tp16_fwd_sl{seq}/logs/simulation_log_gqa_tp16_fwd_sl{seq}.txt",
+    "sim_config_pattern": "examples/run_scripts/analytical/congestion_aware/configs/gqa_seq_scaling/tp16_hbm4_ring_mesh2d_4x4_onering_qwen_gqa_tp16_fwd_bs64_sl{seq}.json",
+    "trace_config_pattern": "examples/run_scripts/analytical/congestion_aware/trace_configs/gqa/tp16/qwen_gqa_tp16_fwd_tph4_tps4_sl{seq}.json",
+    "data": []
+  }
+}

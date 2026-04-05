@@ -1,0 +1,1 @@
+Per-layer decode latency breakdown into Proj QKV, Attention, Proj O, and Communication for five strategies (H100, H100 TP2, Rubin, Rubin TP2, Ours) on Qwen3-235B at sequence lengths 8K and 128K with batch sizes 1 and 8. Communication percentage (C%) is annotated above each bar.

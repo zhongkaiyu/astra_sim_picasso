@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
-"""GQA single-layer power model: estimate HBM / Compute / D2D power
+"""GQA single-layer power model: estimate Static / Compute / Memory / D2D power
 from hybrid merged report data.
 
-Power formula (per component):
-    Power = static_ratio * TDP  +  TDP * utilization
+Power formulas (total system power):
+    H100:  P = 17.7% × 700  + 829  × U_cmpt + 580  × U_mem
+    Rubin: P = 17.7% × 2200 + 2631 × U_cmpt + 1800 × U_mem
+    Ours:  P = 17.7% × 1440 + 394  × U_cmpt + 1120 × U_mem  [+ D2D]
 
 Utilization:
-    HBM:  (hbm_bytes / time) / peak_hbm_bw
-    Cmpt: (flops / time) / peak_flops
-    D2D:  energy-based = d2d_bits * pJ_per_bit / time
+    U_mem:  (hbm_bytes / time) / peak_hbm_bw   (per cube / per die)
+    U_cmpt: (flops / time) / peak_flops         (per cube / per die)
+    D2D:    energy-based = d2d_bits × pJ_per_bit / time
 
-Two architectures:
-    Ours:  16 HBM4 cubes (each with HBM + small compute die + D2D links)
-    Rubin: 2 compute dies + 8 HBM4 cubes (single chip, no inter-chip D2D)
+Three architectures:
+    Ours:      16 HBM4 cubes (each with HBM + small compute die + D2D links)
+    Rubin:     2 compute dies + 8 HBM4 cubes (single chip, no inter-chip D2D)
+    H100_TP2:  2 × H100 GPUs with NVLink
 """
 import argparse
 import json
@@ -20,29 +23,49 @@ import sys
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# Architecture defaults
+# Power model coefficients:  P = static_w + cmpt_coeff × U_cmpt + mem_coeff × U_mem
+# ---------------------------------------------------------------------------
+
+POWER_COEFFS = {
+    "ours": {
+        "static_ratio": 0.177,
+        "tdp_w": 1440,
+        "cmpt_coeff": 394,       # W at full compute utilization
+        "mem_coeff": 1120,        # W at full memory utilization
+        "formula": "P = 17.7%×1440 + 394×U_cmpt + 1120×U_mem + D2D",
+    },
+    "rubin": {
+        "static_ratio": 0.177,
+        "tdp_w": 2200,
+        "cmpt_coeff": 2631,
+        "mem_coeff": 1800,
+        "formula": "P = 17.7%×2200 + 2631×U_cmpt + 1800×U_mem",
+    },
+    "h100": {
+        "static_ratio": 0.177,
+        "tdp_w": 700,
+        "cmpt_coeff": 829,
+        "mem_coeff": 580,
+        "formula": "P = 17.7%×700 + 829×U_cmpt + 580×U_mem",
+    },
+}
+
+# Derived static power (for convenience)
+for _k, _v in POWER_COEFFS.items():
+    _v["static_w"] = _v["static_ratio"] * _v["tdp_w"]
+
+# ---------------------------------------------------------------------------
+# Hardware specs for utilization computation
 # ---------------------------------------------------------------------------
 
 OURS_DEFAULT = {
     "n_cubes": 16,
-    "hbm_tdp_per_cube": 75,       # W
-    "cmpt_tdp_per_cube": 15,      # W
     "peak_flops_per_cube": 80,    # TFLOPS
     "hbm_bw_per_cube": 2.5,      # TB/s
     "d2d_pj_per_bit": 0.38,
-    "static_ratio": 0.1,
 }
 
-RUBIN_DEFAULT = {
-    "n_hbm_cubes": 8,
-    "n_cmpt_dies": 2,
-    "hbm_tdp_per_cube": 75,       # W
-    "cmpt_tdp_per_die": 800,      # W
-    "peak_flops_per_die": 8750,   # TFLOPS  (17500 / 2)
-    "hbm_bw_per_cube": 2.75,     # TB/s    (22 / 8)
-    "d2d_pj_per_bit": 0,
-    "static_ratio": 0.1,
-}
+NVLINK_PJ_PER_BIT = 1.3   # NVLink energy ~1.3 pJ/bit (inter-chip)
 
 OURS_STRATEGIES = ["HMP_reo", "hmp_reo_new", "hmp", "tp16"]
 N_PHYSICAL_CUBES = 16
@@ -52,55 +75,87 @@ N_PHYSICAL_CUBES = 16
 # Core power functions
 # ---------------------------------------------------------------------------
 
-DYNAMIC_POWER_SCALE = 0.9  # scale factor for dynamic power (tdp * utilization)
-
-
-def _component_power(tdp, utilization, static_ratio):
-    return static_ratio * tdp + DYNAMIC_POWER_SCALE * tdp * utilization
-
-
-def calc_power_ours(agg, cfg):
-    """Power estimate for one strategy running on Ours architecture (16 cubes).
+def _time_weighted_util(module_utils, module_times):
+    """Compute time-weighted average utilization.
 
     Parameters
     ----------
-    agg : dict   -- aggregate_metrics from hybrid JSON entry
-    cfg : dict   -- architecture config (OURS_DEFAULT or overridden)
+    module_utils : list of float  -- per-module utilization (0-1)
+    module_times : list of float  -- per-module time (ns)
 
-    Returns dict with full power breakdown.
+    Returns weighted average utilization.
     """
-    n = cfg["n_cubes"]
+    total_t = sum(module_times)
+    if total_t <= 0:
+        return 0.0
+    return sum(u * t for u, t in zip(module_utils, module_times)) / total_t
+
+
+def calc_power_ours(entry, hw_cfg, power_coeffs=None):
+    """Power estimate for one strategy running on Ours architecture (16 cubes).
+
+    Utilization source:
+        U_cmpt — from profiled utilization in compute_breakdown
+                  (Proj_QKV_utilization, score_utilization, attn_v_utilization, Proj_O_utilization)
+        U_mem  — computed from hbm_bytes / (gpu_time × peak_hbm_bw)
+                  (only counts GPU-active time, not communication)
+    """
+    if power_coeffs is None:
+        power_coeffs = POWER_COEFFS["ours"]
+
+    agg = entry["aggregate_metrics"]
+    cb = entry.get("compute_breakdown", {})
+
+    n = hw_cfg["n_cubes"]
     time_ns = agg["total_time_ns"]
     time_s = time_ns * 1e-9
 
+    # --- U_cmpt: time-weighted profiled compute utilization ---
+    qkv_ns = entry.get("hybrid_Proj_QKV_ns", 0)
+    attn_ns = entry.get("hybrid_attn_ns", 0)
+    projo_ns = entry.get("hybrid_Proj_O_ns", 0)
+
+    qkv_util = cb.get("Proj_QKV_utilization", 0)
+    score_util = cb.get("score_utilization", 0)
+    attn_v_util = cb.get("attn_v_utilization", 0)
+    projo_util = cb.get("Proj_O_utilization", 0)
+
+    # Attn consists of score + attn_v; split attn_ns proportionally
+    score_plus_attnv = score_util + attn_v_util
+    if score_plus_attnv > 0:
+        score_ns = attn_ns * score_util / score_plus_attnv
+        attn_v_ns = attn_ns * attn_v_util / score_plus_attnv
+    else:
+        score_ns = attn_ns / 2
+        attn_v_ns = attn_ns / 2
+
+    cmpt_util = _time_weighted_util(
+        [qkv_util, score_util, attn_v_util, projo_util],
+        [qkv_ns, score_ns, attn_v_ns, projo_ns],
+    )
+
+    # --- U_mem: HBM bandwidth utilization during GPU-active time ---
     hbm_bytes_per_cube = agg["hbm_read_bytes_per_cube"]
-    flops_per_cube = agg["compute_flops_per_cube"]
-    d2d_bytes_total = agg["d2d_link_transfer_bytes_all_cubes"]
+    gpu_ns = entry.get("hybrid_gpu_ns", qkv_ns + attn_ns + projo_ns)
+    gpu_s = gpu_ns * 1e-9
+    peak_hbm_bw = hw_cfg["hbm_bw_per_cube"] * 1e12  # bytes/s
+    hbm_util = (hbm_bytes_per_cube / gpu_s) / peak_hbm_bw if gpu_s > 0 else 0
 
-    peak_hbm_bw = cfg["hbm_bw_per_cube"] * 1e12          # bytes/s
-    peak_flops = cfg["peak_flops_per_cube"] * 1e12        # FLOP/s
-
-    hbm_util = (hbm_bytes_per_cube / time_s) / peak_hbm_bw if time_s > 0 else 0
-    cmpt_util = (flops_per_cube / time_s) / peak_flops if time_s > 0 else 0
-
-    hbm_util = min(hbm_util, 1.0)
     cmpt_util = min(cmpt_util, 1.0)
+    hbm_util = min(hbm_util, 1.0)
 
-    sr = cfg["static_ratio"]
-    hbm_power_per_cube = _component_power(cfg["hbm_tdp_per_cube"], hbm_util, sr)
-    cmpt_power_per_cube = _component_power(cfg["cmpt_tdp_per_cube"], cmpt_util, sr)
+    # --- Power: P = static + cmpt_coeff × U_cmpt + mem_coeff × U_mem + D2D ---
+    static_power = power_coeffs["static_w"]
+    cmpt_power = power_coeffs["cmpt_coeff"] * cmpt_util
+    mem_power = power_coeffs["mem_coeff"] * hbm_util
 
-    hbm_power_total = n * hbm_power_per_cube
-    cmpt_power_total = n * cmpt_power_per_cube
-
+    d2d_bytes_total = agg["d2d_link_transfer_bytes_all_cubes"]
     d2d_bits = d2d_bytes_total * 8
-    d2d_energy_j = d2d_bits * cfg["d2d_pj_per_bit"] * 1e-12
+    d2d_energy_j = d2d_bits * hw_cfg["d2d_pj_per_bit"] * 1e-12
     d2d_power = d2d_energy_j / time_s if time_s > 0 else 0
 
-    total_power = hbm_power_total + cmpt_power_total + d2d_power
+    total_power = static_power + cmpt_power + mem_power + d2d_power
     energy_nj = total_power * time_s * 1e9
-
-    tdp_total = n * (cfg["hbm_tdp_per_cube"] + cfg["cmpt_tdp_per_cube"])
 
     return {
         "arch": "ours",
@@ -108,74 +163,83 @@ def calc_power_ours(agg, cfg):
         "time_ns": time_ns,
         "hbm_util_per_cube": round(hbm_util, 6),
         "cmpt_util_per_cube": round(cmpt_util, 6),
-        "hbm_power_per_cube_w": round(hbm_power_per_cube, 4),
-        "cmpt_power_per_cube_w": round(cmpt_power_per_cube, 4),
-        "hbm_power_total_w": round(hbm_power_total, 4),
-        "cmpt_power_total_w": round(cmpt_power_total, 4),
+        "per_module_cmpt_util": {
+            "Proj_QKV": round(qkv_util, 6),
+            "Score": round(score_util, 6),
+            "Attn_V": round(attn_v_util, 6),
+            "Proj_O": round(projo_util, 6),
+        },
+        "static_power_w": round(static_power, 4),
+        "hbm_power_total_w": round(mem_power, 4),       # mem_coeff × U_mem
+        "cmpt_power_total_w": round(cmpt_power, 4),     # cmpt_coeff × U_cmpt
         "d2d_energy_nj": round(d2d_energy_j * 1e9, 4),
         "d2d_power_w": round(d2d_power, 4),
         "total_power_w": round(total_power, 4),
         "energy_per_token_nj": round(energy_nj, 4),
-        "tdp_total_w": tdp_total,
+        "tdp_total_w": power_coeffs["tdp_w"],
     }
 
 
-def calc_power_rubin(agg, cfg):
-    """Power estimate for Rubin architecture (2 compute die + 8 HBM cubes).
+def calc_power_rubin(entry, power_coeffs=None):
+    """Power estimate for Rubin architecture.
 
-    For Rubin, agg comes from the 'rubin' strategy where n_cubes=1 and
-    per_cube values represent the ENTIRE chip.
+    Utilization source:
+        Both U_cmpt and U_mem come from H100 profiling (BW utilization),
+        stored in entry as Proj_QKV_bw_util, attn_bw_util, Proj_O_bw_util.
+        For Rubin decode (bs=1), workload is memory-bound, so BW utilization
+        is the dominant factor; compute utilization is negligible.
     """
+    if power_coeffs is None:
+        power_coeffs = POWER_COEFFS["rubin"]
+
+    agg = entry["aggregate_metrics"]
     time_ns = agg["total_time_ns"]
     time_s = time_ns * 1e-9
 
-    n_hbm = cfg["n_hbm_cubes"]
-    n_cmpt = cfg["n_cmpt_dies"]
+    # --- U_mem: time-weighted H100 BW utilization from profiling ---
+    qkv_ns = entry.get("hybrid_Proj_QKV_ns", 0)
+    attn_ns = entry.get("hybrid_attn_ns", 0)
+    projo_ns = entry.get("hybrid_Proj_O_ns", 0)
 
-    hbm_bytes_total = agg["hbm_read_bytes_per_cube"]
-    flops_total = agg["compute_flops_per_cube"]
+    qkv_bw_util = entry.get("Proj_QKV_bw_util", 0)
+    attn_bw_util = entry.get("attn_bw_util", 0)
+    projo_bw_util = entry.get("Proj_O_bw_util", 0)
 
-    hbm_bytes_per_cube = hbm_bytes_total / n_hbm
-    flops_per_die = flops_total / n_cmpt
+    hbm_util = _time_weighted_util(
+        [qkv_bw_util, attn_bw_util, projo_bw_util],
+        [qkv_ns, attn_ns, projo_ns],
+    )
 
-    peak_hbm_bw = cfg["hbm_bw_per_cube"] * 1e12
-    peak_flops = cfg["peak_flops_per_die"] * 1e12
-
-    hbm_util = (hbm_bytes_per_cube / time_s) / peak_hbm_bw if time_s > 0 else 0
-    cmpt_util = (flops_per_die / time_s) / peak_flops if time_s > 0 else 0
+    # For Rubin decode (bs=1 GEMV), compute utilization is negligible
+    cmpt_util = 0.0
 
     hbm_util = min(hbm_util, 1.0)
-    cmpt_util = min(cmpt_util, 1.0)
 
-    sr = cfg["static_ratio"]
-    hbm_power_per_cube = _component_power(cfg["hbm_tdp_per_cube"], hbm_util, sr)
-    cmpt_power_per_die = _component_power(cfg["cmpt_tdp_per_die"], cmpt_util, sr)
+    # --- Power: P = static + cmpt_coeff × U_cmpt + mem_coeff × U_mem ---
+    static_power = power_coeffs["static_w"]
+    cmpt_power = power_coeffs["cmpt_coeff"] * cmpt_util
+    mem_power = power_coeffs["mem_coeff"] * hbm_util
 
-    hbm_power_total = n_hbm * hbm_power_per_cube
-    cmpt_power_total = n_cmpt * cmpt_power_per_die
-
-    d2d_power = 0.0
-
-    total_power = hbm_power_total + cmpt_power_total + d2d_power
+    total_power = static_power + cmpt_power + mem_power
     energy_nj = total_power * time_s * 1e9
-
-    tdp_total = n_hbm * cfg["hbm_tdp_per_cube"] + n_cmpt * cfg["cmpt_tdp_per_die"]
 
     return {
         "arch": "rubin",
-        "n_hbm_cubes": n_hbm,
-        "n_cmpt_dies": n_cmpt,
         "time_ns": time_ns,
         "hbm_util_per_cube": round(hbm_util, 6),
         "cmpt_util_per_die": round(cmpt_util, 6),
-        "hbm_power_per_cube_w": round(hbm_power_per_cube, 4),
-        "cmpt_power_per_die_w": round(cmpt_power_per_die, 4),
-        "hbm_power_total_w": round(hbm_power_total, 4),
-        "cmpt_power_total_w": round(cmpt_power_total, 4),
+        "per_module_bw_util": {
+            "Proj_QKV": round(qkv_bw_util, 6),
+            "Attn": round(attn_bw_util, 6),
+            "Proj_O": round(projo_bw_util, 6),
+        },
+        "static_power_w": round(static_power, 4),
+        "hbm_power_total_w": round(mem_power, 4),       # mem_coeff × U_mem
+        "cmpt_power_total_w": round(cmpt_power, 4),     # cmpt_coeff × U_cmpt
         "d2d_power_w": 0.0,
         "total_power_w": round(total_power, 4),
         "energy_per_token_nj": round(energy_nj, 4),
-        "tdp_total_w": tdp_total,
+        "tdp_total_w": power_coeffs["tdp_w"],
     }
 
 
@@ -213,63 +277,32 @@ def main():
                         help="Path to hybrid merged JSON (e.g. gqa_hybrid_merged_80T.json)")
     parser.add_argument("--ours-peak-flops", type=float, default=OURS_DEFAULT["peak_flops_per_cube"],
                         help="Ours: peak TFLOPS per cube (default: %(default)s)")
-    parser.add_argument("--ours-hbm-tdp", type=float, default=OURS_DEFAULT["hbm_tdp_per_cube"],
-                        help="Ours: HBM TDP per cube in W (default: %(default)s)")
-    parser.add_argument("--ours-cmpt-tdp", type=float, default=OURS_DEFAULT["cmpt_tdp_per_cube"],
-                        help="Ours: Compute TDP per cube in W (default: %(default)s)")
     parser.add_argument("--ours-hbm-bw", type=float, default=OURS_DEFAULT["hbm_bw_per_cube"],
                         help="Ours: HBM BW per cube in TB/s (default: %(default)s)")
     parser.add_argument("--ours-n-cubes", type=int, default=OURS_DEFAULT["n_cubes"],
                         help="Ours: number of physical cubes (default: %(default)s)")
-    parser.add_argument("--rubin-peak-flops", type=float,
-                        default=RUBIN_DEFAULT["peak_flops_per_die"] * RUBIN_DEFAULT["n_cmpt_dies"],
-                        help="Rubin: total peak TFLOPS (default: %(default)s)")
-    parser.add_argument("--rubin-hbm-bw", type=float,
-                        default=RUBIN_DEFAULT["hbm_bw_per_cube"] * RUBIN_DEFAULT["n_hbm_cubes"],
-                        help="Rubin: total HBM BW in TB/s (default: %(default)s)")
-    parser.add_argument("--rubin-cmpt-tdp", type=float, default=RUBIN_DEFAULT["cmpt_tdp_per_die"],
-                        help="Rubin: compute die TDP in W (default: %(default)s)")
-    parser.add_argument("--rubin-hbm-tdp", type=float, default=RUBIN_DEFAULT["hbm_tdp_per_cube"],
-                        help="Rubin: HBM cube TDP in W (default: %(default)s)")
-    parser.add_argument("--rubin-n-hbm", type=int, default=RUBIN_DEFAULT["n_hbm_cubes"],
-                        help="Rubin: number of HBM cubes (default: %(default)s)")
-    parser.add_argument("--rubin-n-cmpt", type=int, default=RUBIN_DEFAULT["n_cmpt_dies"],
-                        help="Rubin: number of compute dies (default: %(default)s)")
     parser.add_argument("--d2d-pj-per-bit", type=float, default=OURS_DEFAULT["d2d_pj_per_bit"],
                         help="D2D energy in pJ/bit (default: %(default)s)")
-    parser.add_argument("--static-ratio", type=float, default=OURS_DEFAULT["static_ratio"],
-                        help="Static power ratio (default: %(default)s)")
     parser.add_argument("-o", "--output", type=str, default="",
                         help="Output JSON path (default: auto)")
     args = parser.parse_args()
 
-    ours_cfg = {
+    ours_hw = {
         "n_cubes": args.ours_n_cubes,
-        "hbm_tdp_per_cube": args.ours_hbm_tdp,
-        "cmpt_tdp_per_cube": args.ours_cmpt_tdp,
         "peak_flops_per_cube": args.ours_peak_flops,
         "hbm_bw_per_cube": args.ours_hbm_bw,
         "d2d_pj_per_bit": args.d2d_pj_per_bit,
-        "static_ratio": args.static_ratio,
     }
-    rubin_cfg = {
-        "n_hbm_cubes": args.rubin_n_hbm,
-        "n_cmpt_dies": args.rubin_n_cmpt,
-        "hbm_tdp_per_cube": args.rubin_hbm_tdp,
-        "cmpt_tdp_per_die": args.rubin_cmpt_tdp,
-        "peak_flops_per_die": args.rubin_peak_flops / args.rubin_n_cmpt,
-        "hbm_bw_per_cube": args.rubin_hbm_bw / args.rubin_n_hbm,
-        "d2d_pj_per_bit": 0,
-        "static_ratio": args.static_ratio,
-    }
+    ours_pwr = POWER_COEFFS["ours"]
+    rubin_pwr = POWER_COEFFS["rubin"]
 
     data = load_hybrid(args.data)
     strategies_data = data.get("strategies", {})
 
-    all_strategies = OURS_STRATEGIES + ["rubin"]
+    all_strategies = OURS_STRATEGIES + ["rubin", "rubin_tp2", "h100", "h100_tp2"]
     result = {
         "_type": "power_estimation",
-        "_description": "GQA single-layer power model: HBM + Compute + D2D breakdown",
+        "_description": "GQA single-layer power model: Static + Compute + Memory + D2D",
         "_units": {
             "power": "W (watts)",
             "energy": "nJ (nanojoules per token)",
@@ -278,17 +311,22 @@ def main():
         },
         "metadata": {
             "source_data": args.data,
-            "power_formula": "P_component = static_ratio * TDP + TDP * utilization",
-            "total_power_formula": "P_total = P_hbm + P_cmpt + P_d2d",
-            "d2d_power_formula": "P_d2d = d2d_bits * pJ_per_bit / time",
+            "power_formulas": {
+                "ours": ours_pwr["formula"],
+                "rubin": rubin_pwr["formula"],
+                "h100": POWER_COEFFS["h100"]["formula"],
+            },
+            "decomposition": "P_total = P_static + P_cmpt_dynamic + P_mem_dynamic [+ P_d2d]",
+            "d2d_power_formula": "P_d2d = d2d_bits × pJ_per_bit / time",
             "workflow": [
                 "1. roofline_gqa_calc.py  → reports/roofline/*.json  (analytical compute + comm estimates)",
                 "2. collect_gqa_data.py   → reports/astrasim/*.json  (AstraSim simulation data)",
                 "3. merge_gqa_results.py  → reports/hybrid/*.json    (merged hybrid estimates with aggregate_metrics)",
                 "4. power_model.py        → reports/power/*.json     (THIS FILE: power estimation from hybrid data)",
             ],
-            "ours_config": ours_cfg,
-            "rubin_config": rubin_cfg,
+            "ours_hw": ours_hw,
+            "ours_power_coeffs": ours_pwr,
+            "rubin_power_coeffs": rubin_pwr,
         },
         "strategies": {},
     }
@@ -310,29 +348,56 @@ def main():
         entries = strategies_data[strat]["data"]
         power_entries = []
         for entry in entries:
-            agg = entry["aggregate_metrics"]
+            if strat == "tp16":
+                # Fix tp16 per-cube aggregation before passing to calc
+                entry = dict(entry)
+                entry["aggregate_metrics"] = _fix_tp16_per_cube(entry["aggregate_metrics"])
 
             if strat == "rubin":
-                pw = calc_power_rubin(agg, rubin_cfg)
+                pw = calc_power_rubin(entry, rubin_pwr)
+            elif strat == "h100":
+                h100_pwr = POWER_COEFFS["h100"]
+                pw = calc_power_rubin(entry, h100_pwr)
+                pw["arch"] = "h100"
+            elif strat in ("rubin_tp2", "h100_tp2"):
+                # TP2 = 2× single-chip: use single-chip formula × 2 + NVLink D2D
+                base_pwr = POWER_COEFFS["h100"] if strat == "h100_tp2" else rubin_pwr
+                pw = calc_power_rubin(entry, base_pwr)
+                n_gpus = entry.get("aggregate_metrics", {}).get("n_cubes", 2)
+                for k in ("static_power_w", "hbm_power_total_w", "cmpt_power_total_w"):
+                    pw[k] = round(pw[k] * n_gpus, 4)
+                comm_bd = entry.get("comm_breakdown", {})
+                nvlink_bytes = sum(op.get("msg_bytes", 0) * 2 for op in comm_bd.get("ops", []))
+                nvlink_bits = nvlink_bytes * 8
+                nvlink_energy_j = nvlink_bits * NVLINK_PJ_PER_BIT * 1e-12
+                time_s = pw["time_ns"] * 1e-9
+                pw["d2d_power_w"] = round(nvlink_energy_j / time_s, 4) if time_s > 0 else 0
+                pw["d2d_energy_nj"] = round(nvlink_energy_j * 1e9, 4)
+                pw["total_power_w"] = round(
+                    pw["static_power_w"] + pw["hbm_power_total_w"]
+                    + pw["cmpt_power_total_w"] + pw["d2d_power_w"], 4)
+                pw["energy_per_token_nj"] = round(pw["total_power_w"] * time_s * 1e9, 4)
+                pw["tdp_total_w"] = base_pwr["tdp_w"] * n_gpus
+                pw["arch"] = strat
+                pw["n_gpus"] = n_gpus
             else:
-                if strat == "tp16":
-                    agg = _fix_tp16_per_cube(agg)
-                pw = calc_power_ours(agg, ours_cfg)
+                pw = calc_power_ours(entry, ours_hw, ours_pwr)
 
             pw["seq"] = entry["seq"]
+            agg = entry["aggregate_metrics"]
             pw["hybrid_wall_ns"] = entry.get("hybrid_wall_ns", agg["total_time_ns"])
 
-            cb = entry.get("compute_breakdown", {})
-            qkv_ns = cb.get("Proj_QKV_roofline_mem_ns", 0) or entry.get("hybrid_Proj_QKV_ns", 0)
-            attn_ns = cb.get("attn_roofline_fused_ns", 0) or entry.get("hybrid_attn_ns", 0)
-            projo_ns = cb.get("Proj_O_roofline_mem_ns", 0) or entry.get("hybrid_Proj_O_ns", 0)
+            # Memory power breakdown by module (proportional to time)
+            qkv_ns = entry.get("hybrid_Proj_QKV_ns", 0)
+            attn_ns = entry.get("hybrid_attn_ns", 0)
+            projo_ns = entry.get("hybrid_Proj_O_ns", 0)
             total_gpu_ns = qkv_ns + attn_ns + projo_ns
             if total_gpu_ns > 0:
-                hbm_total = pw["hbm_power_total_w"]
+                mem_total = pw["hbm_power_total_w"]
                 pw["hbm_breakdown"] = {
-                    "Proj_QKV_hbm_w": round(hbm_total * qkv_ns / total_gpu_ns, 4),
-                    "Attn_hbm_w": round(hbm_total * attn_ns / total_gpu_ns, 4),
-                    "Proj_O_hbm_w": round(hbm_total * projo_ns / total_gpu_ns, 4),
+                    "Proj_QKV_hbm_w": round(mem_total * qkv_ns / total_gpu_ns, 4),
+                    "Attn_hbm_w": round(mem_total * attn_ns / total_gpu_ns, 4),
+                    "Proj_O_hbm_w": round(mem_total * projo_ns / total_gpu_ns, 4),
                     "Proj_QKV_frac": round(qkv_ns / total_gpu_ns, 6),
                     "Attn_frac": round(attn_ns / total_gpu_ns, 6),
                     "Proj_O_frac": round(projo_ns / total_gpu_ns, 6),
@@ -352,6 +417,7 @@ def main():
                 if pe["seq"] == seq:
                     row[strat] = {
                         "total_power_w": pe["total_power_w"],
+                        "static_power_w": pe["static_power_w"],
                         "hbm_power_w": pe["hbm_power_total_w"],
                         "cmpt_power_w": pe["cmpt_power_total_w"],
                         "d2d_power_w": pe.get("d2d_power_w", 0),
@@ -379,14 +445,14 @@ def main():
     print(f"  GQA Power Model — {Path(args.data).name}")
     print(f"{'='*90}")
 
-    # TDP summary
-    ours_tdp = ours_cfg["n_cubes"] * (ours_cfg["hbm_tdp_per_cube"] + ours_cfg["cmpt_tdp_per_cube"])
-    rubin_tdp = rubin_cfg["n_hbm_cubes"] * rubin_cfg["hbm_tdp_per_cube"] + \
-                rubin_cfg["n_cmpt_dies"] * rubin_cfg["cmpt_tdp_per_die"]
-    print(f"  Ours TDP:  {ours_tdp:.0f}W  ({ours_cfg['n_cubes']} cubes × "
-          f"({ours_cfg['hbm_tdp_per_cube']}W HBM + {ours_cfg['cmpt_tdp_per_cube']}W Cmpt))")
-    print(f"  Rubin TDP: {rubin_tdp:.0f}W  ({rubin_cfg['n_hbm_cubes']}×{rubin_cfg['hbm_tdp_per_cube']}W HBM"
-          f" + {rubin_cfg['n_cmpt_dies']}×{rubin_cfg['cmpt_tdp_per_die']}W Cmpt)")
+    # Power formula summary
+    print(f"  Ours:  P = {ours_pwr['static_ratio']:.1%}×{ours_pwr['tdp_w']}W + "
+          f"{ours_pwr['cmpt_coeff']}×U_cmpt + {ours_pwr['mem_coeff']}×U_mem + D2D")
+    print(f"         Static = {ours_pwr['static_w']:.1f}W, TDP = {ours_pwr['tdp_w']}W")
+    print(f"  Rubin: P = {rubin_pwr['static_ratio']:.1%}×{rubin_pwr['tdp_w']}W + "
+          f"{rubin_pwr['cmpt_coeff']}×U_cmpt + {rubin_pwr['mem_coeff']}×U_mem")
+    print(f"         Static = {rubin_pwr['static_w']:.1f}W, TDP = {rubin_pwr['tdp_w']}W")
+    print(f"  Rubin_TP2 = 2× Rubin  →  Total TDP = {rubin_pwr['tdp_w'] * 2}W")
     print()
 
     # Total power table
@@ -414,7 +480,8 @@ def main():
         print(f" {s:>{col_w}}", end="")
     print()
     print("-" * (20 + col_w * len(header_strats) + len(header_strats)))
-    for comp, key in [("HBM Power (W)", "hbm_power_w"),
+    for comp, key in [("Static Power (W)", "static_power_w"),
+                      ("Mem Power (W)", "hbm_power_w"),
                       ("Cmpt Power (W)", "cmpt_power_w"),
                       ("D2D Power (W)", "d2d_power_w"),
                       ("Total Power (W)", "total_power_w"),
@@ -441,18 +508,13 @@ def main():
         print(f" {s:>{col_w}}", end="")
     print()
     print("-" * (20 + col_w * len(header_strats) + len(header_strats)))
-    for pe_strat in header_strats:
-        sd = result["strategies"].get(pe_strat, {}).get("data", [])
-        pe = next((p for p in sd if p["seq"] == target_seq), sd[-1] if sd else None)
-        if pe is None:
-            continue
     hbm_line = f"{'HBM util':<20}"
     cmpt_line = f"{'Cmpt util':<20}"
     for s in header_strats:
         sd = result["strategies"].get(s, {}).get("data", [])
         pe = next((p for p in sd if p["seq"] == target_seq), sd[-1] if sd else None)
         if pe:
-            hbm_line += f" {pe['hbm_util_per_cube']:>{col_w}.4%}"
+            hbm_line += f" {pe.get('hbm_util_per_cube', 0):>{col_w}.4%}"
             cu = pe.get("cmpt_util_per_cube", pe.get("cmpt_util_per_die", 0))
             cmpt_line += f" {cu:>{col_w}.4%}"
         else:

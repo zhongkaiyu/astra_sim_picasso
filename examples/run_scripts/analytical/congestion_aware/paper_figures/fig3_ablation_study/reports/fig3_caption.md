@@ -1,0 +1,1 @@
+**Fig. 3.** Latency and communication speedup of three parallelism strategies (RO\_new, HMP, TP16) over TP16 baseline on Qwen3-235B at bs=1 with 96T NPU configuration. Left: end-to-end latency speedup at seq=8K, 256K, and 1M. Right: communication-only speedup at the same sequence lengths.

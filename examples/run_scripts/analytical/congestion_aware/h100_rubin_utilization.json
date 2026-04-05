@@ -1,0 +1,20 @@
+{
+    "_description": "H100 SXM TP=1 HBM BW utilization from e2e CUDA event profiling (Qwen3-235B GQA decode bs=1). Applied to Rubin roofline total_ns as total_ns / bw_util.",
+    "_source": "H100_results/attn_scaling_tp1_vs_tp2_report.txt",
+    "proj_qkv": {
+      "1": 0.687
+    },
+    "attn_fused": {
+      "1024": 0.042,
+      "4096": 0.152,
+      "16384": 0.352,
+      "65536": 0.616,
+      "131072": 0.744,
+      "262144": 0.831,
+      "524288": 0.884,
+      "1048576": 0.916
+    },
+    "proj_o": {
+      "1": 0.705
+    }
+  }

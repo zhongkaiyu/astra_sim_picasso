@@ -33,6 +33,21 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parents[4]
 
+MODEL_PRESETS = {
+    "qwen3": {
+        "kvhead": 4,
+        "head": 64,
+        "dmodel": 4096,
+        "head_dim": 128,
+    },
+    "llama4": {
+        "kvhead": 8,
+        "head": 40,
+        "dmodel": 5120,
+        "head_dim": 128,
+    },
+}
+
 STRATEGY_DEFAULTS = {
     "hmp": {
         "model_type": "qwen_gqa_hmp_fwd",
@@ -81,16 +96,21 @@ DEVICE_CONFIGS = {
         "system": "onering16_H100.json",
         "network": "Mesh2D_16gpus_4x4_H100.yml",
     },
+    "HBM4_80T_split4_bw1500": {
+        "system": "onering16_HBM4_80T_split4.json",
+        "network": "Mesh2D_16gpus_4x4_HBM4_bw1500_d2d15ns.yml",
+    },
 }
 
 
-def make_trace_config(strategy, seq, batch, tp_h, tp_s, rank_remap=""):
+def make_trace_config(strategy, seq, batch, tp_h, tp_s, rank_remap="", model_tag="qwen"):
     sdef = STRATEGY_DEFAULTS[strategy]
     remap_tag = f"_{rank_remap}" if rank_remap else ""
     suffix = f"tph{tp_h}_tps{tp_s}_bs{batch}_sl{seq}{remap_tag}"
+    trace_prefix = f"{model_tag}_{strategy}" if model_tag != "qwen" else strategy
     tc = {
-        "output_dir": f"{{PROJECT_DIR}}/symbolic_tensor_graph_picasso/et_trace/gqa/{strategy}_fwd_{suffix}",
-        "output_name": f"{strategy}_fwd_{suffix}",
+        "output_dir": f"{{PROJECT_DIR}}/symbolic_tensor_graph_picasso/et_trace/gqa/{trace_prefix}_fwd_{suffix}",
+        "output_name": f"{trace_prefix}_fwd_{suffix}",
         "model_type": sdef["model_type"],
         "dp": sdef["dp"],
         "tp": sdef["tp"],
@@ -110,20 +130,22 @@ def make_trace_config(strategy, seq, batch, tp_h, tp_s, rank_remap=""):
     return tc
 
 
-def make_sim_config(strategy, seq, batch, tp_h, tp_s, device, rank_remap=""):
+def make_sim_config(strategy, seq, batch, tp_h, tp_s, device, rank_remap="",
+                    model_tag="qwen", run_suffix=""):
     dcfg = DEVICE_CONFIGS[device]
     remap_tag = f"_{rank_remap}" if rank_remap else ""
     suffix = f"tph{tp_h}_tps{tp_s}_bs{batch}_sl{seq}{remap_tag}"
+    trace_prefix = f"{model_tag}_{strategy}" if model_tag != "qwen" else strategy
     strat_label = f"{strategy}{remap_tag}"
     return {
-        "output_dir": f"{{PROJECT_DIR}}/output_qwen/gqa_seq_scaling/{strat_label}_fwd_bs{batch}_sl{seq}",
+        "output_dir": f"{{PROJECT_DIR}}/output_{model_tag}/gqa_seq_scaling/{strat_label}_fwd_bs{batch}_sl{seq}{run_suffix}",
         "astra_sim": "{PROJECT_DIR}/build/astra_analytical/build/bin/AstraSim_Analytical_Congestion_Aware",
         "system": f"{{EXAMPLE_DIR}}/system/native_collectives/{dcfg['system']}",
         "network": f"{{EXAMPLE_DIR}}/network/analytical/{dcfg['network']}",
         "remote_memory": "{EXAMPLE_DIR}/remote_memory/analytical/no_memory_expansion.json",
-        "workload_dir": f"{{PROJECT_DIR}}/symbolic_tensor_graph_picasso/et_trace/gqa/{strategy}_fwd_{suffix}",
-        "workload_base": f"{strategy}_fwd_{suffix}",
-        "log_file": f"simulation_log_gqa_{strat_label}_fwd_bs{batch}_sl{seq}.txt",
+        "workload_dir": f"{{PROJECT_DIR}}/symbolic_tensor_graph_picasso/et_trace/gqa/{trace_prefix}_fwd_{suffix}",
+        "workload_base": f"{trace_prefix}_fwd_{suffix}",
+        "log_file": f"simulation_log_gqa_{strat_label}_fwd_bs{batch}_sl{seq}{run_suffix}.txt",
     }
 
 
@@ -160,10 +182,23 @@ def main():
                         help="Force re-run even if cached")
     parser.add_argument("--trace-force", action="store_true",
                         help="Force regenerate traces")
+    parser.add_argument("--suffix", type=str, default="",
+                        help="Suffix appended to output dir/log names (e.g. '_split4_bw1500')")
     parser.add_argument("--rank-remap", type=str, default="",
                         choices=["", "block2x2"],
                         help="Rank remap strategy (e.g. block2x2)")
+    parser.add_argument("--model", type=str, default="qwen3",
+                        choices=list(MODEL_PRESETS.keys()),
+                        help="Model preset (default: qwen3)")
     args = parser.parse_args()
+
+    # Apply model preset to MODEL_DEFAULTS
+    preset = MODEL_PRESETS[args.model]
+    MODEL_DEFAULTS["kvhead"] = preset["kvhead"]
+    MODEL_DEFAULTS["head"] = preset["head"]
+    MODEL_DEFAULTS["dmodel"] = preset["dmodel"]
+    MODEL_DEFAULTS["head_dim"] = preset["head_dim"]
+    model_tag = "qwen" if args.model == "qwen3" else args.model
 
     sim_subdir = args.sim_configs_dir or "gqa_seq_scaling"
     cache_subdir = args.cache_db or "cache_db_seq_scaling"
@@ -181,17 +216,19 @@ def main():
     for strategy in args.strategies:
         for seq in args.seq:
             tc = make_trace_config(strategy, seq, args.batch,
-                                   args.tp_h, args.tp_s, remap)
-            tc_filename = f"qwen_gqa_{strategy}_fwd_tph{args.tp_h}_tps{args.tp_s}_bs{args.batch}_sl{seq}{remap_tag}.json"
+                                   args.tp_h, args.tp_s, remap,
+                                   model_tag=model_tag)
+            tc_filename = f"{model_tag}_gqa_{strategy}_fwd_tph{args.tp_h}_tps{args.tp_s}_bs{args.batch}_sl{seq}{remap_tag}.json"
             tc_path = trace_configs_dir / strategy / tc_filename
             write_json(str(tc_path), tc)
             generated_trace_paths.append(tc_path)
 
             sc = make_sim_config(strategy, seq, args.batch,
-                                 args.tp_h, args.tp_s, args.device, remap)
+                                 args.tp_h, args.tp_s, args.device, remap,
+                                 model_tag=model_tag, run_suffix=args.suffix)
             sc_filename = (
                 f"tp16_{args.device.lower()}_mesh2d_4x4_onering_"
-                f"qwen_gqa_{strategy}_fwd{remap_tag}_bs{args.batch}_sl{seq}.json"
+                f"{model_tag}_gqa_{strategy}_fwd{remap_tag}_bs{args.batch}_sl{seq}{args.suffix}.json"
             )
             sc_path = sim_configs_dir / sc_filename
             write_json(str(sc_path), sc)

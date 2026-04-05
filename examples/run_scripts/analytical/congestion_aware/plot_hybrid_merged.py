@@ -9,10 +9,11 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 
-STRAT_KEYS = ["HMP_reo", "hmp_reo_new", "hmp", "tp16", "rubin"]
+STRAT_KEYS = ["HMP_reo", "hmp_reo_new", "hmp", "tp16", "rubin", "rubin_tp2", "h100", "h100_tp2"]
 STRAT_LABELS = {
     "HMP_reo": "HMP_RO", "hmp_reo_new": "RO_new",
-    "hmp": "HMP", "tp16": "TP16", "rubin": "Rubin",
+    "hmp": "HMP", "tp16": "TP16", "rubin": "Rubin", "rubin_tp2": "Rubin_TP2",
+    "h100": "H100", "h100_tp2": "H100_TP2",
 }
 STRAT_COLORS = {
     "HMP_reo":     "#E67E22",
@@ -20,9 +21,13 @@ STRAT_COLORS = {
     "hmp":         "#2E86C1",
     "tp16":        "#27AE60",
     "rubin":       "#C0392B",
+    "rubin_tp2":   "#922B21",
+    "h100":        "#7F8C8D",
+    "h100_tp2":    "#566573",
 }
 STRAT_MARKERS = {
     "HMP_reo": "s", "hmp_reo_new": "P", "hmp": "D", "tp16": "^", "rubin": "o",
+    "rubin_tp2": "v", "h100": "X", "h100_tp2": "p",
 }
 
 COMM_COLORS = {
@@ -71,7 +76,7 @@ def extract_comm_ops(strategies_data: dict, strat_key: str) -> dict:
     return result
 
 
-def plot_wall_time(summary, out_dir: Path):
+def plot_wall_time(summary, out_dir: Path, tag: str = "80T"):
     fig, ax = plt.subplots(figsize=(10, 5))
     for sk in STRAT_KEYS:
         seqs = [r["seq"] for r in summary if sk in r]
@@ -83,17 +88,18 @@ def plot_wall_time(summary, out_dir: Path):
     ax.set_yscale("log")
     ax.set_xlabel("Sequence Length", fontsize=12)
     ax.set_ylabel("Wall Time (μs)", fontsize=12)
-    ax.set_title("GQA Hybrid: Wall Time vs Seq (B=1, 80T, Mesh2D 4×4)", fontsize=13)
+    ax.set_title(f"GQA Hybrid: Wall Time vs Seq (B=1, {tag}, Mesh2D 4×4)", fontsize=13)
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: seq_label(int(x))))
     ax.legend(fontsize=11)
     ax.grid(True, which="both", ls="--", alpha=0.4)
     fig.tight_layout()
-    fig.savefig(out_dir / "hybrid_bs1_80T_wall_time.png", dpi=180)
-    print(f"Saved: {out_dir / 'hybrid_bs1_80T_wall_time.png'}")
+    fname = f"hybrid_bs1_{tag}_wall_time.png"
+    fig.savefig(out_dir / fname, dpi=180)
+    print(f"Saved: {out_dir / fname}")
     plt.close(fig)
 
 
-def plot_speedup(summary, out_dir: Path):
+def plot_speedup(summary, out_dir: Path, tag: str = "80T"):
     fig, ax = plt.subplots(figsize=(11, 5.5))
 
     compare_keys = ["HMP_reo", "hmp_reo_new", "hmp", "tp16"]
@@ -113,19 +119,36 @@ def plot_speedup(summary, out_dir: Path):
                         xytext=(0, 10), fontsize=7.5, ha="center",
                         color=STRAT_COLORS[sk], fontweight="bold")
 
+    # Rubin TP2 curve
+    if any("rubin_tp2" in r for r in summary):
+        sk = "rubin_tp2"
+        seqs_tp2 = [r["seq"] for r in summary if sk in r and "rubin" in r]
+        sp_tp2 = [r["rubin"]["wall_ns"] / r[sk]["wall_ns"] for r in summary
+                  if sk in r and "rubin" in r]
+        ax.plot(seqs_tp2, sp_tp2, marker=STRAT_MARKERS[sk], label=STRAT_LABELS[sk],
+                color=STRAT_COLORS[sk], linewidth=2.2, markersize=7, linestyle="--")
+        for s, sp in zip(seqs_tp2, sp_tp2):
+            ax.annotate(f"{sp:.2f}×", (s, sp), textcoords="offset points",
+                        xytext=(0, -14), fontsize=7, ha="center",
+                        color=STRAT_COLORS[sk])
+
     ax.set_xscale("log", base=2)
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: seq_label(int(x))))
     ax.set_xlabel("Sequence Length", fontsize=12)
     ax.set_ylabel("Speedup vs Rubin (single GPU)", fontsize=12)
-    ax.set_title("GQA Hybrid Estimation: Speedup over Rubin (B=1, 80T, Mesh2D 4×4)",
+    ax.set_title(f"GQA Hybrid Estimation: Speedup over Rubin (B=1, {tag}, Mesh2D 4×4)",
                  fontsize=13)
     ax.legend(fontsize=10, loc="upper left")
     ax.grid(True, which="both", ls="--", alpha=0.4)
 
+    all_compare = compare_keys + (["rubin_tp2"] if any("rubin_tp2" in r for r in summary) else [])
     ymax = max(r["rubin"]["wall_ns"] / r[sk]["wall_ns"]
-               for r in summary for sk in compare_keys
+               for r in summary for sk in all_compare
                if sk in r and "rubin" in r) * 1.25
-    ax.set_ylim(0, max(ymax, 1.8))
+    ymin = min((r["rubin"]["wall_ns"] / r[sk]["wall_ns"]
+                for r in summary for sk in all_compare
+                if sk in r and "rubin" in r), default=0)
+    ax.set_ylim(max(0, ymin - 0.15), max(ymax, 1.8))
 
     last = summary[-1]
     seq_last = seq_label(last["seq"])
@@ -148,12 +171,13 @@ def plot_speedup(summary, out_dir: Path):
                                   ec=STRAT_COLORS[sk], alpha=0.9))
 
     fig.tight_layout()
-    fig.savefig(out_dir / "hybrid_bs1_80T_speedup_vs_rubin.png", dpi=180)
-    print(f"Saved: {out_dir / 'hybrid_bs1_80T_speedup_vs_rubin.png'}")
+    fname = f"hybrid_bs1_{tag}_speedup_vs_rubin.png"
+    fig.savefig(out_dir / fname, dpi=180)
+    print(f"Saved: {out_dir / fname}")
     plt.close(fig)
 
 
-def plot_module_breakdown(full_data, out_dir: Path):
+def plot_module_breakdown(full_data, out_dir: Path, tag: str = "80T"):
     """Module breakdown with comm sub-operations split out."""
     strategies = full_data["strategies"]
     summary = full_data["summary_table"]
@@ -273,13 +297,24 @@ def plot_module_breakdown(full_data, out_dir: Path):
     fig.legend(all_handles, all_labels,
                loc="upper center", ncol=min(len(all_labels), 5), fontsize=16,
                bbox_to_anchor=(0.5, 1.06))
-    fig.suptitle("GQA Hybrid: Module Breakdown with Comm Split (B=1, 80T)",
+    fig.suptitle(f"GQA Hybrid: Module Breakdown with Comm Split (B=1, {tag})",
                  fontsize=26, fontweight="bold", y=1.14)
     fig.tight_layout()
-    fig.savefig(out_dir / "hybrid_bs1_80T_module_breakdown.png", dpi=180,
-                bbox_inches="tight")
-    print(f"Saved: {out_dir / 'hybrid_bs1_80T_module_breakdown.png'}")
+    fname = f"hybrid_bs1_{tag}_module_breakdown.png"
+    fig.savefig(out_dir / fname, dpi=180, bbox_inches="tight")
+    print(f"Saved: {out_dir / fname}")
     plt.close(fig)
+
+
+def _get_tag(data: dict) -> str:
+    """Extract a short tag like '80T' from metadata for filenames/titles."""
+    hw = data.get("metadata", {}).get("device_hw", {})
+    pp = hw.get("peak_perf_tflops", 0)
+    if pp and pp == int(pp):
+        return f"{int(pp)}T"
+    if pp:
+        return f"{pp}T"
+    return "80T"
 
 
 def main():
@@ -293,10 +328,11 @@ def main():
     summary = data["summary_table"]
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    tag = _get_tag(data)
 
-    plot_wall_time(summary, out_dir)
-    plot_speedup(summary, out_dir)
-    plot_module_breakdown(data, out_dir)
+    plot_wall_time(summary, out_dir, tag=tag)
+    plot_speedup(summary, out_dir, tag=tag)
+    plot_module_breakdown(data, out_dir, tag=tag)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 # we only consider Qwen 3 235B model FP8
 # We only consider Decodeing stage, all layers.
+# test writing
 import math
 import hardware_config
 
@@ -9,6 +10,29 @@ config = {
     "num_kv_heads": 4,           # key/value heads (GQA)
     "d_head": 128,               # per-head dimension
     "num_layers": 94,            # transformer layers
+}
+
+MODEL_CONFIGS = {
+    "qwen3": {
+        "d_model": 4096,
+        "num_attention_heads": 64,
+        "num_kv_heads": 4,
+        "d_head": 128,
+        "num_layers": 94,
+    },
+    "llama4": {
+        "d_model": 5120,
+        "num_attention_heads": 40,
+        "num_kv_heads": 8,
+        "d_head": 128,
+        "num_layers": 48,
+    },
+}
+
+# model key -> reports subfolder name
+MODEL_REPORT_DIRS = {
+    "qwen3": "qwen3-235B",
+    "llama4": "llama4",
 }
 
 B200_config = hardware_config.B200_config
@@ -25,9 +49,9 @@ H100_fp8_config = hardware_config.H100_fp8_config
 #   tp_h=4 groups, tp_s=4 cubes per group, 16 NPUs total
 # ---------------------------------------------------------------------------
 
-FULL_CONFIG = config  # alias for the full-model config
+FULL_CONFIG = config  # alias for the full-model config (Qwen3, backward compat)
 
-def make_strategy_config(strategy, tp_h=4, tp_hd=4):
+def make_strategy_config(strategy, tp_h=4, tp_hd=4, model_config=None):
     """Build per-NPU model config for a given parallelism strategy.
 
     All three strategies split Wq/Wk/Wv by Hkv (tp_h groups) then by d_head (tp_hd cubes).
@@ -41,18 +65,20 @@ def make_strategy_config(strategy, tp_h=4, tp_hd=4):
 
     tp_h:  head-group count  (Hkv split, default 4)
     tp_hd: head-dim split factor within each group (default 4)
+    model_config: model parameter dict (default: FULL_CONFIG / Qwen3)
     """
-    Hq = FULL_CONFIG["num_attention_heads"]
-    Hkv = FULL_CONFIG["num_kv_heads"]
+    mc = model_config if model_config is not None else FULL_CONFIG
+    Hq = mc["num_attention_heads"]
+    Hkv = mc["num_kv_heads"]
     G = tp_h
 
     if strategy == "hmp":
         return {
-            "d_model": FULL_CONFIG["d_model"],
+            "d_model": mc["d_model"],
             "num_attention_heads": Hq // G,
             "num_kv_heads": Hkv // G,
-            "d_head": FULL_CONFIG["d_head"] // tp_hd,
-            "d_head_full": FULL_CONFIG["d_head"],
+            "d_head": mc["d_head"] // tp_hd,
+            "d_head_full": mc["d_head"],
             "num_layers": 1,
             "tp_s": tp_hd,
             "tp_hd": tp_hd,
@@ -61,11 +87,11 @@ def make_strategy_config(strategy, tp_h=4, tp_hd=4):
         }
     elif strategy == "HMP_reo":
         return {
-            "d_model": FULL_CONFIG["d_model"],
+            "d_model": mc["d_model"],
             "num_attention_heads": Hq // G,
             "num_kv_heads": Hkv // G,
-            "d_head": FULL_CONFIG["d_head"] // tp_hd,
-            "d_head_full": FULL_CONFIG["d_head"],
+            "d_head": mc["d_head"] // tp_hd,
+            "d_head_full": mc["d_head"],
             "num_layers": 1,
             "tp_s": tp_hd,
             "tp_hd": tp_hd,
@@ -74,11 +100,11 @@ def make_strategy_config(strategy, tp_h=4, tp_hd=4):
         }
     elif strategy == "hmp_reo_new":
         return {
-            "d_model": FULL_CONFIG["d_model"],
+            "d_model": mc["d_model"],
             "num_attention_heads": Hq // G,
             "num_kv_heads": Hkv // G,
-            "d_head": FULL_CONFIG["d_head"] // tp_hd,
-            "d_head_full": FULL_CONFIG["d_head"],
+            "d_head": mc["d_head"] // tp_hd,
+            "d_head_full": mc["d_head"],
             "num_layers": 1,
             "tp_s": tp_hd,
             "tp_hd": tp_hd,
@@ -87,10 +113,10 @@ def make_strategy_config(strategy, tp_h=4, tp_hd=4):
         }
     elif strategy == "tp16":
         return {
-            "d_model": FULL_CONFIG["d_model"],
-            "num_attention_heads": Hq // Hkv,     # 16 query heads per KV group
-            "num_kv_heads": Hkv // G,             # 1 KV head per group
-            "d_head": FULL_CONFIG["d_head"] // tp_hd,  # 32, HeadDim split by tp_hd
+            "d_model": mc["d_model"],
+            "num_attention_heads": Hq // Hkv,     # query heads per KV group
+            "num_kv_heads": Hkv // G,             # KV heads per group
+            "d_head": mc["d_head"] // tp_hd,      # HeadDim split by tp_hd
             # NO d_head_full: TP16 does NOT AllGather QKV results.
             # Attention runs with dk=32 (partial inner product, AllReduce on scores).
             "num_layers": 1,
@@ -98,12 +124,12 @@ def make_strategy_config(strategy, tp_h=4, tp_hd=4):
             "tp_hd": tp_hd,   # d_head split for QKV weight sizing
             "wo_mode": "full",
         }
-    elif strategy == "rubin":
+    elif strategy in ("rubin", "h100"):
         return {
-            "d_model": FULL_CONFIG["d_model"],
+            "d_model": mc["d_model"],
             "num_attention_heads": Hq,
             "num_kv_heads": Hkv,
-            "d_head": FULL_CONFIG["d_head"],
+            "d_head": mc["d_head"],
             "num_layers": 1,
             "tp_s": 1,
             "wo_mode": "none",

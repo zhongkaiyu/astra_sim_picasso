@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import hardware_config as hw
-from attention import make_strategy_config, FULL_CONFIG
+from attention import make_strategy_config, FULL_CONFIG, MODEL_CONFIGS, MODEL_REPORT_DIRS
 
 
 def roofline_qkv(peak_perf, bw, cfg, bs):
@@ -385,8 +385,9 @@ def roofline_baseline_output_ag(link_bw_tbs, cfg, bs,
 
 def calc_strategy(strategy, hw_cfg, bs, seq_list, link_bw=2.0,
                   dataset_splits=1, active_chunks=1,
-                  hop_latency_ns=100, endpoint_delay_ns=10):
-    cfg = make_strategy_config(strategy)
+                  hop_latency_ns=100, endpoint_delay_ns=10,
+                  model_config=None):
+    cfg = make_strategy_config(strategy, model_config=model_config)
     pp = hw_cfg["compute"]
     bw = hw_cfg["Bandwidth"]
     crossover = pp / bw
@@ -500,9 +501,14 @@ def main():
                         help="D2D hop latency in ns (default: 100)")
     parser.add_argument("--endpoint-delay", type=float, default=10,
                         help="Endpoint delay in ns (default: 10)")
+    parser.add_argument("--model", type=str, default="qwen3",
+                        choices=list(MODEL_CONFIGS.keys()),
+                        help="Model config to use (default: qwen3)")
     parser.add_argument("-o", "--output", type=str, default="",
                         help="Output JSON path (default: auto-generated)")
     args = parser.parse_args()
+
+    model_cfg = MODEL_CONFIGS[args.model]
 
     seq_list = args.seq
     bs = args.batch
@@ -520,15 +526,24 @@ def main():
         "Bandwidth": hw.rubin_single_layer_config["Bandwidth"],
         "device_link_bw": hw.rubin_single_layer_config.get("device_link_bw", 1.8),
     }
+    h100_hw = {
+        "compute": hw.H100_fp8_config["compute"],
+        "Bandwidth": hw.H100_fp8_config["Bandwidth"],
+        "device_link_bw": hw.H100_fp8_config.get("device_link_bw", 0.9),
+    }
     crossover = pp / bw_val
+
+    model_desc = (f"{args.model} (d={model_cfg['d_model']}, "
+                  f"Hq={model_cfg['num_attention_heads']}, "
+                  f"Hkv={model_cfg['num_kv_heads']}, dk={model_cfg['d_head']})")
 
     output = {
         "metadata": {
             "_source": "roofline_gqa_calc.py (roofline_qkv + roofline_attention + roofline_output + comm)",
             "description": f"GQA single-layer roofline WITH weight loading + comm, bs={bs}, peak-perf={pp}T",
-            "model": "Qwen3 235B (d=4096, Hq=64, Hkv=4, dk=128)",
+            "model": model_desc,
             "batch_size": bs,
-            "strategies": ["HMP_reo", "hmp_reo_new", "hmp", "tp16", "rubin"],
+            "strategies": ["HMP_reo", "hmp_reo_new", "hmp", "tp16", "rubin", "h100"],
             "device_hw": {
                 "peak_perf_tflops": pp,
                 "bandwidth_tb_s": bw_val,
@@ -540,7 +555,11 @@ def main():
                 "bandwidth_tb_s": rubin_hw["Bandwidth"],
                 "crossover_oi": round(rubin_hw["compute"] / rubin_hw["Bandwidth"], 2),
             },
-            "gqa_attention_oi": "2*Hq_local/Hkv_local = 32 (FLOPs/element, all strategies)",
+            "h100_hw": {
+                "peak_perf_tflops": h100_hw["compute"],
+                "bandwidth_tb_s": h100_hw["Bandwidth"],
+                "crossover_oi": round(h100_hw["compute"] / h100_hw["Bandwidth"], 2),
+            },
             "comm_model": "QKV AllGather(tp_s) ring + final tree-reduce log2(tp_h*tp_s) steps",
             "output_ar_chunking": {
                 "dataset_splits": ds_splits,
@@ -560,11 +579,18 @@ def main():
                                                      dataset_splits=ds_splits,
                                                      active_chunks=act_chunks,
                                                      hop_latency_ns=hop_lat,
-                                                     endpoint_delay_ns=ep_delay)
+                                                     endpoint_delay_ns=ep_delay,
+                                                     model_config=model_cfg)
     output["strategies"]["rubin"] = calc_strategy("rubin", rubin_hw, bs, seq_list,
                                                    link_bw=rubin_hw["device_link_bw"],
                                                    dataset_splits=ds_splits,
-                                                   active_chunks=act_chunks)
+                                                   active_chunks=act_chunks,
+                                                   model_config=model_cfg)
+    output["strategies"]["h100"] = calc_strategy("h100", h100_hw, bs, seq_list,
+                                                  link_bw=h100_hw["device_link_bw"],
+                                                  dataset_splits=ds_splits,
+                                                  active_chunks=act_chunks,
+                                                  model_config=model_cfg)
 
     # --- GPU compute table ---
     summary_rows = []
@@ -657,7 +683,8 @@ def main():
         out_path = Path(args.output)
     else:
         pp_tag = f"{int(pp)}T" if pp == int(pp) else f"{pp}T"
-        out_path = Path(__file__).resolve().parent / "reports" / f"gqa_roofline_with_weights_bs{bs}_{pp_tag}.json"
+        report_dir = MODEL_REPORT_DIRS.get(args.model, args.model)
+        out_path = Path(__file__).resolve().parent / "reports" / report_dir / "roofline" / f"gqa_roofline_with_weights_bs{bs}_{pp_tag}.json"
     os.makedirs(out_path.parent, exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(output, f, indent=2, default=str)
