@@ -1,0 +1,5597 @@
+{
+  "metadata": {
+    "_sources": {
+      "Proj_QKV": "max(AstraSim compute, max(roofline compute_ns/util, roofline memory_ns))",
+      "attn": "max(AstraSim compute, sum(max(comp_ns/util, mem_ns) per sub-op))",
+      "Proj_O": "max(AstraSim compute, max(roofline compute_ns/util, roofline memory_ns))",
+      "comm_HMP_reo": "roofline: qkv_allgather + final_reduce",
+      "comm_hmp_reo_new": "roofline: qkv_allgather + attn_rs + final_reduce",
+      "comm_hmp": "roofline: qkv_ag + output_ar + output_ag; astrasim: attn_comm",
+      "comm_tp16": "astrasim: attn_comm + output_comm"
+    },
+    "astrasim_file": "reports/qwen3-235B/astrasim/gqa_seq_scaling_bs1_80t_split4_bw1500_data.json",
+    "roofline_file": "reports/qwen3-235B/roofline/gqa_roofline_bs8_96T_bw1500.json",
+    "device_hw": {
+      "peak_perf_tflops": 96.0,
+      "bandwidth_tb_s": 2.5,
+      "link_bw_tb_s": 1.5,
+      "crossover_oi": 38.4
+    },
+    "batch_size": 8,
+    "utilization_file": "backend/roofline/utilization_profiles/qwen3/util_96.json",
+    "utilization_model": "compute_ns / gpu_utilization per module; proj_qkv/proj_o indexed by batch_size; score/attn_v indexed by effective_seq=cache_seq*dk/dk_ref",
+    "rubin_utilization_file": "h100_rubin_utilization.json",
+    "rubin_utilization_model": "H100 HBM BW utilization from e2e profiling; applied to Rubin roofline total_ns as total_ns / bw_util",
+    "rubin_tp2_model": "Rubin TP1 roofline / 2 per GPU, H100 TP2 BW util, NVLink roofline AR (bw=1.8TB/s, lat=900ns, msg=4096B)",
+    "h100_tp2_model": "H100 TP1 roofline / 2 per GPU, H100 TP2 BW util, H100 NVLink AR (bw=0.9TB/s, lat=900ns, msg=4096B)"
+  },
+  "strategies": {
+    "HMP_reo": {
+      "data": [
+        {
+          "seq": 1024,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3112.93,
+          "hybrid_Proj_O_ns": 3375.1,
+          "hybrid_gpu_ns": 7907.31,
+          "comm_total_ns": 271.6,
+          "hybrid_wall_ns": 8178.91,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 271.6,
+            "total_d2d_bytes_all_cubes": 712704
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 712704,
+            "hbm_read_bytes_per_cube": 11358720,
+            "hbm_read_bytes_all_cubes": 181739520,
+            "compute_macs_per_cube": 94371840,
+            "compute_flops_per_cube": 188743680,
+            "compute_flops_all_cubes": 3019898880,
+            "n_cubes": 16,
+            "total_time_ns": 8178.91
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 209.72,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 3375.1,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3112.93,
+            "score_utilization": 0.05614,
+            "attn_v_utilization": 0.05614,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 3375.1
+          },
+          "original_astrasim": {
+            "wall_ns": 340,
+            "gpu_ns": 340,
+            "comm_ns": 0
+          }
+        },
+        {
+          "seq": 2048,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3112.9,
+          "hybrid_Proj_O_ns": 3375.1,
+          "hybrid_gpu_ns": 7907.28,
+          "comm_total_ns": 271.6,
+          "hybrid_wall_ns": 8178.88,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 271.6,
+            "total_d2d_bytes_all_cubes": 712704
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 712704,
+            "hbm_read_bytes_per_cube": 11883008,
+            "hbm_read_bytes_all_cubes": 190128128,
+            "compute_macs_per_cube": 102760448,
+            "compute_flops_per_cube": 205520896,
+            "compute_flops_all_cubes": 3288334336,
+            "n_cubes": 16,
+            "total_time_ns": 8178.88
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 419.43,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 3375.1,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3112.9,
+            "score_utilization": 0.112281,
+            "attn_v_utilization": 0.112281,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 3375.1
+          },
+          "original_astrasim": {
+            "wall_ns": 392,
+            "gpu_ns": 392,
+            "comm_ns": 0
+          }
+        },
+        {
+          "seq": 4096,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3113.01,
+          "hybrid_Proj_O_ns": 3375.1,
+          "hybrid_gpu_ns": 7907.39,
+          "comm_total_ns": 271.6,
+          "hybrid_wall_ns": 8178.99,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 271.6,
+            "total_d2d_bytes_all_cubes": 712704
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 712704,
+            "hbm_read_bytes_per_cube": 12931584,
+            "hbm_read_bytes_all_cubes": 206905344,
+            "compute_macs_per_cube": 119537664,
+            "compute_flops_per_cube": 239075328,
+            "compute_flops_all_cubes": 3825205248,
+            "n_cubes": 16,
+            "total_time_ns": 8178.99
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 838.86,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 3375.1,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3113.01,
+            "score_utilization": 0.224561,
+            "attn_v_utilization": 0.224561,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 3375.1
+          },
+          "original_astrasim": {
+            "wall_ns": 496,
+            "gpu_ns": 496,
+            "comm_ns": 0
+          }
+        },
+        {
+          "seq": 8192,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3112.96,
+          "hybrid_Proj_O_ns": 3375.1,
+          "hybrid_gpu_ns": 7907.34,
+          "comm_total_ns": 271.6,
+          "hybrid_wall_ns": 8178.94,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 271.6,
+            "total_d2d_bytes_all_cubes": 712704
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 712704,
+            "hbm_read_bytes_per_cube": 15028736,
+            "hbm_read_bytes_all_cubes": 240459776,
+            "compute_macs_per_cube": 153092096,
+            "compute_flops_per_cube": 306184192,
+            "compute_flops_all_cubes": 4898947072,
+            "n_cubes": 16,
+            "total_time_ns": 8178.94
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 1677.72,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 3375.1,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3112.96,
+            "score_utilization": 0.449123,
+            "attn_v_utilization": 0.449123,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 3375.1
+          },
+          "original_astrasim": {
+            "wall_ns": 704,
+            "gpu_ns": 704,
+            "comm_ns": 0
+          }
+        },
+        {
+          "seq": 16384,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 5210.1,
+          "hybrid_Proj_O_ns": 3375.1,
+          "hybrid_gpu_ns": 10004.48,
+          "comm_total_ns": 271.6,
+          "hybrid_wall_ns": 10276.08,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 271.6,
+            "total_d2d_bytes_all_cubes": 712704
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 712704,
+            "hbm_read_bytes_per_cube": 19223040,
+            "hbm_read_bytes_all_cubes": 307568640,
+            "compute_macs_per_cube": 220200960,
+            "compute_flops_per_cube": 440401920,
+            "compute_flops_all_cubes": 7046430720,
+            "n_cubes": 16,
+            "total_time_ns": 10276.08
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 3355.44,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 3375.1,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 5210.1,
+            "score_utilization": 0.536688,
+            "attn_v_utilization": 0.536688,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 3375.1
+          },
+          "original_astrasim": {
+            "wall_ns": 1124,
+            "gpu_ns": 1124,
+            "comm_ns": 0
+          }
+        },
+        {
+          "seq": 32768,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 7009.07,
+          "hybrid_Proj_O_ns": 3375.1,
+          "hybrid_gpu_ns": 11803.45,
+          "comm_total_ns": 271.6,
+          "hybrid_wall_ns": 12075.05,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 271.6,
+            "total_d2d_bytes_all_cubes": 712704
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 712704,
+            "hbm_read_bytes_per_cube": 27611648,
+            "hbm_read_bytes_all_cubes": 441786368,
+            "compute_macs_per_cube": 354418688,
+            "compute_flops_per_cube": 708837376,
+            "compute_flops_all_cubes": 11341398016,
+            "n_cubes": 16,
+            "total_time_ns": 12075.05
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 6710.89,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 3375.1,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 7009.07,
+            "score_utilization": 0.765321,
+            "attn_v_utilization": 0.846281,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 3375.1
+          },
+          "original_astrasim": {
+            "wall_ns": 1964,
+            "gpu_ns": 1964,
+            "comm_ns": 0
+          }
+        },
+        {
+          "seq": 65536,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 13510.26,
+          "hybrid_Proj_O_ns": 3375.1,
+          "hybrid_gpu_ns": 18304.64,
+          "comm_total_ns": 271.6,
+          "hybrid_wall_ns": 18576.24,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 271.6,
+            "total_d2d_bytes_all_cubes": 712704
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 712704,
+            "hbm_read_bytes_per_cube": 44388864,
+            "hbm_read_bytes_all_cubes": 710221824,
+            "compute_macs_per_cube": 622854144,
+            "compute_flops_per_cube": 1245708288,
+            "compute_flops_all_cubes": 19931332608,
+            "n_cubes": 16,
+            "total_time_ns": 18576.24
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 13421.77,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 3375.1,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 13510.26,
+            "score_utilization": 0.82249,
+            "attn_v_utilization": 0.916741,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 3375.1
+          },
+          "original_astrasim": {
+            "wall_ns": 3640,
+            "gpu_ns": 3640,
+            "comm_ns": 0
+          }
+        },
+        {
+          "seq": 131072,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 26843.54,
+          "hybrid_Proj_O_ns": 3375.1,
+          "hybrid_gpu_ns": 31637.92,
+          "comm_total_ns": 271.6,
+          "hybrid_wall_ns": 31909.52,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 271.6,
+            "total_d2d_bytes_all_cubes": 712704
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 712704,
+            "hbm_read_bytes_per_cube": 77943296,
+            "hbm_read_bytes_all_cubes": 1247092736,
+            "compute_macs_per_cube": 1159725056,
+            "compute_flops_per_cube": 2319450112,
+            "compute_flops_all_cubes": 37111201792,
+            "n_cubes": 16,
+            "total_time_ns": 31909.52
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 26843.55,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 3375.1,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 26843.54,
+            "score_utilization": 0.928798,
+            "attn_v_utilization": 0.956562,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 3375.1
+          },
+          "original_astrasim": {
+            "wall_ns": 6996,
+            "gpu_ns": 6996,
+            "comm_ns": 0
+          }
+        },
+        {
+          "seq": 262144,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 53687.1,
+          "hybrid_Proj_O_ns": 3375.1,
+          "hybrid_gpu_ns": 58481.48,
+          "comm_total_ns": 271.6,
+          "hybrid_wall_ns": 58753.08,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 271.6,
+            "total_d2d_bytes_all_cubes": 712704
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 712704,
+            "hbm_read_bytes_per_cube": 145052160,
+            "hbm_read_bytes_all_cubes": 2320834560,
+            "compute_macs_per_cube": 2233466880,
+            "compute_flops_per_cube": 4466933760,
+            "compute_flops_all_cubes": 71470940160,
+            "n_cubes": 16,
+            "total_time_ns": 58753.08
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 53687.09,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 3375.1,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 53687.1,
+            "score_utilization": 0.948807,
+            "attn_v_utilization": 0.977799,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 3375.1
+          },
+          "original_astrasim": {
+            "wall_ns": 13708,
+            "gpu_ns": 13708,
+            "comm_ns": 0
+          }
+        },
+        {
+          "seq": 524288,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 107374.18,
+          "hybrid_Proj_O_ns": 3375.1,
+          "hybrid_gpu_ns": 112168.56,
+          "comm_total_ns": 271.6,
+          "hybrid_wall_ns": 112440.16,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 271.6,
+            "total_d2d_bytes_all_cubes": 712704
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 712704,
+            "hbm_read_bytes_per_cube": 279269888,
+            "hbm_read_bytes_all_cubes": 4468318208,
+            "compute_macs_per_cube": 4380950528,
+            "compute_flops_per_cube": 8761901056,
+            "compute_flops_all_cubes": 140190416896,
+            "n_cubes": 16,
+            "total_time_ns": 112440.16
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 107374.18,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 3375.1,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 107374.18,
+            "score_utilization": 0.981195,
+            "attn_v_utilization": 0.988775,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 3375.1
+          },
+          "original_astrasim": {
+            "wall_ns": 27128,
+            "gpu_ns": 27128,
+            "comm_ns": 0
+          }
+        },
+        {
+          "seq": 1048576,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 214748.36,
+          "hybrid_Proj_O_ns": 3375.1,
+          "hybrid_gpu_ns": 219542.74,
+          "comm_total_ns": 271.6,
+          "hybrid_wall_ns": 219814.34,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 271.6,
+            "total_d2d_bytes_all_cubes": 712704
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 712704,
+            "hbm_read_bytes_per_cube": 547705344,
+            "hbm_read_bytes_all_cubes": 8763285504,
+            "compute_macs_per_cube": 8675917824,
+            "compute_flops_per_cube": 17351835648,
+            "compute_flops_all_cubes": 277629370368,
+            "n_cubes": 16,
+            "total_time_ns": 219814.34
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 214748.36,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 3375.1,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 214748.36,
+            "score_utilization": 0.986691,
+            "attn_v_utilization": 0.994356,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 3375.1
+          },
+          "original_astrasim": {
+            "wall_ns": 53972,
+            "gpu_ns": 53972,
+            "comm_ns": 0
+          }
+        }
+      ]
+    },
+    "hmp_reo_new": {
+      "data": [
+        {
+          "seq": 1024,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3112.93,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 5390.73,
+          "comm_total_ns": 354.79,
+          "hybrid_wall_ns": 5745.52,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_rs",
+                "source": "roofline",
+                "time_ns": 83.19,
+                "total_elems": 16384,
+                "d2d_bytes_all_cubes": 49152,
+                "group": "tp_s=4, 4 groups (ring RS, block2x2 1-hop)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 354.79,
+            "total_d2d_bytes_all_cubes": 761856
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 761856,
+            "hbm_read_bytes_per_cube": 5067264,
+            "hbm_read_bytes_all_cubes": 81076224,
+            "compute_macs_per_cube": 44040192,
+            "compute_flops_per_cube": 88080384,
+            "compute_flops_all_cubes": 1409286144,
+            "n_cubes": 16,
+            "total_time_ns": 5745.52
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 209.72,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3112.93,
+            "score_utilization": 0.05614,
+            "attn_v_utilization": 0.05614,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 677,
+            "gpu_ns": 182,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 2048,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3112.9,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 5390.7,
+          "comm_total_ns": 354.79,
+          "hybrid_wall_ns": 5745.49,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_rs",
+                "source": "roofline",
+                "time_ns": 83.19,
+                "total_elems": 16384,
+                "d2d_bytes_all_cubes": 49152,
+                "group": "tp_s=4, 4 groups (ring RS, block2x2 1-hop)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 354.79,
+            "total_d2d_bytes_all_cubes": 761856
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 761856,
+            "hbm_read_bytes_per_cube": 5591552,
+            "hbm_read_bytes_all_cubes": 89464832,
+            "compute_macs_per_cube": 52428800,
+            "compute_flops_per_cube": 104857600,
+            "compute_flops_all_cubes": 1677721600,
+            "n_cubes": 16,
+            "total_time_ns": 5745.49
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 419.43,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3112.9,
+            "score_utilization": 0.112281,
+            "attn_v_utilization": 0.112281,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 729,
+            "gpu_ns": 234,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 4096,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3113.01,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 5390.81,
+          "comm_total_ns": 354.79,
+          "hybrid_wall_ns": 5745.6,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_rs",
+                "source": "roofline",
+                "time_ns": 83.19,
+                "total_elems": 16384,
+                "d2d_bytes_all_cubes": 49152,
+                "group": "tp_s=4, 4 groups (ring RS, block2x2 1-hop)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 354.79,
+            "total_d2d_bytes_all_cubes": 761856
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 761856,
+            "hbm_read_bytes_per_cube": 6640128,
+            "hbm_read_bytes_all_cubes": 106242048,
+            "compute_macs_per_cube": 69206016,
+            "compute_flops_per_cube": 138412032,
+            "compute_flops_all_cubes": 2214592512,
+            "n_cubes": 16,
+            "total_time_ns": 5745.6
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 838.86,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3113.01,
+            "score_utilization": 0.224561,
+            "attn_v_utilization": 0.224561,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 833,
+            "gpu_ns": 338,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 8192,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3112.96,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 5390.76,
+          "comm_total_ns": 354.79,
+          "hybrid_wall_ns": 5745.55,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_rs",
+                "source": "roofline",
+                "time_ns": 83.19,
+                "total_elems": 16384,
+                "d2d_bytes_all_cubes": 49152,
+                "group": "tp_s=4, 4 groups (ring RS, block2x2 1-hop)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 354.79,
+            "total_d2d_bytes_all_cubes": 761856
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 761856,
+            "hbm_read_bytes_per_cube": 8737280,
+            "hbm_read_bytes_all_cubes": 139796480,
+            "compute_macs_per_cube": 102760448,
+            "compute_flops_per_cube": 205520896,
+            "compute_flops_all_cubes": 3288334336,
+            "n_cubes": 16,
+            "total_time_ns": 5745.55
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 1677.72,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3112.96,
+            "score_utilization": 0.449123,
+            "attn_v_utilization": 0.449123,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 1041,
+            "gpu_ns": 546,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 16384,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 5210.1,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 7487.9,
+          "comm_total_ns": 354.79,
+          "hybrid_wall_ns": 7842.69,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_rs",
+                "source": "roofline",
+                "time_ns": 83.19,
+                "total_elems": 16384,
+                "d2d_bytes_all_cubes": 49152,
+                "group": "tp_s=4, 4 groups (ring RS, block2x2 1-hop)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 354.79,
+            "total_d2d_bytes_all_cubes": 761856
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 761856,
+            "hbm_read_bytes_per_cube": 12931584,
+            "hbm_read_bytes_all_cubes": 206905344,
+            "compute_macs_per_cube": 169869312,
+            "compute_flops_per_cube": 339738624,
+            "compute_flops_all_cubes": 5435817984,
+            "n_cubes": 16,
+            "total_time_ns": 7842.69
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 3355.44,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 5210.1,
+            "score_utilization": 0.536688,
+            "attn_v_utilization": 0.536688,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 1461,
+            "gpu_ns": 966,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 32768,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 7009.07,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 9286.87,
+          "comm_total_ns": 354.79,
+          "hybrid_wall_ns": 9641.66,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_rs",
+                "source": "roofline",
+                "time_ns": 83.19,
+                "total_elems": 16384,
+                "d2d_bytes_all_cubes": 49152,
+                "group": "tp_s=4, 4 groups (ring RS, block2x2 1-hop)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 354.79,
+            "total_d2d_bytes_all_cubes": 761856
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 761856,
+            "hbm_read_bytes_per_cube": 21320192,
+            "hbm_read_bytes_all_cubes": 341123072,
+            "compute_macs_per_cube": 304087040,
+            "compute_flops_per_cube": 608174080,
+            "compute_flops_all_cubes": 9730785280,
+            "n_cubes": 16,
+            "total_time_ns": 9641.66
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 6710.89,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 7009.07,
+            "score_utilization": 0.765321,
+            "attn_v_utilization": 0.846281,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 2301,
+            "gpu_ns": 1806,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 65536,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 13510.26,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 15788.06,
+          "comm_total_ns": 354.79,
+          "hybrid_wall_ns": 16142.85,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_rs",
+                "source": "roofline",
+                "time_ns": 83.19,
+                "total_elems": 16384,
+                "d2d_bytes_all_cubes": 49152,
+                "group": "tp_s=4, 4 groups (ring RS, block2x2 1-hop)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 354.79,
+            "total_d2d_bytes_all_cubes": 761856
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 761856,
+            "hbm_read_bytes_per_cube": 38097408,
+            "hbm_read_bytes_all_cubes": 609558528,
+            "compute_macs_per_cube": 572522496,
+            "compute_flops_per_cube": 1145044992,
+            "compute_flops_all_cubes": 18320719872,
+            "n_cubes": 16,
+            "total_time_ns": 16142.85
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 13421.77,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 13510.26,
+            "score_utilization": 0.82249,
+            "attn_v_utilization": 0.916741,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 3977,
+            "gpu_ns": 3482,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 131072,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 26843.54,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 29121.34,
+          "comm_total_ns": 354.79,
+          "hybrid_wall_ns": 29476.13,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_rs",
+                "source": "roofline",
+                "time_ns": 83.19,
+                "total_elems": 16384,
+                "d2d_bytes_all_cubes": 49152,
+                "group": "tp_s=4, 4 groups (ring RS, block2x2 1-hop)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 354.79,
+            "total_d2d_bytes_all_cubes": 761856
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 761856,
+            "hbm_read_bytes_per_cube": 71651840,
+            "hbm_read_bytes_all_cubes": 1146429440,
+            "compute_macs_per_cube": 1109393408,
+            "compute_flops_per_cube": 2218786816,
+            "compute_flops_all_cubes": 35500589056,
+            "n_cubes": 16,
+            "total_time_ns": 29476.13
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 26843.55,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 26843.54,
+            "score_utilization": 0.928798,
+            "attn_v_utilization": 0.956562,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 7333,
+            "gpu_ns": 6838,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 262144,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 53687.1,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 55964.9,
+          "comm_total_ns": 354.79,
+          "hybrid_wall_ns": 56319.69,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_rs",
+                "source": "roofline",
+                "time_ns": 83.19,
+                "total_elems": 16384,
+                "d2d_bytes_all_cubes": 49152,
+                "group": "tp_s=4, 4 groups (ring RS, block2x2 1-hop)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 354.79,
+            "total_d2d_bytes_all_cubes": 761856
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 761856,
+            "hbm_read_bytes_per_cube": 138760704,
+            "hbm_read_bytes_all_cubes": 2220171264,
+            "compute_macs_per_cube": 2183135232,
+            "compute_flops_per_cube": 4366270464,
+            "compute_flops_all_cubes": 69860327424,
+            "n_cubes": 16,
+            "total_time_ns": 56319.69
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 53687.09,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 53687.1,
+            "score_utilization": 0.948807,
+            "attn_v_utilization": 0.977799,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 14045,
+            "gpu_ns": 13550,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 524288,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 107374.18,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 109651.98,
+          "comm_total_ns": 354.79,
+          "hybrid_wall_ns": 110006.77,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_rs",
+                "source": "roofline",
+                "time_ns": 83.19,
+                "total_elems": 16384,
+                "d2d_bytes_all_cubes": 49152,
+                "group": "tp_s=4, 4 groups (ring RS, block2x2 1-hop)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 354.79,
+            "total_d2d_bytes_all_cubes": 761856
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 761856,
+            "hbm_read_bytes_per_cube": 272978432,
+            "hbm_read_bytes_all_cubes": 4367654912,
+            "compute_macs_per_cube": 4330618880,
+            "compute_flops_per_cube": 8661237760,
+            "compute_flops_all_cubes": 138579804160,
+            "n_cubes": 16,
+            "total_time_ns": 110006.77
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 107374.18,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 107374.18,
+            "score_utilization": 0.981195,
+            "attn_v_utilization": 0.988775,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 27465,
+            "gpu_ns": 26970,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 1048576,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 214748.36,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 217026.16,
+          "comm_total_ns": 354.79,
+          "hybrid_wall_ns": 217380.95,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_rs",
+                "source": "roofline",
+                "time_ns": 83.19,
+                "total_elems": 16384,
+                "d2d_bytes_all_cubes": 49152,
+                "group": "tp_s=4, 4 groups (ring RS, block2x2 1-hop)"
+              },
+              {
+                "name": "final_reduce",
+                "source": "roofline",
+                "time_ns": 187.38,
+                "msg_bytes_per_step": 32768,
+                "d2d_bytes_all_cubes": 491520,
+                "group": "tree-reduce 16 NPUs"
+              }
+            ],
+            "total_comm_ns": 354.79,
+            "total_d2d_bytes_all_cubes": 761856
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 761856,
+            "hbm_read_bytes_per_cube": 541413888,
+            "hbm_read_bytes_all_cubes": 8662622208,
+            "compute_macs_per_cube": 8625586176,
+            "compute_flops_per_cube": 17251172352,
+            "compute_flops_all_cubes": 276018757632,
+            "n_cubes": 16,
+            "total_time_ns": 217380.95
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 214748.36,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 214748.36,
+            "score_utilization": 0.986691,
+            "attn_v_utilization": 0.994356,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 54309,
+            "gpu_ns": 53814,
+            "comm_ns": 495
+          }
+        }
+      ]
+    },
+    "hmp": {
+      "data": [
+        {
+          "seq": 1024,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3112.93,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 5390.73,
+          "comm_total_ns": 1638.37,
+          "hybrid_wall_ns": 7029.1,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1280.0,
+                "msg_bytes": 16384,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_ar_comm",
+                "source": "roofline",
+                "time_ns": 182.77,
+                "time_ns_astrasim_original": 250.0,
+                "msg_bytes": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "tp_s=4, 4 groups (ring AR, block2x2 1-hop, no congestion)"
+              },
+              {
+                "name": "output_ag_comm",
+                "source": "roofline (corrected)",
+                "time_ns": 91.38,
+                "time_ns_astrasim_original": 85.0,
+                "msg_bytes_per_cube": 8192,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "tp_s=4, 4 groups (ring AG, no congestion)"
+              }
+            ],
+            "total_comm_ns": 1638.37,
+            "total_d2d_bytes_all_cubes": 1794048
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 1794048,
+            "hbm_read_bytes_per_cube": 5067264,
+            "hbm_read_bytes_all_cubes": 81076224,
+            "compute_macs_per_cube": 44040192,
+            "compute_flops_per_cube": 88080384,
+            "compute_flops_all_cubes": 1409286144,
+            "n_cubes": 16,
+            "total_time_ns": 7029.1
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 209.72,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3112.93,
+            "score_utilization": 0.05614,
+            "attn_v_utilization": 0.05614,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 677,
+            "gpu_ns": 182,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 2048,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3112.9,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 5390.7,
+          "comm_total_ns": 1638.37,
+          "hybrid_wall_ns": 7029.07,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1280.0,
+                "msg_bytes": 16384,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_ar_comm",
+                "source": "roofline",
+                "time_ns": 182.77,
+                "time_ns_astrasim_original": 250.0,
+                "msg_bytes": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "tp_s=4, 4 groups (ring AR, block2x2 1-hop, no congestion)"
+              },
+              {
+                "name": "output_ag_comm",
+                "source": "roofline (corrected)",
+                "time_ns": 91.38,
+                "time_ns_astrasim_original": 85.0,
+                "msg_bytes_per_cube": 8192,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "tp_s=4, 4 groups (ring AG, no congestion)"
+              }
+            ],
+            "total_comm_ns": 1638.37,
+            "total_d2d_bytes_all_cubes": 1794048
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 1794048,
+            "hbm_read_bytes_per_cube": 5591552,
+            "hbm_read_bytes_all_cubes": 89464832,
+            "compute_macs_per_cube": 52428800,
+            "compute_flops_per_cube": 104857600,
+            "compute_flops_all_cubes": 1677721600,
+            "n_cubes": 16,
+            "total_time_ns": 7029.07
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 419.43,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3112.9,
+            "score_utilization": 0.112281,
+            "attn_v_utilization": 0.112281,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 729,
+            "gpu_ns": 234,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 4096,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3113.01,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 5390.81,
+          "comm_total_ns": 1638.37,
+          "hybrid_wall_ns": 7029.18,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1280.0,
+                "msg_bytes": 16384,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_ar_comm",
+                "source": "roofline",
+                "time_ns": 182.77,
+                "time_ns_astrasim_original": 250.0,
+                "msg_bytes": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "tp_s=4, 4 groups (ring AR, block2x2 1-hop, no congestion)"
+              },
+              {
+                "name": "output_ag_comm",
+                "source": "roofline (corrected)",
+                "time_ns": 91.38,
+                "time_ns_astrasim_original": 85.0,
+                "msg_bytes_per_cube": 8192,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "tp_s=4, 4 groups (ring AG, no congestion)"
+              }
+            ],
+            "total_comm_ns": 1638.37,
+            "total_d2d_bytes_all_cubes": 1794048
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 1794048,
+            "hbm_read_bytes_per_cube": 6640128,
+            "hbm_read_bytes_all_cubes": 106242048,
+            "compute_macs_per_cube": 69206016,
+            "compute_flops_per_cube": 138412032,
+            "compute_flops_all_cubes": 2214592512,
+            "n_cubes": 16,
+            "total_time_ns": 7029.18
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 838.86,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3113.01,
+            "score_utilization": 0.224561,
+            "attn_v_utilization": 0.224561,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 833,
+            "gpu_ns": 338,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 8192,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3112.96,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 5390.76,
+          "comm_total_ns": 1638.37,
+          "hybrid_wall_ns": 7029.13,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1280.0,
+                "msg_bytes": 16384,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_ar_comm",
+                "source": "roofline",
+                "time_ns": 182.77,
+                "time_ns_astrasim_original": 250.0,
+                "msg_bytes": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "tp_s=4, 4 groups (ring AR, block2x2 1-hop, no congestion)"
+              },
+              {
+                "name": "output_ag_comm",
+                "source": "roofline (corrected)",
+                "time_ns": 91.38,
+                "time_ns_astrasim_original": 85.0,
+                "msg_bytes_per_cube": 8192,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "tp_s=4, 4 groups (ring AG, no congestion)"
+              }
+            ],
+            "total_comm_ns": 1638.37,
+            "total_d2d_bytes_all_cubes": 1794048
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 1794048,
+            "hbm_read_bytes_per_cube": 8737280,
+            "hbm_read_bytes_all_cubes": 139796480,
+            "compute_macs_per_cube": 102760448,
+            "compute_flops_per_cube": 205520896,
+            "compute_flops_all_cubes": 3288334336,
+            "n_cubes": 16,
+            "total_time_ns": 7029.13
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 1677.72,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3112.96,
+            "score_utilization": 0.449123,
+            "attn_v_utilization": 0.449123,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 1041,
+            "gpu_ns": 546,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 16384,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 5210.1,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 7487.9,
+          "comm_total_ns": 1638.37,
+          "hybrid_wall_ns": 9126.27,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1280.0,
+                "msg_bytes": 16384,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_ar_comm",
+                "source": "roofline",
+                "time_ns": 182.77,
+                "time_ns_astrasim_original": 250.0,
+                "msg_bytes": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "tp_s=4, 4 groups (ring AR, block2x2 1-hop, no congestion)"
+              },
+              {
+                "name": "output_ag_comm",
+                "source": "roofline (corrected)",
+                "time_ns": 91.38,
+                "time_ns_astrasim_original": 0,
+                "msg_bytes_per_cube": 8192,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "tp_s=4, 4 groups (ring AG, no congestion)"
+              }
+            ],
+            "total_comm_ns": 1638.37,
+            "total_d2d_bytes_all_cubes": 1794048
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 1794048,
+            "hbm_read_bytes_per_cube": 12931584,
+            "hbm_read_bytes_all_cubes": 206905344,
+            "compute_macs_per_cube": 169869312,
+            "compute_flops_per_cube": 339738624,
+            "compute_flops_all_cubes": 5435817984,
+            "n_cubes": 16,
+            "total_time_ns": 9126.27
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 3355.44,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 5210.1,
+            "score_utilization": 0.536688,
+            "attn_v_utilization": 0.536688,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 1461,
+            "gpu_ns": 966,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 32768,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 7009.07,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 9286.87,
+          "comm_total_ns": 1638.37,
+          "hybrid_wall_ns": 10925.24,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1280.0,
+                "msg_bytes": 16384,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_ar_comm",
+                "source": "roofline",
+                "time_ns": 182.77,
+                "time_ns_astrasim_original": 250.0,
+                "msg_bytes": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "tp_s=4, 4 groups (ring AR, block2x2 1-hop, no congestion)"
+              },
+              {
+                "name": "output_ag_comm",
+                "source": "roofline (corrected)",
+                "time_ns": 91.38,
+                "time_ns_astrasim_original": 85.0,
+                "msg_bytes_per_cube": 8192,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "tp_s=4, 4 groups (ring AG, no congestion)"
+              }
+            ],
+            "total_comm_ns": 1638.37,
+            "total_d2d_bytes_all_cubes": 1794048
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 1794048,
+            "hbm_read_bytes_per_cube": 21320192,
+            "hbm_read_bytes_all_cubes": 341123072,
+            "compute_macs_per_cube": 304087040,
+            "compute_flops_per_cube": 608174080,
+            "compute_flops_all_cubes": 9730785280,
+            "n_cubes": 16,
+            "total_time_ns": 10925.24
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 6710.89,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 7009.07,
+            "score_utilization": 0.765321,
+            "attn_v_utilization": 0.846281,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 2301,
+            "gpu_ns": 1806,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 65536,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 13510.26,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 15788.06,
+          "comm_total_ns": 1638.37,
+          "hybrid_wall_ns": 17426.43,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1280.0,
+                "msg_bytes": 16384,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_ar_comm",
+                "source": "roofline",
+                "time_ns": 182.77,
+                "time_ns_astrasim_original": 250.0,
+                "msg_bytes": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "tp_s=4, 4 groups (ring AR, block2x2 1-hop, no congestion)"
+              },
+              {
+                "name": "output_ag_comm",
+                "source": "roofline (corrected)",
+                "time_ns": 91.38,
+                "time_ns_astrasim_original": 85.0,
+                "msg_bytes_per_cube": 8192,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "tp_s=4, 4 groups (ring AG, no congestion)"
+              }
+            ],
+            "total_comm_ns": 1638.37,
+            "total_d2d_bytes_all_cubes": 1794048
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 1794048,
+            "hbm_read_bytes_per_cube": 38097408,
+            "hbm_read_bytes_all_cubes": 609558528,
+            "compute_macs_per_cube": 572522496,
+            "compute_flops_per_cube": 1145044992,
+            "compute_flops_all_cubes": 18320719872,
+            "n_cubes": 16,
+            "total_time_ns": 17426.43
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 13421.77,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 13510.26,
+            "score_utilization": 0.82249,
+            "attn_v_utilization": 0.916741,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 3977,
+            "gpu_ns": 3482,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 131072,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 26843.54,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 29121.34,
+          "comm_total_ns": 1638.37,
+          "hybrid_wall_ns": 30759.71,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1280.0,
+                "msg_bytes": 16384,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_ar_comm",
+                "source": "roofline",
+                "time_ns": 182.77,
+                "time_ns_astrasim_original": 250.0,
+                "msg_bytes": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "tp_s=4, 4 groups (ring AR, block2x2 1-hop, no congestion)"
+              },
+              {
+                "name": "output_ag_comm",
+                "source": "roofline (corrected)",
+                "time_ns": 91.38,
+                "time_ns_astrasim_original": 85.0,
+                "msg_bytes_per_cube": 8192,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "tp_s=4, 4 groups (ring AG, no congestion)"
+              }
+            ],
+            "total_comm_ns": 1638.37,
+            "total_d2d_bytes_all_cubes": 1794048
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 1794048,
+            "hbm_read_bytes_per_cube": 71651840,
+            "hbm_read_bytes_all_cubes": 1146429440,
+            "compute_macs_per_cube": 1109393408,
+            "compute_flops_per_cube": 2218786816,
+            "compute_flops_all_cubes": 35500589056,
+            "n_cubes": 16,
+            "total_time_ns": 30759.71
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 26843.55,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 26843.54,
+            "score_utilization": 0.928798,
+            "attn_v_utilization": 0.956562,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 7333,
+            "gpu_ns": 6838,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 262144,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 53687.1,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 55964.9,
+          "comm_total_ns": 1638.37,
+          "hybrid_wall_ns": 57603.27,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1280.0,
+                "msg_bytes": 16384,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_ar_comm",
+                "source": "roofline",
+                "time_ns": 182.77,
+                "time_ns_astrasim_original": 250.0,
+                "msg_bytes": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "tp_s=4, 4 groups (ring AR, block2x2 1-hop, no congestion)"
+              },
+              {
+                "name": "output_ag_comm",
+                "source": "roofline (corrected)",
+                "time_ns": 91.38,
+                "time_ns_astrasim_original": 85.0,
+                "msg_bytes_per_cube": 8192,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "tp_s=4, 4 groups (ring AG, no congestion)"
+              }
+            ],
+            "total_comm_ns": 1638.37,
+            "total_d2d_bytes_all_cubes": 1794048
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 1794048,
+            "hbm_read_bytes_per_cube": 138760704,
+            "hbm_read_bytes_all_cubes": 2220171264,
+            "compute_macs_per_cube": 2183135232,
+            "compute_flops_per_cube": 4366270464,
+            "compute_flops_all_cubes": 69860327424,
+            "n_cubes": 16,
+            "total_time_ns": 57603.27
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 53687.09,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 53687.1,
+            "score_utilization": 0.948807,
+            "attn_v_utilization": 0.977799,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 14045,
+            "gpu_ns": 13550,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 524288,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 107374.18,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 109651.98,
+          "comm_total_ns": 1638.37,
+          "hybrid_wall_ns": 111290.35,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1280.0,
+                "msg_bytes": 16384,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_ar_comm",
+                "source": "roofline",
+                "time_ns": 182.77,
+                "time_ns_astrasim_original": 250.0,
+                "msg_bytes": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "tp_s=4, 4 groups (ring AR, block2x2 1-hop, no congestion)"
+              },
+              {
+                "name": "output_ag_comm",
+                "source": "roofline (corrected)",
+                "time_ns": 91.38,
+                "time_ns_astrasim_original": 85.0,
+                "msg_bytes_per_cube": 8192,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "tp_s=4, 4 groups (ring AG, no congestion)"
+              }
+            ],
+            "total_comm_ns": 1638.37,
+            "total_d2d_bytes_all_cubes": 1794048
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 1794048,
+            "hbm_read_bytes_per_cube": 272978432,
+            "hbm_read_bytes_all_cubes": 4367654912,
+            "compute_macs_per_cube": 4330618880,
+            "compute_flops_per_cube": 8661237760,
+            "compute_flops_all_cubes": 138579804160,
+            "n_cubes": 16,
+            "total_time_ns": 111290.35
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 107374.18,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 107374.18,
+            "score_utilization": 0.981195,
+            "attn_v_utilization": 0.988775,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 27465,
+            "gpu_ns": 26970,
+            "comm_ns": 495
+          }
+        },
+        {
+          "seq": 1048576,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 214748.36,
+          "hybrid_Proj_O_ns": 858.52,
+          "hybrid_gpu_ns": 217026.16,
+          "comm_total_ns": 1638.37,
+          "hybrid_wall_ns": 218664.53,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "qkv_allgather",
+                "source": "roofline",
+                "time_ns": 84.22,
+                "msg_bytes_per_cube": 4608,
+                "d2d_bytes_all_cubes": 221184,
+                "group": "tp_s=4, 4 groups (ring AG)"
+              },
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1280.0,
+                "msg_bytes": 16384,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_ar_comm",
+                "source": "roofline",
+                "time_ns": 182.77,
+                "time_ns_astrasim_original": 250.0,
+                "msg_bytes": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "tp_s=4, 4 groups (ring AR, block2x2 1-hop, no congestion)"
+              },
+              {
+                "name": "output_ag_comm",
+                "source": "roofline (corrected)",
+                "time_ns": 91.38,
+                "time_ns_astrasim_original": 85.0,
+                "msg_bytes_per_cube": 8192,
+                "d2d_bytes_all_cubes": 393216,
+                "group": "tp_s=4, 4 groups (ring AG, no congestion)"
+              }
+            ],
+            "total_comm_ns": 1638.37,
+            "total_d2d_bytes_all_cubes": 1794048
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 1794048,
+            "hbm_read_bytes_per_cube": 541413888,
+            "hbm_read_bytes_all_cubes": 8662622208,
+            "compute_macs_per_cube": 8625586176,
+            "compute_flops_per_cube": 17251172352,
+            "compute_flops_all_cubes": 276018757632,
+            "n_cubes": 16,
+            "total_time_ns": 218664.53
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 214748.36,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 858.52,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 214748.36,
+            "score_utilization": 0.986691,
+            "attn_v_utilization": 0.994356,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 858.52
+          },
+          "original_astrasim": {
+            "wall_ns": 54309,
+            "gpu_ns": 53814,
+            "comm_ns": 495
+          }
+        }
+      ]
+    },
+    "tp16": {
+      "data": [
+        {
+          "seq": 1024,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3112.93,
+          "hybrid_Proj_O_ns": 853.61,
+          "hybrid_gpu_ns": 5385.82,
+          "comm_total_ns": 5040.0,
+          "hybrid_wall_ns": 10425.82,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1760.0,
+                "msg_bytes": 131072,
+                "d2d_bytes_all_cubes": 3145728,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_comm",
+                "source": "astrasim×8",
+                "time_ns": 3280.0,
+                "msg_bytes_total": 65536,
+                "d2d_bytes_all_cubes": 1572864,
+                "group": "2×AR on g17+g21 (4 GPUs, 4 groups each)"
+              }
+            ],
+            "total_comm_ns": 5040.0,
+            "total_d2d_bytes_all_cubes": 4718592
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 4718592,
+            "hbm_read_bytes_per_cube": 5054976,
+            "hbm_read_bytes_all_cubes": 5054976,
+            "compute_macs_per_cube": 44040192,
+            "compute_flops_per_cube": 88080384,
+            "compute_flops_all_cubes": 88080384,
+            "n_cubes": 1,
+            "total_time_ns": 10425.82
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 209.72,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 853.61,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3112.93,
+            "score_utilization": 0.05614,
+            "attn_v_utilization": 0.05614,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 853.61
+          },
+          "original_astrasim": {
+            "wall_ns": 792,
+            "gpu_ns": 162,
+            "comm_ns": 630
+          }
+        },
+        {
+          "seq": 2048,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3112.9,
+          "hybrid_Proj_O_ns": 853.61,
+          "hybrid_gpu_ns": 5385.79,
+          "comm_total_ns": 5128.0,
+          "hybrid_wall_ns": 10513.79,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 1864.0,
+                "msg_bytes": 262144,
+                "d2d_bytes_all_cubes": 6291456,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_comm",
+                "source": "astrasim×8",
+                "time_ns": 3264.0,
+                "msg_bytes_total": 65536,
+                "d2d_bytes_all_cubes": 1572864,
+                "group": "2×AR on g17+g21 (4 GPUs, 4 groups each)"
+              }
+            ],
+            "total_comm_ns": 5128.0,
+            "total_d2d_bytes_all_cubes": 7864320
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 7864320,
+            "hbm_read_bytes_per_cube": 5579264,
+            "hbm_read_bytes_all_cubes": 5579264,
+            "compute_macs_per_cube": 52428800,
+            "compute_flops_per_cube": 104857600,
+            "compute_flops_all_cubes": 104857600,
+            "n_cubes": 1,
+            "total_time_ns": 10513.79
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 419.43,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 853.61,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3112.9,
+            "score_utilization": 0.112281,
+            "attn_v_utilization": 0.112281,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 853.61
+          },
+          "original_astrasim": {
+            "wall_ns": 857,
+            "gpu_ns": 214,
+            "comm_ns": 643
+          }
+        },
+        {
+          "seq": 4096,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3113.01,
+          "hybrid_Proj_O_ns": 853.61,
+          "hybrid_gpu_ns": 5385.9,
+          "comm_total_ns": 5288.0,
+          "hybrid_wall_ns": 10673.9,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 2040.0,
+                "msg_bytes": 524288,
+                "d2d_bytes_all_cubes": 12582912,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_comm",
+                "source": "astrasim×8",
+                "time_ns": 3248.0,
+                "msg_bytes_total": 65536,
+                "d2d_bytes_all_cubes": 1572864,
+                "group": "2×AR on g17+g21 (4 GPUs, 4 groups each)"
+              }
+            ],
+            "total_comm_ns": 5288.0,
+            "total_d2d_bytes_all_cubes": 14155776
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 14155776,
+            "hbm_read_bytes_per_cube": 6627840,
+            "hbm_read_bytes_all_cubes": 6627840,
+            "compute_macs_per_cube": 69206016,
+            "compute_flops_per_cube": 138412032,
+            "compute_flops_all_cubes": 138412032,
+            "n_cubes": 1,
+            "total_time_ns": 10673.9
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 838.86,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 853.61,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3113.01,
+            "score_utilization": 0.224561,
+            "attn_v_utilization": 0.224561,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 853.61
+          },
+          "original_astrasim": {
+            "wall_ns": 983,
+            "gpu_ns": 318,
+            "comm_ns": 665
+          }
+        },
+        {
+          "seq": 8192,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 3112.96,
+          "hybrid_Proj_O_ns": 853.61,
+          "hybrid_gpu_ns": 5385.85,
+          "comm_total_ns": 5696.0,
+          "hybrid_wall_ns": 11081.85,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 2496.0,
+                "msg_bytes": 1048576,
+                "d2d_bytes_all_cubes": 25165824,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_comm",
+                "source": "astrasim×8",
+                "time_ns": 3200.0,
+                "msg_bytes_total": 65536,
+                "d2d_bytes_all_cubes": 1572864,
+                "group": "2×AR on g17+g21 (4 GPUs, 4 groups each)"
+              }
+            ],
+            "total_comm_ns": 5696.0,
+            "total_d2d_bytes_all_cubes": 26738688
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 26738688,
+            "hbm_read_bytes_per_cube": 8724992,
+            "hbm_read_bytes_all_cubes": 8724992,
+            "compute_macs_per_cube": 102760448,
+            "compute_flops_per_cube": 205520896,
+            "compute_flops_all_cubes": 205520896,
+            "n_cubes": 1,
+            "total_time_ns": 11081.85
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 1677.72,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 853.61,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 3112.96,
+            "score_utilization": 0.449123,
+            "attn_v_utilization": 0.449123,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 853.61
+          },
+          "original_astrasim": {
+            "wall_ns": 1248,
+            "gpu_ns": 526,
+            "comm_ns": 722
+          }
+        },
+        {
+          "seq": 16384,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 5210.1,
+          "hybrid_Proj_O_ns": 853.61,
+          "hybrid_gpu_ns": 7482.99,
+          "comm_total_ns": 6432.0,
+          "hybrid_wall_ns": 13914.99,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 3272.0,
+                "msg_bytes": 2097152,
+                "d2d_bytes_all_cubes": 50331648,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_comm",
+                "source": "astrasim×8",
+                "time_ns": 3160.0,
+                "msg_bytes_total": 65536,
+                "d2d_bytes_all_cubes": 1572864,
+                "group": "2×AR on g17+g21 (4 GPUs, 4 groups each)"
+              }
+            ],
+            "total_comm_ns": 6432.0,
+            "total_d2d_bytes_all_cubes": 51904512
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 51904512,
+            "hbm_read_bytes_per_cube": 12919296,
+            "hbm_read_bytes_all_cubes": 12919296,
+            "compute_macs_per_cube": 169869312,
+            "compute_flops_per_cube": 339738624,
+            "compute_flops_all_cubes": 339738624,
+            "n_cubes": 1,
+            "total_time_ns": 13914.99
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 3355.44,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 853.61,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 5210.1,
+            "score_utilization": 0.536688,
+            "attn_v_utilization": 0.536688,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 853.61
+          },
+          "original_astrasim": {
+            "wall_ns": 1765,
+            "gpu_ns": 946,
+            "comm_ns": 819
+          }
+        },
+        {
+          "seq": 32768,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 7009.07,
+          "hybrid_Proj_O_ns": 853.61,
+          "hybrid_gpu_ns": 9281.96,
+          "comm_total_ns": 8296.0,
+          "hybrid_wall_ns": 17577.96,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 5216.0,
+                "msg_bytes": 4194304,
+                "d2d_bytes_all_cubes": 100663296,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_comm",
+                "source": "astrasim×8",
+                "time_ns": 3080.0,
+                "msg_bytes_total": 65536,
+                "d2d_bytes_all_cubes": 1572864,
+                "group": "2×AR on g17+g21 (4 GPUs, 4 groups each)"
+              }
+            ],
+            "total_comm_ns": 8296.0,
+            "total_d2d_bytes_all_cubes": 102236160
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 102236160,
+            "hbm_read_bytes_per_cube": 21307904,
+            "hbm_read_bytes_all_cubes": 21307904,
+            "compute_macs_per_cube": 304087040,
+            "compute_flops_per_cube": 608174080,
+            "compute_flops_all_cubes": 608174080,
+            "n_cubes": 1,
+            "total_time_ns": 17577.96
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 6710.89,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 853.61,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 7009.07,
+            "score_utilization": 0.765321,
+            "attn_v_utilization": 0.846281,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 853.61
+          },
+          "original_astrasim": {
+            "wall_ns": 2848,
+            "gpu_ns": 1786,
+            "comm_ns": 1062
+          }
+        },
+        {
+          "seq": 65536,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 13510.26,
+          "hybrid_Proj_O_ns": 853.61,
+          "hybrid_gpu_ns": 15783.15,
+          "comm_total_ns": 10632.0,
+          "hybrid_wall_ns": 26415.15,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 8872.0,
+                "msg_bytes": 8388608,
+                "d2d_bytes_all_cubes": 201326592,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_comm",
+                "source": "astrasim×8",
+                "time_ns": 1760.0,
+                "msg_bytes_total": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "2×AR on g17+g21 (4 GPUs, 4 groups each)"
+              }
+            ],
+            "total_comm_ns": 10632.0,
+            "total_d2d_bytes_all_cubes": 202113024
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 202113024,
+            "hbm_read_bytes_per_cube": 38085120,
+            "hbm_read_bytes_all_cubes": 38085120,
+            "compute_macs_per_cube": 572522496,
+            "compute_flops_per_cube": 1145044992,
+            "compute_flops_all_cubes": 1145044992,
+            "n_cubes": 1,
+            "total_time_ns": 26415.15
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 13421.77,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 853.61,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 13510.26,
+            "score_utilization": 0.82249,
+            "attn_v_utilization": 0.916741,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 853.61
+          },
+          "original_astrasim": {
+            "wall_ns": 4981,
+            "gpu_ns": 3462,
+            "comm_ns": 1519
+          }
+        },
+        {
+          "seq": 131072,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 26843.54,
+          "hybrid_Proj_O_ns": 853.61,
+          "hybrid_gpu_ns": 29116.43,
+          "comm_total_ns": 20408.0,
+          "hybrid_wall_ns": 49524.43,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 17368.0,
+                "msg_bytes": 16777216,
+                "d2d_bytes_all_cubes": 402653184,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_comm",
+                "source": "astrasim×8",
+                "time_ns": 3040.0,
+                "msg_bytes_total": 65536,
+                "d2d_bytes_all_cubes": 1572864,
+                "group": "2×AR on g17+g21 (4 GPUs, 4 groups each)"
+              }
+            ],
+            "total_comm_ns": 20408.0,
+            "total_d2d_bytes_all_cubes": 404226048
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 404226048,
+            "hbm_read_bytes_per_cube": 71639552,
+            "hbm_read_bytes_all_cubes": 71639552,
+            "compute_macs_per_cube": 1109393408,
+            "compute_flops_per_cube": 2218786816,
+            "compute_flops_all_cubes": 2218786816,
+            "n_cubes": 1,
+            "total_time_ns": 49524.43
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 26843.55,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 853.61,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 26843.54,
+            "score_utilization": 0.928798,
+            "attn_v_utilization": 0.956562,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 853.61
+          },
+          "original_astrasim": {
+            "wall_ns": 9399,
+            "gpu_ns": 6818,
+            "comm_ns": 2581
+          }
+        },
+        {
+          "seq": 262144,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 53687.1,
+          "hybrid_Proj_O_ns": 853.61,
+          "hybrid_gpu_ns": 55959.99,
+          "comm_total_ns": 37256.0,
+          "hybrid_wall_ns": 93215.99,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 34216.0,
+                "msg_bytes": 33554432,
+                "d2d_bytes_all_cubes": 805306368,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_comm",
+                "source": "astrasim×8",
+                "time_ns": 3040.0,
+                "msg_bytes_total": 65536,
+                "d2d_bytes_all_cubes": 1572864,
+                "group": "2×AR on g17+g21 (4 GPUs, 4 groups each)"
+              }
+            ],
+            "total_comm_ns": 37256.0,
+            "total_d2d_bytes_all_cubes": 806879232
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 806879232,
+            "hbm_read_bytes_per_cube": 138748416,
+            "hbm_read_bytes_all_cubes": 138748416,
+            "compute_macs_per_cube": 2183135232,
+            "compute_flops_per_cube": 4366270464,
+            "compute_flops_all_cubes": 4366270464,
+            "n_cubes": 1,
+            "total_time_ns": 93215.99
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 53687.09,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 853.61,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 53687.1,
+            "score_utilization": 0.948807,
+            "attn_v_utilization": 0.977799,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 853.61
+          },
+          "original_astrasim": {
+            "wall_ns": 18217,
+            "gpu_ns": 13530,
+            "comm_ns": 4687
+          }
+        },
+        {
+          "seq": 524288,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 107374.18,
+          "hybrid_Proj_O_ns": 853.61,
+          "hybrid_gpu_ns": 109647.07,
+          "comm_total_ns": 71160.0,
+          "hybrid_wall_ns": 180807.07,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 68120.0,
+                "msg_bytes": 67108864,
+                "d2d_bytes_all_cubes": 1610612736,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_comm",
+                "source": "astrasim×8",
+                "time_ns": 3040.0,
+                "msg_bytes_total": 65536,
+                "d2d_bytes_all_cubes": 1572864,
+                "group": "2×AR on g17+g21 (4 GPUs, 4 groups each)"
+              }
+            ],
+            "total_comm_ns": 71160.0,
+            "total_d2d_bytes_all_cubes": 1612185600
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 1612185600,
+            "hbm_read_bytes_per_cube": 272966144,
+            "hbm_read_bytes_all_cubes": 272966144,
+            "compute_macs_per_cube": 4330618880,
+            "compute_flops_per_cube": 8661237760,
+            "compute_flops_all_cubes": 8661237760,
+            "n_cubes": 1,
+            "total_time_ns": 180807.07
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 107374.18,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 853.61,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 107374.18,
+            "score_utilization": 0.981195,
+            "attn_v_utilization": 0.988775,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 853.61
+          },
+          "original_astrasim": {
+            "wall_ns": 35875,
+            "gpu_ns": 26950,
+            "comm_ns": 8925
+          }
+        },
+        {
+          "seq": 1048576,
+          "hybrid_Proj_QKV_ns": 1419.28,
+          "hybrid_attn_ns": 214748.36,
+          "hybrid_Proj_O_ns": 853.61,
+          "hybrid_gpu_ns": 217021.25,
+          "comm_total_ns": 137688.0,
+          "hybrid_wall_ns": 354709.25,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "attn_comm",
+                "source": "astrasim×8",
+                "time_ns": 135928.0,
+                "msg_bytes": 134217728,
+                "d2d_bytes_all_cubes": 3221225472,
+                "group": "g21 (4 GPUs, 4 groups, ring AR)"
+              },
+              {
+                "name": "output_comm",
+                "source": "astrasim×8",
+                "time_ns": 1760.0,
+                "msg_bytes_total": 32768,
+                "d2d_bytes_all_cubes": 786432,
+                "group": "2×AR on g17+g21 (4 GPUs, 4 groups each)"
+              }
+            ],
+            "total_comm_ns": 137688.0,
+            "total_d2d_bytes_all_cubes": 3222011904
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 3222011904,
+            "hbm_read_bytes_per_cube": 541401600,
+            "hbm_read_bytes_all_cubes": 541401600,
+            "compute_macs_per_cube": 8625586176,
+            "compute_flops_per_cube": 17251172352,
+            "compute_flops_all_cubes": 17251172352,
+            "n_cubes": 1,
+            "total_time_ns": 354709.25
+          },
+          "compute_breakdown": {
+            "Proj_QKV_source": "roofline_util_adj",
+            "Proj_QKV_astrasim_ns": 0,
+            "Proj_QKV_roofline_mem_ns": 958.67,
+            "attn_source": "roofline_util_adj",
+            "attn_astrasim_ns": 0,
+            "attn_roofline_fused_ns": 214748.36,
+            "Proj_O_source": "roofline_util_adj",
+            "Proj_O_astrasim_ns": 0,
+            "Proj_O_roofline_mem_ns": 853.61,
+            "utilization_applied": true,
+            "Proj_QKV_utilization": 0.277056,
+            "Proj_QKV_roofline_util_adj_ns": 1419.28,
+            "attn_roofline_util_adj_ns": 214748.36,
+            "score_utilization": 0.986691,
+            "attn_v_utilization": 0.994356,
+            "Proj_O_utilization": 0.488899,
+            "Proj_O_roofline_util_adj_ns": 853.61
+          },
+          "original_astrasim": {
+            "wall_ns": 71195,
+            "gpu_ns": 53794,
+            "comm_ns": 17401
+          }
+        }
+      ]
+    },
+    "rubin": {
+      "data": [
+        {
+          "seq": 1024,
+          "hybrid_Proj_QKV_ns": 2504.64,
+          "hybrid_attn_ns": 9078.57,
+          "hybrid_Proj_O_ns": 2169.74,
+          "hybrid_gpu_ns": 13752.96,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 13752.96,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 79896576,
+            "hbm_read_bytes_all_cubes": 79896576,
+            "compute_macs_per_cube": 704643072,
+            "compute_flops_per_cube": 1409286144,
+            "compute_flops_all_cubes": 1409286144,
+            "n_cubes": 1,
+            "total_time_ns": 13752.96
+          },
+          "source": "roofline (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 1720.69,
+          "attn_bw_util": 0.042,
+          "attn_roofline_ns": 381.3,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 1529.67
+        },
+        {
+          "seq": 2048,
+          "hybrid_Proj_QKV_ns": 2504.64,
+          "hybrid_attn_ns": 7861.86,
+          "hybrid_Proj_O_ns": 2169.74,
+          "hybrid_gpu_ns": 12536.24,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 12536.24,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 88285184,
+            "hbm_read_bytes_all_cubes": 88285184,
+            "compute_macs_per_cube": 838860800,
+            "compute_flops_per_cube": 1677721600,
+            "compute_flops_all_cubes": 1677721600,
+            "n_cubes": 1,
+            "total_time_ns": 12536.24
+          },
+          "source": "roofline (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 1720.69,
+          "attn_bw_util": 0.097,
+          "attn_roofline_ns": 762.6,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 1529.67
+        },
+        {
+          "seq": 4096,
+          "hybrid_Proj_QKV_ns": 2504.64,
+          "hybrid_attn_ns": 10034.21,
+          "hybrid_Proj_O_ns": 2169.74,
+          "hybrid_gpu_ns": 14708.6,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 14708.6,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 105062400,
+            "hbm_read_bytes_all_cubes": 105062400,
+            "compute_macs_per_cube": 1107296256,
+            "compute_flops_per_cube": 2214592512,
+            "compute_flops_all_cubes": 2214592512,
+            "n_cubes": 1,
+            "total_time_ns": 14708.6
+          },
+          "source": "roofline (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 1720.69,
+          "attn_bw_util": 0.152,
+          "attn_roofline_ns": 1525.2,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 1529.67
+        },
+        {
+          "seq": 8192,
+          "hybrid_Proj_QKV_ns": 2504.64,
+          "hybrid_attn_ns": 12104.76,
+          "hybrid_Proj_O_ns": 2169.74,
+          "hybrid_gpu_ns": 16779.15,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 16779.15,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 138616832,
+            "hbm_read_bytes_all_cubes": 138616832,
+            "compute_macs_per_cube": 1644167168,
+            "compute_flops_per_cube": 3288334336,
+            "compute_flops_all_cubes": 3288334336,
+            "n_cubes": 1,
+            "total_time_ns": 16779.15
+          },
+          "source": "roofline (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 1720.69,
+          "attn_bw_util": 0.252,
+          "attn_roofline_ns": 3050.4,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 1529.67
+        },
+        {
+          "seq": 16384,
+          "hybrid_Proj_QKV_ns": 2504.64,
+          "hybrid_attn_ns": 17331.85,
+          "hybrid_Proj_O_ns": 2169.74,
+          "hybrid_gpu_ns": 22006.23,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 22006.23,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 205725696,
+            "hbm_read_bytes_all_cubes": 205725696,
+            "compute_macs_per_cube": 2717908992,
+            "compute_flops_per_cube": 5435817984,
+            "compute_flops_all_cubes": 5435817984,
+            "n_cubes": 1,
+            "total_time_ns": 22006.23
+          },
+          "source": "roofline (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 1720.69,
+          "attn_bw_util": 0.352,
+          "attn_roofline_ns": 6100.81,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 1529.67
+        },
+        {
+          "seq": 32768,
+          "hybrid_Proj_QKV_ns": 2504.64,
+          "hybrid_attn_ns": 25209.94,
+          "hybrid_Proj_O_ns": 2169.74,
+          "hybrid_gpu_ns": 29884.33,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 29884.33,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 339943424,
+            "hbm_read_bytes_all_cubes": 339943424,
+            "compute_macs_per_cube": 4865392640,
+            "compute_flops_per_cube": 9730785280,
+            "compute_flops_all_cubes": 9730785280,
+            "n_cubes": 1,
+            "total_time_ns": 29884.33
+          },
+          "source": "roofline (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 1720.69,
+          "attn_bw_util": 0.484,
+          "attn_roofline_ns": 12201.61,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 1529.67
+        },
+        {
+          "seq": 65536,
+          "hybrid_Proj_QKV_ns": 2504.64,
+          "hybrid_attn_ns": 39615.62,
+          "hybrid_Proj_O_ns": 2169.74,
+          "hybrid_gpu_ns": 44290.0,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 44290.0,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 608378880,
+            "hbm_read_bytes_all_cubes": 608378880,
+            "compute_macs_per_cube": 9160359936,
+            "compute_flops_per_cube": 18320719872,
+            "compute_flops_all_cubes": 18320719872,
+            "n_cubes": 1,
+            "total_time_ns": 44290.0
+          },
+          "source": "roofline (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 1720.69,
+          "attn_bw_util": 0.616,
+          "attn_roofline_ns": 24403.22,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 1529.67
+        },
+        {
+          "seq": 131072,
+          "hybrid_Proj_QKV_ns": 2504.64,
+          "hybrid_attn_ns": 65600.07,
+          "hybrid_Proj_O_ns": 2169.74,
+          "hybrid_gpu_ns": 70274.46,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 70274.46,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 1145249792,
+            "hbm_read_bytes_all_cubes": 1145249792,
+            "compute_macs_per_cube": 17750294528,
+            "compute_flops_per_cube": 35500589056,
+            "compute_flops_all_cubes": 35500589056,
+            "n_cubes": 1,
+            "total_time_ns": 70274.46
+          },
+          "source": "roofline (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 1720.69,
+          "attn_bw_util": 0.744,
+          "attn_roofline_ns": 48806.45,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 1529.67
+        },
+        {
+          "seq": 262144,
+          "hybrid_Proj_QKV_ns": 2504.64,
+          "hybrid_attn_ns": 117464.37,
+          "hybrid_Proj_O_ns": 2169.74,
+          "hybrid_gpu_ns": 122138.76,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 122138.76,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 2218991616,
+            "hbm_read_bytes_all_cubes": 2218991616,
+            "compute_macs_per_cube": 34930163712,
+            "compute_flops_per_cube": 69860327424,
+            "compute_flops_all_cubes": 69860327424,
+            "n_cubes": 1,
+            "total_time_ns": 122138.76
+          },
+          "source": "roofline (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 1720.69,
+          "attn_bw_util": 0.831,
+          "attn_roofline_ns": 97612.89,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 1529.67
+        },
+        {
+          "seq": 524288,
+          "hybrid_Proj_QKV_ns": 2504.64,
+          "hybrid_attn_ns": 220843.65,
+          "hybrid_Proj_O_ns": 2169.74,
+          "hybrid_gpu_ns": 225518.04,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 225518.04,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 4366475264,
+            "hbm_read_bytes_all_cubes": 4366475264,
+            "compute_macs_per_cube": 69289902080,
+            "compute_flops_per_cube": 138579804160,
+            "compute_flops_all_cubes": 138579804160,
+            "n_cubes": 1,
+            "total_time_ns": 225518.04
+          },
+          "source": "roofline (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 1720.69,
+          "attn_bw_util": 0.884,
+          "attn_roofline_ns": 195225.79,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 1529.67
+        },
+        {
+          "seq": 1048576,
+          "hybrid_Proj_QKV_ns": 2504.64,
+          "hybrid_attn_ns": 426257.17,
+          "hybrid_Proj_O_ns": 2169.74,
+          "hybrid_gpu_ns": 430931.56,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 430931.56,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 8661442560,
+            "hbm_read_bytes_all_cubes": 8661442560,
+            "compute_macs_per_cube": 138009378816,
+            "compute_flops_per_cube": 276018757632,
+            "compute_flops_all_cubes": 276018757632,
+            "n_cubes": 1,
+            "total_time_ns": 430931.56
+          },
+          "source": "roofline (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 1720.69,
+          "attn_bw_util": 0.916,
+          "attn_roofline_ns": 390451.57,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 1529.67
+        }
+      ]
+    },
+    "h100": {
+      "data": [
+        {
+          "seq": 1024,
+          "hybrid_Proj_QKV_ns": 16448.43,
+          "hybrid_attn_ns": 59620.48,
+          "hybrid_Proj_O_ns": 14249.06,
+          "hybrid_gpu_ns": 90317.97,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 90317.97,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 79896576,
+            "hbm_read_bytes_all_cubes": 79896576,
+            "compute_macs_per_cube": 704643072,
+            "compute_flops_per_cube": 1409286144,
+            "compute_flops_all_cubes": 1409286144,
+            "n_cubes": 1,
+            "total_time_ns": 90317.97
+          },
+          "source": "h100 (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 11300.07,
+          "attn_bw_util": 0.042,
+          "attn_roofline_ns": 2504.06,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 10045.59
+        },
+        {
+          "seq": 2048,
+          "hybrid_Proj_QKV_ns": 16448.43,
+          "hybrid_attn_ns": 51630.1,
+          "hybrid_Proj_O_ns": 14249.06,
+          "hybrid_gpu_ns": 82327.59,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 82327.59,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 88285184,
+            "hbm_read_bytes_all_cubes": 88285184,
+            "compute_macs_per_cube": 838860800,
+            "compute_flops_per_cube": 1677721600,
+            "compute_flops_all_cubes": 1677721600,
+            "n_cubes": 1,
+            "total_time_ns": 82327.59
+          },
+          "source": "h100 (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 11300.07,
+          "attn_bw_util": 0.097,
+          "attn_roofline_ns": 5008.12,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 10045.59
+        },
+        {
+          "seq": 4096,
+          "hybrid_Proj_QKV_ns": 16448.43,
+          "hybrid_attn_ns": 65896.38,
+          "hybrid_Proj_O_ns": 14249.06,
+          "hybrid_gpu_ns": 96593.87,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 96593.87,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 105062400,
+            "hbm_read_bytes_all_cubes": 105062400,
+            "compute_macs_per_cube": 1107296256,
+            "compute_flops_per_cube": 2214592512,
+            "compute_flops_all_cubes": 2214592512,
+            "n_cubes": 1,
+            "total_time_ns": 96593.87
+          },
+          "source": "h100 (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 11300.07,
+          "attn_bw_util": 0.152,
+          "attn_roofline_ns": 10016.25,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 10045.59
+        },
+        {
+          "seq": 8192,
+          "hybrid_Proj_QKV_ns": 16448.43,
+          "hybrid_attn_ns": 79494.05,
+          "hybrid_Proj_O_ns": 14249.06,
+          "hybrid_gpu_ns": 110191.54,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 110191.54,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 138616832,
+            "hbm_read_bytes_all_cubes": 138616832,
+            "compute_macs_per_cube": 1644167168,
+            "compute_flops_per_cube": 3288334336,
+            "compute_flops_all_cubes": 3288334336,
+            "n_cubes": 1,
+            "total_time_ns": 110191.54
+          },
+          "source": "h100 (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 11300.07,
+          "attn_bw_util": 0.252,
+          "attn_roofline_ns": 20032.5,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 10045.59
+        },
+        {
+          "seq": 16384,
+          "hybrid_Proj_QKV_ns": 16448.43,
+          "hybrid_attn_ns": 113820.99,
+          "hybrid_Proj_O_ns": 14249.06,
+          "hybrid_gpu_ns": 144518.49,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 144518.49,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 205725696,
+            "hbm_read_bytes_all_cubes": 205725696,
+            "compute_macs_per_cube": 2717908992,
+            "compute_flops_per_cube": 5435817984,
+            "compute_flops_all_cubes": 5435817984,
+            "n_cubes": 1,
+            "total_time_ns": 144518.49
+          },
+          "source": "h100 (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 11300.07,
+          "attn_bw_util": 0.352,
+          "attn_roofline_ns": 40064.99,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 10045.59
+        },
+        {
+          "seq": 32768,
+          "hybrid_Proj_QKV_ns": 16448.43,
+          "hybrid_attn_ns": 165557.83,
+          "hybrid_Proj_O_ns": 14249.06,
+          "hybrid_gpu_ns": 196255.32,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 196255.32,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 339943424,
+            "hbm_read_bytes_all_cubes": 339943424,
+            "compute_macs_per_cube": 4865392640,
+            "compute_flops_per_cube": 9730785280,
+            "compute_flops_all_cubes": 9730785280,
+            "n_cubes": 1,
+            "total_time_ns": 196255.32
+          },
+          "source": "h100 (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 11300.07,
+          "attn_bw_util": 0.484,
+          "attn_roofline_ns": 80129.99,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 10045.59
+        },
+        {
+          "seq": 65536,
+          "hybrid_Proj_QKV_ns": 16448.43,
+          "hybrid_attn_ns": 260162.29,
+          "hybrid_Proj_O_ns": 14249.06,
+          "hybrid_gpu_ns": 290859.78,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 290859.78,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 608378880,
+            "hbm_read_bytes_all_cubes": 608378880,
+            "compute_macs_per_cube": 9160359936,
+            "compute_flops_per_cube": 18320719872,
+            "compute_flops_all_cubes": 18320719872,
+            "n_cubes": 1,
+            "total_time_ns": 290859.78
+          },
+          "source": "h100 (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 11300.07,
+          "attn_bw_util": 0.616,
+          "attn_roofline_ns": 160259.97,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 10045.59
+        },
+        {
+          "seq": 131072,
+          "hybrid_Proj_QKV_ns": 16448.43,
+          "hybrid_attn_ns": 430806.38,
+          "hybrid_Proj_O_ns": 14249.06,
+          "hybrid_gpu_ns": 461503.88,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 461503.88,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 1145249792,
+            "hbm_read_bytes_all_cubes": 1145249792,
+            "compute_macs_per_cube": 17750294528,
+            "compute_flops_per_cube": 35500589056,
+            "compute_flops_all_cubes": 35500589056,
+            "n_cubes": 1,
+            "total_time_ns": 461503.88
+          },
+          "source": "h100 (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 11300.07,
+          "attn_bw_util": 0.744,
+          "attn_roofline_ns": 320519.95,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 10045.59
+        },
+        {
+          "seq": 262144,
+          "hybrid_Proj_QKV_ns": 16448.43,
+          "hybrid_attn_ns": 771407.81,
+          "hybrid_Proj_O_ns": 14249.06,
+          "hybrid_gpu_ns": 802105.3,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 802105.3,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 2218991616,
+            "hbm_read_bytes_all_cubes": 2218991616,
+            "compute_macs_per_cube": 34930163712,
+            "compute_flops_per_cube": 69860327424,
+            "compute_flops_all_cubes": 69860327424,
+            "n_cubes": 1,
+            "total_time_ns": 802105.3
+          },
+          "source": "h100 (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 11300.07,
+          "attn_bw_util": 0.831,
+          "attn_roofline_ns": 641039.89,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 10045.59
+        },
+        {
+          "seq": 524288,
+          "hybrid_Proj_QKV_ns": 16448.43,
+          "hybrid_attn_ns": 1450316.5,
+          "hybrid_Proj_O_ns": 14249.06,
+          "hybrid_gpu_ns": 1481014.0,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 1481014.0,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 4366475264,
+            "hbm_read_bytes_all_cubes": 4366475264,
+            "compute_macs_per_cube": 69289902080,
+            "compute_flops_per_cube": 138579804160,
+            "compute_flops_all_cubes": 138579804160,
+            "n_cubes": 1,
+            "total_time_ns": 1481014.0
+          },
+          "source": "h100 (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 11300.07,
+          "attn_bw_util": 0.884,
+          "attn_roofline_ns": 1282079.79,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 10045.59
+        },
+        {
+          "seq": 1048576,
+          "hybrid_Proj_QKV_ns": 16448.43,
+          "hybrid_attn_ns": 2799300.85,
+          "hybrid_Proj_O_ns": 14249.06,
+          "hybrid_gpu_ns": 2829998.34,
+          "comm_total_ns": 0,
+          "hybrid_wall_ns": 2829998.34,
+          "comm_breakdown": {
+            "ops": [],
+            "total_comm_ns": 0,
+            "total_d2d_bytes_all_cubes": 0
+          },
+          "aggregate_metrics": {
+            "d2d_link_transfer_bytes_all_cubes": 0,
+            "hbm_read_bytes_per_cube": 8661442560,
+            "hbm_read_bytes_all_cubes": 8661442560,
+            "compute_macs_per_cube": 138009378816,
+            "compute_flops_per_cube": 276018757632,
+            "compute_flops_all_cubes": 276018757632,
+            "n_cubes": 1,
+            "total_time_ns": 2829998.34
+          },
+          "source": "h100 (single GPU, no communication)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.687,
+          "Proj_QKV_roofline_ns": 11300.07,
+          "attn_bw_util": 0.916,
+          "attn_roofline_ns": 2564159.58,
+          "Proj_O_bw_util": 0.705,
+          "Proj_O_roofline_ns": 10045.59
+        }
+      ]
+    },
+    "rubin_tp2": {
+      "data": [
+        {
+          "seq": 1024,
+          "hybrid_Proj_QKV_ns": 1654.51,
+          "hybrid_attn_ns": 8289.13,
+          "hybrid_Proj_O_ns": 1365.78,
+          "hybrid_gpu_ns": 11309.42,
+          "comm_total_ns": 1802.28,
+          "hybrid_wall_ns": 13111.7,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink",
+                "time_ns": 1802.28,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 1.1378,
+                "nvlink_bw_tbs": 1.8
+              }
+            ],
+            "total_comm_ns": 1802.28
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 39948288,
+            "hbm_read_bytes_all_cubes": 79896576,
+            "compute_macs_per_cube": 352321536,
+            "compute_flops_per_cube": 704643072,
+            "compute_flops_all_cubes": 1409286144,
+            "n_cubes": 2,
+            "total_time_ns": 13111.7
+          },
+          "source": "rubin_tp2 (2 GPUs, TP2 BW util + NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 860.35,
+          "attn_bw_util": 0.023,
+          "attn_roofline_ns": 190.65,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 764.84
+        },
+        {
+          "seq": 2048,
+          "hybrid_Proj_QKV_ns": 1654.51,
+          "hybrid_attn_ns": 7194.34,
+          "hybrid_Proj_O_ns": 1365.78,
+          "hybrid_gpu_ns": 10214.63,
+          "comm_total_ns": 1802.28,
+          "hybrid_wall_ns": 12016.91,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink",
+                "time_ns": 1802.28,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 1.1378,
+                "nvlink_bw_tbs": 1.8
+              }
+            ],
+            "total_comm_ns": 1802.28
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 44142592,
+            "hbm_read_bytes_all_cubes": 88285184,
+            "compute_macs_per_cube": 419430400,
+            "compute_flops_per_cube": 838860800,
+            "compute_flops_all_cubes": 1677721600,
+            "n_cubes": 2,
+            "total_time_ns": 12016.91
+          },
+          "source": "rubin_tp2 (2 GPUs, TP2 BW util + NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 860.35,
+          "attn_bw_util": 0.053,
+          "attn_roofline_ns": 381.3,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 764.84
+        },
+        {
+          "seq": 4096,
+          "hybrid_Proj_QKV_ns": 1654.51,
+          "hybrid_attn_ns": 9187.95,
+          "hybrid_Proj_O_ns": 1365.78,
+          "hybrid_gpu_ns": 12208.24,
+          "comm_total_ns": 1802.28,
+          "hybrid_wall_ns": 14010.52,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink",
+                "time_ns": 1802.28,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 1.1378,
+                "nvlink_bw_tbs": 1.8
+              }
+            ],
+            "total_comm_ns": 1802.28
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 52531200,
+            "hbm_read_bytes_all_cubes": 105062400,
+            "compute_macs_per_cube": 553648128,
+            "compute_flops_per_cube": 1107296256,
+            "compute_flops_all_cubes": 2214592512,
+            "n_cubes": 2,
+            "total_time_ns": 14010.52
+          },
+          "source": "rubin_tp2 (2 GPUs, TP2 BW util + NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 860.35,
+          "attn_bw_util": 0.083,
+          "attn_roofline_ns": 762.6,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 764.84
+        },
+        {
+          "seq": 8192,
+          "hybrid_Proj_QKV_ns": 1654.51,
+          "hybrid_attn_ns": 10665.73,
+          "hybrid_Proj_O_ns": 1365.78,
+          "hybrid_gpu_ns": 13686.02,
+          "comm_total_ns": 1802.28,
+          "hybrid_wall_ns": 15488.3,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink",
+                "time_ns": 1802.28,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 1.1378,
+                "nvlink_bw_tbs": 1.8
+              }
+            ],
+            "total_comm_ns": 1802.28
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 69308416,
+            "hbm_read_bytes_all_cubes": 138616832,
+            "compute_macs_per_cube": 822083584,
+            "compute_flops_per_cube": 1644167168,
+            "compute_flops_all_cubes": 3288334336,
+            "n_cubes": 2,
+            "total_time_ns": 15488.3
+          },
+          "source": "rubin_tp2 (2 GPUs, TP2 BW util + NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 860.35,
+          "attn_bw_util": 0.143,
+          "attn_roofline_ns": 1525.2,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 764.84
+        },
+        {
+          "seq": 16384,
+          "hybrid_Proj_QKV_ns": 1654.51,
+          "hybrid_attn_ns": 15026.63,
+          "hybrid_Proj_O_ns": 1365.78,
+          "hybrid_gpu_ns": 18046.91,
+          "comm_total_ns": 1802.28,
+          "hybrid_wall_ns": 19849.19,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink",
+                "time_ns": 1802.28,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 1.1378,
+                "nvlink_bw_tbs": 1.8
+              }
+            ],
+            "total_comm_ns": 1802.28
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 102862848,
+            "hbm_read_bytes_all_cubes": 205725696,
+            "compute_macs_per_cube": 1358954496,
+            "compute_flops_per_cube": 2717908992,
+            "compute_flops_all_cubes": 5435817984,
+            "n_cubes": 2,
+            "total_time_ns": 19849.19
+          },
+          "source": "rubin_tp2 (2 GPUs, TP2 BW util + NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 860.35,
+          "attn_bw_util": 0.203,
+          "attn_roofline_ns": 3050.41,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 764.84
+        },
+        {
+          "seq": 32768,
+          "hybrid_Proj_QKV_ns": 1654.51,
+          "hybrid_attn_ns": 13865.47,
+          "hybrid_Proj_O_ns": 1365.78,
+          "hybrid_gpu_ns": 16885.75,
+          "comm_total_ns": 1802.28,
+          "hybrid_wall_ns": 18688.03,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink",
+                "time_ns": 1802.28,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 1.1378,
+                "nvlink_bw_tbs": 1.8
+              }
+            ],
+            "total_comm_ns": 1802.28
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 169971712,
+            "hbm_read_bytes_all_cubes": 339943424,
+            "compute_macs_per_cube": 2432696320,
+            "compute_flops_per_cube": 4865392640,
+            "compute_flops_all_cubes": 9730785280,
+            "n_cubes": 2,
+            "total_time_ns": 18688.03
+          },
+          "source": "rubin_tp2 (2 GPUs, TP2 BW util + NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 860.35,
+          "attn_bw_util": 0.44,
+          "attn_roofline_ns": 6100.81,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 764.84
+        },
+        {
+          "seq": 65536,
+          "hybrid_Proj_QKV_ns": 1654.51,
+          "hybrid_attn_ns": 27730.93,
+          "hybrid_Proj_O_ns": 1365.78,
+          "hybrid_gpu_ns": 30751.22,
+          "comm_total_ns": 1802.28,
+          "hybrid_wall_ns": 32553.5,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink",
+                "time_ns": 1802.28,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 1.1378,
+                "nvlink_bw_tbs": 1.8
+              }
+            ],
+            "total_comm_ns": 1802.28
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 304189440,
+            "hbm_read_bytes_all_cubes": 608378880,
+            "compute_macs_per_cube": 4580179968,
+            "compute_flops_per_cube": 9160359936,
+            "compute_flops_all_cubes": 18320719872,
+            "n_cubes": 2,
+            "total_time_ns": 32553.5
+          },
+          "source": "rubin_tp2 (2 GPUs, TP2 BW util + NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 860.35,
+          "attn_bw_util": 0.44,
+          "attn_roofline_ns": 12201.61,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 764.84
+        },
+        {
+          "seq": 131072,
+          "hybrid_Proj_QKV_ns": 1654.51,
+          "hybrid_attn_ns": 42074.53,
+          "hybrid_Proj_O_ns": 1365.78,
+          "hybrid_gpu_ns": 45094.81,
+          "comm_total_ns": 1802.28,
+          "hybrid_wall_ns": 46897.09,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink",
+                "time_ns": 1802.28,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 1.1378,
+                "nvlink_bw_tbs": 1.8
+              }
+            ],
+            "total_comm_ns": 1802.28
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 572624896,
+            "hbm_read_bytes_all_cubes": 1145249792,
+            "compute_macs_per_cube": 8875147264,
+            "compute_flops_per_cube": 17750294528,
+            "compute_flops_all_cubes": 35500589056,
+            "n_cubes": 2,
+            "total_time_ns": 46897.09
+          },
+          "source": "rubin_tp2 (2 GPUs, TP2 BW util + NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 860.35,
+          "attn_bw_util": 0.58,
+          "attn_roofline_ns": 24403.22,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 764.84
+        },
+        {
+          "seq": 262144,
+          "hybrid_Proj_QKV_ns": 1654.51,
+          "hybrid_attn_ns": 74856.51,
+          "hybrid_Proj_O_ns": 1365.78,
+          "hybrid_gpu_ns": 77876.8,
+          "comm_total_ns": 1802.28,
+          "hybrid_wall_ns": 79679.08,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink",
+                "time_ns": 1802.28,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 1.1378,
+                "nvlink_bw_tbs": 1.8
+              }
+            ],
+            "total_comm_ns": 1802.28
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 1109495808,
+            "hbm_read_bytes_all_cubes": 2218991616,
+            "compute_macs_per_cube": 17465081856,
+            "compute_flops_per_cube": 34930163712,
+            "compute_flops_all_cubes": 69860327424,
+            "n_cubes": 2,
+            "total_time_ns": 79679.08
+          },
+          "source": "rubin_tp2 (2 GPUs, TP2 BW util + NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 860.35,
+          "attn_bw_util": 0.652,
+          "attn_roofline_ns": 48806.44,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 764.84
+        },
+        {
+          "seq": 524288,
+          "hybrid_Proj_QKV_ns": 1654.51,
+          "hybrid_attn_ns": 117605.9,
+          "hybrid_Proj_O_ns": 1365.78,
+          "hybrid_gpu_ns": 120626.18,
+          "comm_total_ns": 1802.28,
+          "hybrid_wall_ns": 122428.46,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink",
+                "time_ns": 1802.28,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 1.1378,
+                "nvlink_bw_tbs": 1.8
+              }
+            ],
+            "total_comm_ns": 1802.28
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 2183237632,
+            "hbm_read_bytes_all_cubes": 4366475264,
+            "compute_macs_per_cube": 34644951040,
+            "compute_flops_per_cube": 69289902080,
+            "compute_flops_all_cubes": 138579804160,
+            "n_cubes": 2,
+            "total_time_ns": 122428.46
+          },
+          "source": "rubin_tp2 (2 GPUs, TP2 BW util + NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 860.35,
+          "attn_bw_util": 0.83,
+          "attn_roofline_ns": 97612.9,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 764.84
+        },
+        {
+          "seq": 1048576,
+          "hybrid_Proj_QKV_ns": 1654.51,
+          "hybrid_attn_ns": 222099.87,
+          "hybrid_Proj_O_ns": 1365.78,
+          "hybrid_gpu_ns": 225120.16,
+          "comm_total_ns": 1802.28,
+          "hybrid_wall_ns": 226922.44,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink",
+                "time_ns": 1802.28,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 1.1378,
+                "nvlink_bw_tbs": 1.8
+              }
+            ],
+            "total_comm_ns": 1802.28
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 4330721280,
+            "hbm_read_bytes_all_cubes": 8661442560,
+            "compute_macs_per_cube": 69004689408,
+            "compute_flops_per_cube": 138009378816,
+            "compute_flops_all_cubes": 276018757632,
+            "n_cubes": 2,
+            "total_time_ns": 226922.44
+          },
+          "source": "rubin_tp2 (2 GPUs, TP2 BW util + NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 860.35,
+          "attn_bw_util": 0.879,
+          "attn_roofline_ns": 195225.79,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 764.84
+        }
+      ]
+    },
+    "h100_tp2": {
+      "data": [
+        {
+          "seq": 1024,
+          "hybrid_Proj_QKV_ns": 10865.45,
+          "hybrid_attn_ns": 54436.09,
+          "hybrid_Proj_O_ns": 8969.28,
+          "hybrid_gpu_ns": 74270.82,
+          "comm_total_ns": 1804.55,
+          "hybrid_wall_ns": 76075.37,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink_h100",
+                "time_ns": 1804.55,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 2.2756,
+                "nvlink_bw_tbs": 0.9
+              }
+            ],
+            "total_comm_ns": 1804.55
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 39948288,
+            "hbm_read_bytes_all_cubes": 79896576,
+            "compute_macs_per_cube": 352321536,
+            "compute_flops_per_cube": 704643072,
+            "compute_flops_all_cubes": 1409286144,
+            "n_cubes": 2,
+            "total_time_ns": 76075.37
+          },
+          "source": "h100_tp2 (2 GPUs, TP2 BW util + H100 NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 5650.03,
+          "attn_bw_util": 0.023,
+          "attn_roofline_ns": 1252.03,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 5022.8
+        },
+        {
+          "seq": 2048,
+          "hybrid_Proj_QKV_ns": 10865.45,
+          "hybrid_attn_ns": 47246.42,
+          "hybrid_Proj_O_ns": 8969.28,
+          "hybrid_gpu_ns": 67081.14,
+          "comm_total_ns": 1804.55,
+          "hybrid_wall_ns": 68885.69,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink_h100",
+                "time_ns": 1804.55,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 2.2756,
+                "nvlink_bw_tbs": 0.9
+              }
+            ],
+            "total_comm_ns": 1804.55
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 44142592,
+            "hbm_read_bytes_all_cubes": 88285184,
+            "compute_macs_per_cube": 419430400,
+            "compute_flops_per_cube": 838860800,
+            "compute_flops_all_cubes": 1677721600,
+            "n_cubes": 2,
+            "total_time_ns": 68885.69
+          },
+          "source": "h100_tp2 (2 GPUs, TP2 BW util + H100 NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 5650.03,
+          "attn_bw_util": 0.053,
+          "attn_roofline_ns": 2504.06,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 5022.8
+        },
+        {
+          "seq": 4096,
+          "hybrid_Proj_QKV_ns": 10865.45,
+          "hybrid_attn_ns": 60338.86,
+          "hybrid_Proj_O_ns": 8969.28,
+          "hybrid_gpu_ns": 80173.58,
+          "comm_total_ns": 1804.55,
+          "hybrid_wall_ns": 81978.13,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink_h100",
+                "time_ns": 1804.55,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 2.2756,
+                "nvlink_bw_tbs": 0.9
+              }
+            ],
+            "total_comm_ns": 1804.55
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 52531200,
+            "hbm_read_bytes_all_cubes": 105062400,
+            "compute_macs_per_cube": 553648128,
+            "compute_flops_per_cube": 1107296256,
+            "compute_flops_all_cubes": 2214592512,
+            "n_cubes": 2,
+            "total_time_ns": 81978.13
+          },
+          "source": "h100_tp2 (2 GPUs, TP2 BW util + H100 NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 5650.03,
+          "attn_bw_util": 0.083,
+          "attn_roofline_ns": 5008.12,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 5022.8
+        },
+        {
+          "seq": 8192,
+          "hybrid_Proj_QKV_ns": 10865.45,
+          "hybrid_attn_ns": 70043.71,
+          "hybrid_Proj_O_ns": 8969.28,
+          "hybrid_gpu_ns": 89878.44,
+          "comm_total_ns": 1804.55,
+          "hybrid_wall_ns": 91682.99,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink_h100",
+                "time_ns": 1804.55,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 2.2756,
+                "nvlink_bw_tbs": 0.9
+              }
+            ],
+            "total_comm_ns": 1804.55
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 69308416,
+            "hbm_read_bytes_all_cubes": 138616832,
+            "compute_macs_per_cube": 822083584,
+            "compute_flops_per_cube": 1644167168,
+            "compute_flops_all_cubes": 3288334336,
+            "n_cubes": 2,
+            "total_time_ns": 91682.99
+          },
+          "source": "h100_tp2 (2 GPUs, TP2 BW util + H100 NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 5650.03,
+          "attn_bw_util": 0.143,
+          "attn_roofline_ns": 10016.25,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 5022.8
+        },
+        {
+          "seq": 16384,
+          "hybrid_Proj_QKV_ns": 10865.45,
+          "hybrid_attn_ns": 98682.24,
+          "hybrid_Proj_O_ns": 8969.28,
+          "hybrid_gpu_ns": 118516.97,
+          "comm_total_ns": 1804.55,
+          "hybrid_wall_ns": 120321.52,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink_h100",
+                "time_ns": 1804.55,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 2.2756,
+                "nvlink_bw_tbs": 0.9
+              }
+            ],
+            "total_comm_ns": 1804.55
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 102862848,
+            "hbm_read_bytes_all_cubes": 205725696,
+            "compute_macs_per_cube": 1358954496,
+            "compute_flops_per_cube": 2717908992,
+            "compute_flops_all_cubes": 5435817984,
+            "n_cubes": 2,
+            "total_time_ns": 120321.52
+          },
+          "source": "h100_tp2 (2 GPUs, TP2 BW util + H100 NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 5650.03,
+          "attn_bw_util": 0.203,
+          "attn_roofline_ns": 20032.49,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 5022.8
+        },
+        {
+          "seq": 32768,
+          "hybrid_Proj_QKV_ns": 10865.45,
+          "hybrid_attn_ns": 91056.81,
+          "hybrid_Proj_O_ns": 8969.28,
+          "hybrid_gpu_ns": 110891.54,
+          "comm_total_ns": 1804.55,
+          "hybrid_wall_ns": 112696.09,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink_h100",
+                "time_ns": 1804.55,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 2.2756,
+                "nvlink_bw_tbs": 0.9
+              }
+            ],
+            "total_comm_ns": 1804.55
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 169971712,
+            "hbm_read_bytes_all_cubes": 339943424,
+            "compute_macs_per_cube": 2432696320,
+            "compute_flops_per_cube": 4865392640,
+            "compute_flops_all_cubes": 9730785280,
+            "n_cubes": 2,
+            "total_time_ns": 112696.09
+          },
+          "source": "h100_tp2 (2 GPUs, TP2 BW util + H100 NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 5650.03,
+          "attn_bw_util": 0.44,
+          "attn_roofline_ns": 40065.0,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 5022.8
+        },
+        {
+          "seq": 65536,
+          "hybrid_Proj_QKV_ns": 10865.45,
+          "hybrid_attn_ns": 182113.6,
+          "hybrid_Proj_O_ns": 8969.28,
+          "hybrid_gpu_ns": 201948.33,
+          "comm_total_ns": 1804.55,
+          "hybrid_wall_ns": 203752.88,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink_h100",
+                "time_ns": 1804.55,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 2.2756,
+                "nvlink_bw_tbs": 0.9
+              }
+            ],
+            "total_comm_ns": 1804.55
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 304189440,
+            "hbm_read_bytes_all_cubes": 608378880,
+            "compute_macs_per_cube": 4580179968,
+            "compute_flops_per_cube": 9160359936,
+            "compute_flops_all_cubes": 18320719872,
+            "n_cubes": 2,
+            "total_time_ns": 203752.88
+          },
+          "source": "h100_tp2 (2 GPUs, TP2 BW util + H100 NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 5650.03,
+          "attn_bw_util": 0.44,
+          "attn_roofline_ns": 80129.99,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 5022.8
+        },
+        {
+          "seq": 131072,
+          "hybrid_Proj_QKV_ns": 10865.45,
+          "hybrid_attn_ns": 276310.3,
+          "hybrid_Proj_O_ns": 8969.28,
+          "hybrid_gpu_ns": 296145.03,
+          "comm_total_ns": 1804.55,
+          "hybrid_wall_ns": 297949.58,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink_h100",
+                "time_ns": 1804.55,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 2.2756,
+                "nvlink_bw_tbs": 0.9
+              }
+            ],
+            "total_comm_ns": 1804.55
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 572624896,
+            "hbm_read_bytes_all_cubes": 1145249792,
+            "compute_macs_per_cube": 8875147264,
+            "compute_flops_per_cube": 17750294528,
+            "compute_flops_all_cubes": 35500589056,
+            "n_cubes": 2,
+            "total_time_ns": 297949.58
+          },
+          "source": "h100_tp2 (2 GPUs, TP2 BW util + H100 NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 5650.03,
+          "attn_bw_util": 0.58,
+          "attn_roofline_ns": 160259.98,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 5022.8
+        },
+        {
+          "seq": 262144,
+          "hybrid_Proj_QKV_ns": 10865.45,
+          "hybrid_attn_ns": 491595.01,
+          "hybrid_Proj_O_ns": 8969.28,
+          "hybrid_gpu_ns": 511429.74,
+          "comm_total_ns": 1804.55,
+          "hybrid_wall_ns": 513234.29,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink_h100",
+                "time_ns": 1804.55,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 2.2756,
+                "nvlink_bw_tbs": 0.9
+              }
+            ],
+            "total_comm_ns": 1804.55
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 1109495808,
+            "hbm_read_bytes_all_cubes": 2218991616,
+            "compute_macs_per_cube": 17465081856,
+            "compute_flops_per_cube": 34930163712,
+            "compute_flops_all_cubes": 69860327424,
+            "n_cubes": 2,
+            "total_time_ns": 513234.29
+          },
+          "source": "h100_tp2 (2 GPUs, TP2 BW util + H100 NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 5650.03,
+          "attn_bw_util": 0.652,
+          "attn_roofline_ns": 320519.95,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 5022.8
+        },
+        {
+          "seq": 524288,
+          "hybrid_Proj_QKV_ns": 10865.45,
+          "hybrid_attn_ns": 772337.22,
+          "hybrid_Proj_O_ns": 8969.28,
+          "hybrid_gpu_ns": 792171.95,
+          "comm_total_ns": 1804.55,
+          "hybrid_wall_ns": 793976.5,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink_h100",
+                "time_ns": 1804.55,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 2.2756,
+                "nvlink_bw_tbs": 0.9
+              }
+            ],
+            "total_comm_ns": 1804.55
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 2183237632,
+            "hbm_read_bytes_all_cubes": 4366475264,
+            "compute_macs_per_cube": 34644951040,
+            "compute_flops_per_cube": 69289902080,
+            "compute_flops_all_cubes": 138579804160,
+            "n_cubes": 2,
+            "total_time_ns": 793976.5
+          },
+          "source": "h100_tp2 (2 GPUs, TP2 BW util + H100 NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 5650.03,
+          "attn_bw_util": 0.83,
+          "attn_roofline_ns": 641039.9,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 5022.8
+        },
+        {
+          "seq": 1048576,
+          "hybrid_Proj_QKV_ns": 10865.45,
+          "hybrid_attn_ns": 1458566.31,
+          "hybrid_Proj_O_ns": 8969.28,
+          "hybrid_gpu_ns": 1478401.04,
+          "comm_total_ns": 1804.55,
+          "hybrid_wall_ns": 1480205.59,
+          "comm_breakdown": {
+            "ops": [
+              {
+                "name": "allreduce_attn",
+                "source": "roofline_nvlink_h100",
+                "time_ns": 1804.55,
+                "msg_bytes": 4096,
+                "n_gpus": 2,
+                "steps": 2,
+                "chunk_bytes": 2048.0,
+                "latency_ns": 900,
+                "bw_per_step_ns": 2.2756,
+                "nvlink_bw_tbs": 0.9
+              }
+            ],
+            "total_comm_ns": 1804.55
+          },
+          "aggregate_metrics": {
+            "hbm_read_bytes_per_cube": 4330721280,
+            "hbm_read_bytes_all_cubes": 8661442560,
+            "compute_macs_per_cube": 69004689408,
+            "compute_flops_per_cube": 138009378816,
+            "compute_flops_all_cubes": 276018757632,
+            "n_cubes": 2,
+            "total_time_ns": 1480205.59
+          },
+          "source": "h100_tp2 (2 GPUs, TP2 BW util + H100 NVLink roofline AR)",
+          "utilization_applied": true,
+          "Proj_QKV_bw_util": 0.52,
+          "Proj_QKV_roofline_ns": 5650.03,
+          "attn_bw_util": 0.879,
+          "attn_roofline_ns": 1282079.79,
+          "Proj_O_bw_util": 0.56,
+          "Proj_O_roofline_ns": 5022.8
+        }
+      ]
+    }
+  },
+  "summary_table": [
+    {
+      "seq": 1024,
+      "HMP_reo": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3112.9,
+        "Proj_O_ns": 3375.1,
+        "gpu_ns": 7907.3,
+        "comm_ns": 271.6,
+        "wall_ns": 8178.9
+      },
+      "hmp_reo_new": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3112.9,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 5390.7,
+        "comm_ns": 354.8,
+        "wall_ns": 5745.5
+      },
+      "hmp": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3112.9,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 5390.7,
+        "comm_ns": 1638.4,
+        "wall_ns": 7029.1
+      },
+      "tp16": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3112.9,
+        "Proj_O_ns": 853.6,
+        "gpu_ns": 5385.8,
+        "comm_ns": 5040.0,
+        "wall_ns": 10425.8
+      },
+      "rubin": {
+        "Proj_QKV_ns": 2504.6,
+        "attn_ns": 9078.6,
+        "Proj_O_ns": 2169.7,
+        "gpu_ns": 13753.0,
+        "comm_ns": 0,
+        "wall_ns": 13753.0
+      },
+      "h100": {
+        "Proj_QKV_ns": 16448.4,
+        "attn_ns": 59620.5,
+        "Proj_O_ns": 14249.1,
+        "gpu_ns": 90318.0,
+        "comm_ns": 0,
+        "wall_ns": 90318.0
+      },
+      "rubin_tp2": {
+        "Proj_QKV_ns": 1654.5,
+        "attn_ns": 8289.1,
+        "Proj_O_ns": 1365.8,
+        "gpu_ns": 11309.4,
+        "comm_ns": 1802.3,
+        "wall_ns": 13111.7
+      },
+      "h100_tp2": {
+        "Proj_QKV_ns": 10865.5,
+        "attn_ns": 54436.1,
+        "Proj_O_ns": 8969.3,
+        "gpu_ns": 74270.8,
+        "comm_ns": 1804.5,
+        "wall_ns": 76075.4
+      }
+    },
+    {
+      "seq": 2048,
+      "HMP_reo": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3112.9,
+        "Proj_O_ns": 3375.1,
+        "gpu_ns": 7907.3,
+        "comm_ns": 271.6,
+        "wall_ns": 8178.9
+      },
+      "hmp_reo_new": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3112.9,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 5390.7,
+        "comm_ns": 354.8,
+        "wall_ns": 5745.5
+      },
+      "hmp": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3112.9,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 5390.7,
+        "comm_ns": 1638.4,
+        "wall_ns": 7029.1
+      },
+      "tp16": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3112.9,
+        "Proj_O_ns": 853.6,
+        "gpu_ns": 5385.8,
+        "comm_ns": 5128.0,
+        "wall_ns": 10513.8
+      },
+      "rubin": {
+        "Proj_QKV_ns": 2504.6,
+        "attn_ns": 7861.9,
+        "Proj_O_ns": 2169.7,
+        "gpu_ns": 12536.2,
+        "comm_ns": 0,
+        "wall_ns": 12536.2
+      },
+      "h100": {
+        "Proj_QKV_ns": 16448.4,
+        "attn_ns": 51630.1,
+        "Proj_O_ns": 14249.1,
+        "gpu_ns": 82327.6,
+        "comm_ns": 0,
+        "wall_ns": 82327.6
+      },
+      "rubin_tp2": {
+        "Proj_QKV_ns": 1654.5,
+        "attn_ns": 7194.3,
+        "Proj_O_ns": 1365.8,
+        "gpu_ns": 10214.6,
+        "comm_ns": 1802.3,
+        "wall_ns": 12016.9
+      },
+      "h100_tp2": {
+        "Proj_QKV_ns": 10865.5,
+        "attn_ns": 47246.4,
+        "Proj_O_ns": 8969.3,
+        "gpu_ns": 67081.1,
+        "comm_ns": 1804.5,
+        "wall_ns": 68885.7
+      }
+    },
+    {
+      "seq": 4096,
+      "HMP_reo": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3113.0,
+        "Proj_O_ns": 3375.1,
+        "gpu_ns": 7907.4,
+        "comm_ns": 271.6,
+        "wall_ns": 8179.0
+      },
+      "hmp_reo_new": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3113.0,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 5390.8,
+        "comm_ns": 354.8,
+        "wall_ns": 5745.6
+      },
+      "hmp": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3113.0,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 5390.8,
+        "comm_ns": 1638.4,
+        "wall_ns": 7029.2
+      },
+      "tp16": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3113.0,
+        "Proj_O_ns": 853.6,
+        "gpu_ns": 5385.9,
+        "comm_ns": 5288.0,
+        "wall_ns": 10673.9
+      },
+      "rubin": {
+        "Proj_QKV_ns": 2504.6,
+        "attn_ns": 10034.2,
+        "Proj_O_ns": 2169.7,
+        "gpu_ns": 14708.6,
+        "comm_ns": 0,
+        "wall_ns": 14708.6
+      },
+      "h100": {
+        "Proj_QKV_ns": 16448.4,
+        "attn_ns": 65896.4,
+        "Proj_O_ns": 14249.1,
+        "gpu_ns": 96593.9,
+        "comm_ns": 0,
+        "wall_ns": 96593.9
+      },
+      "rubin_tp2": {
+        "Proj_QKV_ns": 1654.5,
+        "attn_ns": 9188.0,
+        "Proj_O_ns": 1365.8,
+        "gpu_ns": 12208.2,
+        "comm_ns": 1802.3,
+        "wall_ns": 14010.5
+      },
+      "h100_tp2": {
+        "Proj_QKV_ns": 10865.5,
+        "attn_ns": 60338.9,
+        "Proj_O_ns": 8969.3,
+        "gpu_ns": 80173.6,
+        "comm_ns": 1804.5,
+        "wall_ns": 81978.1
+      }
+    },
+    {
+      "seq": 8192,
+      "HMP_reo": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3113.0,
+        "Proj_O_ns": 3375.1,
+        "gpu_ns": 7907.3,
+        "comm_ns": 271.6,
+        "wall_ns": 8178.9
+      },
+      "hmp_reo_new": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3113.0,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 5390.8,
+        "comm_ns": 354.8,
+        "wall_ns": 5745.6
+      },
+      "hmp": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3113.0,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 5390.8,
+        "comm_ns": 1638.4,
+        "wall_ns": 7029.1
+      },
+      "tp16": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 3113.0,
+        "Proj_O_ns": 853.6,
+        "gpu_ns": 5385.9,
+        "comm_ns": 5696.0,
+        "wall_ns": 11081.9
+      },
+      "rubin": {
+        "Proj_QKV_ns": 2504.6,
+        "attn_ns": 12104.8,
+        "Proj_O_ns": 2169.7,
+        "gpu_ns": 16779.2,
+        "comm_ns": 0,
+        "wall_ns": 16779.2
+      },
+      "h100": {
+        "Proj_QKV_ns": 16448.4,
+        "attn_ns": 79494.1,
+        "Proj_O_ns": 14249.1,
+        "gpu_ns": 110191.5,
+        "comm_ns": 0,
+        "wall_ns": 110191.5
+      },
+      "rubin_tp2": {
+        "Proj_QKV_ns": 1654.5,
+        "attn_ns": 10665.7,
+        "Proj_O_ns": 1365.8,
+        "gpu_ns": 13686.0,
+        "comm_ns": 1802.3,
+        "wall_ns": 15488.3
+      },
+      "h100_tp2": {
+        "Proj_QKV_ns": 10865.5,
+        "attn_ns": 70043.7,
+        "Proj_O_ns": 8969.3,
+        "gpu_ns": 89878.4,
+        "comm_ns": 1804.5,
+        "wall_ns": 91683.0
+      }
+    },
+    {
+      "seq": 16384,
+      "HMP_reo": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 5210.1,
+        "Proj_O_ns": 3375.1,
+        "gpu_ns": 10004.5,
+        "comm_ns": 271.6,
+        "wall_ns": 10276.1
+      },
+      "hmp_reo_new": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 5210.1,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 7487.9,
+        "comm_ns": 354.8,
+        "wall_ns": 7842.7
+      },
+      "hmp": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 5210.1,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 7487.9,
+        "comm_ns": 1638.4,
+        "wall_ns": 9126.3
+      },
+      "tp16": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 5210.1,
+        "Proj_O_ns": 853.6,
+        "gpu_ns": 7483.0,
+        "comm_ns": 6432.0,
+        "wall_ns": 13915.0
+      },
+      "rubin": {
+        "Proj_QKV_ns": 2504.6,
+        "attn_ns": 17331.8,
+        "Proj_O_ns": 2169.7,
+        "gpu_ns": 22006.2,
+        "comm_ns": 0,
+        "wall_ns": 22006.2
+      },
+      "h100": {
+        "Proj_QKV_ns": 16448.4,
+        "attn_ns": 113821.0,
+        "Proj_O_ns": 14249.1,
+        "gpu_ns": 144518.5,
+        "comm_ns": 0,
+        "wall_ns": 144518.5
+      },
+      "rubin_tp2": {
+        "Proj_QKV_ns": 1654.5,
+        "attn_ns": 15026.6,
+        "Proj_O_ns": 1365.8,
+        "gpu_ns": 18046.9,
+        "comm_ns": 1802.3,
+        "wall_ns": 19849.2
+      },
+      "h100_tp2": {
+        "Proj_QKV_ns": 10865.5,
+        "attn_ns": 98682.2,
+        "Proj_O_ns": 8969.3,
+        "gpu_ns": 118517.0,
+        "comm_ns": 1804.5,
+        "wall_ns": 120321.5
+      }
+    },
+    {
+      "seq": 32768,
+      "HMP_reo": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 7009.1,
+        "Proj_O_ns": 3375.1,
+        "gpu_ns": 11803.5,
+        "comm_ns": 271.6,
+        "wall_ns": 12075.0
+      },
+      "hmp_reo_new": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 7009.1,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 9286.9,
+        "comm_ns": 354.8,
+        "wall_ns": 9641.7
+      },
+      "hmp": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 7009.1,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 9286.9,
+        "comm_ns": 1638.4,
+        "wall_ns": 10925.2
+      },
+      "tp16": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 7009.1,
+        "Proj_O_ns": 853.6,
+        "gpu_ns": 9282.0,
+        "comm_ns": 8296.0,
+        "wall_ns": 17578.0
+      },
+      "rubin": {
+        "Proj_QKV_ns": 2504.6,
+        "attn_ns": 25209.9,
+        "Proj_O_ns": 2169.7,
+        "gpu_ns": 29884.3,
+        "comm_ns": 0,
+        "wall_ns": 29884.3
+      },
+      "h100": {
+        "Proj_QKV_ns": 16448.4,
+        "attn_ns": 165557.8,
+        "Proj_O_ns": 14249.1,
+        "gpu_ns": 196255.3,
+        "comm_ns": 0,
+        "wall_ns": 196255.3
+      },
+      "rubin_tp2": {
+        "Proj_QKV_ns": 1654.5,
+        "attn_ns": 13865.5,
+        "Proj_O_ns": 1365.8,
+        "gpu_ns": 16885.8,
+        "comm_ns": 1802.3,
+        "wall_ns": 18688.0
+      },
+      "h100_tp2": {
+        "Proj_QKV_ns": 10865.5,
+        "attn_ns": 91056.8,
+        "Proj_O_ns": 8969.3,
+        "gpu_ns": 110891.5,
+        "comm_ns": 1804.5,
+        "wall_ns": 112696.1
+      }
+    },
+    {
+      "seq": 65536,
+      "HMP_reo": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 13510.3,
+        "Proj_O_ns": 3375.1,
+        "gpu_ns": 18304.6,
+        "comm_ns": 271.6,
+        "wall_ns": 18576.2
+      },
+      "hmp_reo_new": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 13510.3,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 15788.1,
+        "comm_ns": 354.8,
+        "wall_ns": 16142.9
+      },
+      "hmp": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 13510.3,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 15788.1,
+        "comm_ns": 1638.4,
+        "wall_ns": 17426.4
+      },
+      "tp16": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 13510.3,
+        "Proj_O_ns": 853.6,
+        "gpu_ns": 15783.1,
+        "comm_ns": 10632.0,
+        "wall_ns": 26415.2
+      },
+      "rubin": {
+        "Proj_QKV_ns": 2504.6,
+        "attn_ns": 39615.6,
+        "Proj_O_ns": 2169.7,
+        "gpu_ns": 44290.0,
+        "comm_ns": 0,
+        "wall_ns": 44290.0
+      },
+      "h100": {
+        "Proj_QKV_ns": 16448.4,
+        "attn_ns": 260162.3,
+        "Proj_O_ns": 14249.1,
+        "gpu_ns": 290859.8,
+        "comm_ns": 0,
+        "wall_ns": 290859.8
+      },
+      "rubin_tp2": {
+        "Proj_QKV_ns": 1654.5,
+        "attn_ns": 27730.9,
+        "Proj_O_ns": 1365.8,
+        "gpu_ns": 30751.2,
+        "comm_ns": 1802.3,
+        "wall_ns": 32553.5
+      },
+      "h100_tp2": {
+        "Proj_QKV_ns": 10865.5,
+        "attn_ns": 182113.6,
+        "Proj_O_ns": 8969.3,
+        "gpu_ns": 201948.3,
+        "comm_ns": 1804.5,
+        "wall_ns": 203752.9
+      }
+    },
+    {
+      "seq": 131072,
+      "HMP_reo": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 26843.5,
+        "Proj_O_ns": 3375.1,
+        "gpu_ns": 31637.9,
+        "comm_ns": 271.6,
+        "wall_ns": 31909.5
+      },
+      "hmp_reo_new": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 26843.5,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 29121.3,
+        "comm_ns": 354.8,
+        "wall_ns": 29476.1
+      },
+      "hmp": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 26843.5,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 29121.3,
+        "comm_ns": 1638.4,
+        "wall_ns": 30759.7
+      },
+      "tp16": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 26843.5,
+        "Proj_O_ns": 853.6,
+        "gpu_ns": 29116.4,
+        "comm_ns": 20408.0,
+        "wall_ns": 49524.4
+      },
+      "rubin": {
+        "Proj_QKV_ns": 2504.6,
+        "attn_ns": 65600.1,
+        "Proj_O_ns": 2169.7,
+        "gpu_ns": 70274.5,
+        "comm_ns": 0,
+        "wall_ns": 70274.5
+      },
+      "h100": {
+        "Proj_QKV_ns": 16448.4,
+        "attn_ns": 430806.4,
+        "Proj_O_ns": 14249.1,
+        "gpu_ns": 461503.9,
+        "comm_ns": 0,
+        "wall_ns": 461503.9
+      },
+      "rubin_tp2": {
+        "Proj_QKV_ns": 1654.5,
+        "attn_ns": 42074.5,
+        "Proj_O_ns": 1365.8,
+        "gpu_ns": 45094.8,
+        "comm_ns": 1802.3,
+        "wall_ns": 46897.1
+      },
+      "h100_tp2": {
+        "Proj_QKV_ns": 10865.5,
+        "attn_ns": 276310.3,
+        "Proj_O_ns": 8969.3,
+        "gpu_ns": 296145.0,
+        "comm_ns": 1804.5,
+        "wall_ns": 297949.6
+      }
+    },
+    {
+      "seq": 262144,
+      "HMP_reo": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 53687.1,
+        "Proj_O_ns": 3375.1,
+        "gpu_ns": 58481.5,
+        "comm_ns": 271.6,
+        "wall_ns": 58753.1
+      },
+      "hmp_reo_new": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 53687.1,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 55964.9,
+        "comm_ns": 354.8,
+        "wall_ns": 56319.7
+      },
+      "hmp": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 53687.1,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 55964.9,
+        "comm_ns": 1638.4,
+        "wall_ns": 57603.3
+      },
+      "tp16": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 53687.1,
+        "Proj_O_ns": 853.6,
+        "gpu_ns": 55960.0,
+        "comm_ns": 37256.0,
+        "wall_ns": 93216.0
+      },
+      "rubin": {
+        "Proj_QKV_ns": 2504.6,
+        "attn_ns": 117464.4,
+        "Proj_O_ns": 2169.7,
+        "gpu_ns": 122138.8,
+        "comm_ns": 0,
+        "wall_ns": 122138.8
+      },
+      "h100": {
+        "Proj_QKV_ns": 16448.4,
+        "attn_ns": 771407.8,
+        "Proj_O_ns": 14249.1,
+        "gpu_ns": 802105.3,
+        "comm_ns": 0,
+        "wall_ns": 802105.3
+      },
+      "rubin_tp2": {
+        "Proj_QKV_ns": 1654.5,
+        "attn_ns": 74856.5,
+        "Proj_O_ns": 1365.8,
+        "gpu_ns": 77876.8,
+        "comm_ns": 1802.3,
+        "wall_ns": 79679.1
+      },
+      "h100_tp2": {
+        "Proj_QKV_ns": 10865.5,
+        "attn_ns": 491595.0,
+        "Proj_O_ns": 8969.3,
+        "gpu_ns": 511429.7,
+        "comm_ns": 1804.5,
+        "wall_ns": 513234.3
+      }
+    },
+    {
+      "seq": 524288,
+      "HMP_reo": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 107374.2,
+        "Proj_O_ns": 3375.1,
+        "gpu_ns": 112168.6,
+        "comm_ns": 271.6,
+        "wall_ns": 112440.2
+      },
+      "hmp_reo_new": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 107374.2,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 109652.0,
+        "comm_ns": 354.8,
+        "wall_ns": 110006.8
+      },
+      "hmp": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 107374.2,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 109652.0,
+        "comm_ns": 1638.4,
+        "wall_ns": 111290.4
+      },
+      "tp16": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 107374.2,
+        "Proj_O_ns": 853.6,
+        "gpu_ns": 109647.1,
+        "comm_ns": 71160.0,
+        "wall_ns": 180807.1
+      },
+      "rubin": {
+        "Proj_QKV_ns": 2504.6,
+        "attn_ns": 220843.6,
+        "Proj_O_ns": 2169.7,
+        "gpu_ns": 225518.0,
+        "comm_ns": 0,
+        "wall_ns": 225518.0
+      },
+      "h100": {
+        "Proj_QKV_ns": 16448.4,
+        "attn_ns": 1450316.5,
+        "Proj_O_ns": 14249.1,
+        "gpu_ns": 1481014.0,
+        "comm_ns": 0,
+        "wall_ns": 1481014.0
+      },
+      "rubin_tp2": {
+        "Proj_QKV_ns": 1654.5,
+        "attn_ns": 117605.9,
+        "Proj_O_ns": 1365.8,
+        "gpu_ns": 120626.2,
+        "comm_ns": 1802.3,
+        "wall_ns": 122428.5
+      },
+      "h100_tp2": {
+        "Proj_QKV_ns": 10865.5,
+        "attn_ns": 772337.2,
+        "Proj_O_ns": 8969.3,
+        "gpu_ns": 792171.9,
+        "comm_ns": 1804.5,
+        "wall_ns": 793976.5
+      }
+    },
+    {
+      "seq": 1048576,
+      "HMP_reo": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 214748.4,
+        "Proj_O_ns": 3375.1,
+        "gpu_ns": 219542.7,
+        "comm_ns": 271.6,
+        "wall_ns": 219814.3
+      },
+      "hmp_reo_new": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 214748.4,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 217026.2,
+        "comm_ns": 354.8,
+        "wall_ns": 217381.0
+      },
+      "hmp": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 214748.4,
+        "Proj_O_ns": 858.5,
+        "gpu_ns": 217026.2,
+        "comm_ns": 1638.4,
+        "wall_ns": 218664.5
+      },
+      "tp16": {
+        "Proj_QKV_ns": 1419.3,
+        "attn_ns": 214748.4,
+        "Proj_O_ns": 853.6,
+        "gpu_ns": 217021.2,
+        "comm_ns": 137688.0,
+        "wall_ns": 354709.2
+      },
+      "rubin": {
+        "Proj_QKV_ns": 2504.6,
+        "attn_ns": 426257.2,
+        "Proj_O_ns": 2169.7,
+        "gpu_ns": 430931.6,
+        "comm_ns": 0,
+        "wall_ns": 430931.6
+      },
+      "h100": {
+        "Proj_QKV_ns": 16448.4,
+        "attn_ns": 2799300.9,
+        "Proj_O_ns": 14249.1,
+        "gpu_ns": 2829998.3,
+        "comm_ns": 0,
+        "wall_ns": 2829998.3
+      },
+      "rubin_tp2": {
+        "Proj_QKV_ns": 1654.5,
+        "attn_ns": 222099.9,
+        "Proj_O_ns": 1365.8,
+        "gpu_ns": 225120.2,
+        "comm_ns": 1802.3,
+        "wall_ns": 226922.4
+      },
+      "h100_tp2": {
+        "Proj_QKV_ns": 10865.5,
+        "attn_ns": 1458566.3,
+        "Proj_O_ns": 8969.3,
+        "gpu_ns": 1478401.0,
+        "comm_ns": 1804.5,
+        "wall_ns": 1480205.6
+      }
+    }
+  ]
+}

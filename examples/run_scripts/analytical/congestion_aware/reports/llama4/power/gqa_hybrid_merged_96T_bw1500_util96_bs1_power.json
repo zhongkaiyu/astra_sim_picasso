@@ -1,0 +1,4253 @@
+{
+  "_type": "power_estimation",
+  "_description": "GQA single-layer power model: Static + Compute + Memory + D2D",
+  "_units": {
+    "power": "W (watts)",
+    "energy": "nJ (nanojoules per token)",
+    "time": "ns",
+    "utilization": "fraction (0-1)"
+  },
+  "metadata": {
+    "source_data": "reports/llama4/hybrid/gqa_hybrid_merged_96T_bw1500_util96_bs1.json",
+    "power_formulas": {
+      "ours": "P = 17.7%\u00d71440 + 260\u00d7U_cmpt + 1021\u00d7U_mem + D2D",
+      "rubin": "P = 17.7%\u00d72200 + 2631\u00d7U_cmpt + 1800\u00d7U_mem",
+      "h100": "P = 17.7%\u00d7700 + 829\u00d7U_cmpt + 580\u00d7U_mem"
+    },
+    "decomposition": "P_total = P_static + P_cmpt_dynamic + P_mem_dynamic [+ P_d2d]",
+    "d2d_power_formula": "P_d2d = d2d_bits \u00d7 pJ_per_bit / time",
+    "workflow": [
+      "1. roofline_gqa_calc.py  \u2192 reports/roofline/*.json  (analytical compute + comm estimates)",
+      "2. collect_gqa_data.py   \u2192 reports/astrasim/*.json  (AstraSim simulation data)",
+      "3. merge_gqa_results.py  \u2192 reports/hybrid/*.json    (merged hybrid estimates with aggregate_metrics)",
+      "4. power_model.py        \u2192 reports/power/*.json     (THIS FILE: power estimation from hybrid data)"
+    ],
+    "ours_hw": {
+      "n_cubes": 16,
+      "peak_flops_per_cube": 80,
+      "hbm_bw_per_cube": 2.5,
+      "d2d_pj_per_bit": 0.38
+    },
+    "ours_power_coeffs": {
+      "static_ratio": 0.177,
+      "tdp_w": 1440,
+      "cmpt_coeff": 260,
+      "mem_coeff": 1021,
+      "formula": "P = 17.7%\u00d71440 + 260\u00d7U_cmpt + 1021\u00d7U_mem + D2D",
+      "static_w": 254.88
+    },
+    "rubin_power_coeffs": {
+      "static_ratio": 0.177,
+      "tdp_w": 2200,
+      "cmpt_coeff": 2631,
+      "mem_coeff": 1800,
+      "formula": "P = 17.7%\u00d72200 + 2631\u00d7U_cmpt + 1800\u00d7U_mem",
+      "static_w": 389.4
+    }
+  },
+  "strategies": {
+    "HMP_reo": {
+      "data": [
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 4609.01,
+          "hbm_util_per_cube": 0.81371,
+          "cmpt_util_per_cube": 0.048243,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.017544,
+            "Attn_V": 0.017544,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 830.7982,
+          "cmpt_power_total_w": 12.5431,
+          "d2d_energy_nj": 298.8442,
+          "d2d_power_w": 0.0648,
+          "total_power_w": 1098.2861,
+          "energy_per_token_nj": 5062011.639,
+          "tdp_total_w": 1440,
+          "seq": 1024,
+          "hybrid_wall_ns": 4609.01,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 191.1539,
+            "Attn_hbm_w": 146.3681,
+            "Proj_O_hbm_w": 493.2762,
+            "Proj_QKV_frac": 0.230085,
+            "Attn_frac": 0.176178,
+            "Proj_O_frac": 0.593738
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 4608.44,
+          "hbm_util_per_cube": 0.82568,
+          "cmpt_util_per_cube": 0.051336,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.035088,
+            "Attn_V": 0.035088,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 843.0192,
+          "cmpt_power_total_w": 13.3472,
+          "d2d_energy_nj": 298.8442,
+          "d2d_power_w": 0.0648,
+          "total_power_w": 1111.3113,
+          "energy_per_token_nj": 5121411.4702,
+          "tdp_total_w": 1440,
+          "seq": 2048,
+          "hybrid_wall_ns": 4608.44,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 193.9908,
+            "Attn_hbm_w": 148.4315,
+            "Proj_O_hbm_w": 500.5968,
+            "Proj_QKV_frac": 0.230114,
+            "Attn_frac": 0.176071,
+            "Proj_O_frac": 0.593814
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 4608.74,
+          "hbm_util_per_cube": 0.849352,
+          "cmpt_util_per_cube": 0.057514,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.070175,
+            "Attn_V": 0.070175,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 867.1881,
+          "cmpt_power_total_w": 14.9537,
+          "d2d_energy_nj": 298.8442,
+          "d2d_power_w": 0.0648,
+          "total_power_w": 1137.0866,
+          "energy_per_token_nj": 5240536.4883,
+          "tdp_total_w": 1440,
+          "seq": 4096,
+          "hybrid_wall_ns": 4608.74,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 199.5389,
+            "Attn_hbm_w": 152.7355,
+            "Proj_O_hbm_w": 514.9137,
+            "Proj_QKV_frac": 0.230099,
+            "Attn_frac": 0.176127,
+            "Proj_O_frac": 0.593774
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 4608.59,
+          "hbm_util_per_cube": 0.896838,
+          "cmpt_util_per_cube": 0.069872,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.140351,
+            "Attn_V": 0.140351,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 915.6713,
+          "cmpt_power_total_w": 18.1667,
+          "d2d_energy_nj": 298.8442,
+          "d2d_power_w": 0.0648,
+          "total_power_w": 1188.7828,
+          "energy_per_token_nj": 5478612.4169,
+          "tdp_total_w": 1440,
+          "seq": 8192,
+          "hybrid_wall_ns": 4608.59,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 210.702,
+            "Attn_hbm_w": 161.2491,
+            "Proj_O_hbm_w": 543.7202,
+            "Proj_QKV_frac": 0.230107,
+            "Attn_frac": 0.176099,
+            "Proj_O_frac": 0.593794
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 5132.97,
+          "hbm_util_per_cube": 0.886551,
+          "cmpt_util_per_cube": 0.084558,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.167715,
+            "Attn_V": 0.167715,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 905.1682,
+          "cmpt_power_total_w": 21.9851,
+          "d2d_energy_nj": 298.8442,
+          "d2d_power_w": 0.0582,
+          "total_power_w": 1182.0915,
+          "energy_per_token_nj": 6067640.3632,
+          "tdp_total_w": 1440,
+          "seq": 16384,
+          "hybrid_wall_ns": 5132.97,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 186.191,
+            "Attn_hbm_w": 238.5079,
+            "Proj_O_hbm_w": 480.4693,
+            "Proj_QKV_frac": 0.205698,
+            "Attn_frac": 0.263496,
+            "Proj_O_frac": 0.530807
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 5582.65,
+          "hbm_util_per_cube": 0.968173,
+          "cmpt_util_per_cube": 0.119022,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.239163,
+            "Attn_V": 0.264463,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 988.5044,
+          "cmpt_power_total_w": 30.9458,
+          "d2d_energy_nj": 298.8442,
+          "d2d_power_w": 0.0535,
+          "total_power_w": 1274.3838,
+          "energy_per_token_nj": 7114438.566,
+          "tdp_total_w": 1440,
+          "seq": 32768,
+          "hybrid_wall_ns": 5582.65,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 186.379,
+            "Attn_hbm_w": 321.1709,
+            "Proj_O_hbm_w": 480.9545,
+            "Proj_QKV_frac": 0.188546,
+            "Attn_frac": 0.324906,
+            "Proj_O_frac": 0.486548
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 7207.97,
+          "hbm_util_per_cube": 0.98301,
+          "cmpt_util_per_cube": 0.159596,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.257028,
+            "Attn_V": 0.286482,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1003.6528,
+          "cmpt_power_total_w": 41.495,
+          "d2d_energy_nj": 298.8442,
+          "d2d_power_w": 0.0415,
+          "total_power_w": 1300.0693,
+          "energy_per_token_nj": 9370860.5764,
+          "tdp_total_w": 1440,
+          "seq": 65536,
+          "hybrid_wall_ns": 7207.97,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 145.4123,
+            "Attn_hbm_w": 483.0015,
+            "Proj_O_hbm_w": 375.239,
+            "Proj_QKV_frac": 0.144883,
+            "Attn_frac": 0.481244,
+            "Proj_O_frac": 0.373873
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 10541.28,
+          "hbm_util_per_cube": 0.990619,
+          "cmpt_util_per_cube": 0.210295,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.290249,
+            "Attn_V": 0.298926,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1011.4217,
+          "cmpt_power_total_w": 54.6767,
+          "d2d_energy_nj": 298.8442,
+          "d2d_power_w": 0.0283,
+          "total_power_w": 1321.0068,
+          "energy_per_token_nj": 13925102.0989,
+          "tdp_total_w": 1440,
+          "seq": 131072,
+          "hybrid_wall_ns": 10541.28,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 99.3519,
+            "Attn_hbm_w": 655.6904,
+            "Proj_O_hbm_w": 256.3794,
+            "Proj_QKV_frac": 0.09823,
+            "Attn_frac": 0.648286,
+            "Proj_O_frac": 0.253484
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 17252.18,
+          "hbm_util_per_cube": 0.994308,
+          "cmpt_util_per_cube": 0.248546,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.296502,
+            "Attn_V": 0.305562,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1015.1881,
+          "cmpt_power_total_w": 64.6219,
+          "d2d_energy_nj": 298.8442,
+          "d2d_power_w": 0.0173,
+          "total_power_w": 1334.7074,
+          "energy_per_token_nj": 23026612.1687,
+          "tdp_total_w": 1440,
+          "seq": 262144,
+          "hybrid_wall_ns": 17252.18,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 60.5003,
+            "Attn_hbm_w": 798.5657,
+            "Proj_O_hbm_w": 156.1221,
+            "Proj_QKV_frac": 0.059595,
+            "Attn_frac": 0.786618,
+            "Proj_O_frac": 0.153786
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 30673.94,
+          "hbm_util_per_cube": 0.996814,
+          "cmpt_util_per_cube": 0.277595,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.306624,
+            "Attn_V": 0.308992,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1017.7474,
+          "cmpt_power_total_w": 72.1748,
+          "d2d_energy_nj": 298.8442,
+          "d2d_power_w": 0.0097,
+          "total_power_w": 1344.812,
+          "energy_per_token_nj": 41250681.5276,
+          "tdp_total_w": 1440,
+          "seq": 524288,
+          "hybrid_wall_ns": 30673.94,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 33.9484,
+            "Attn_hbm_w": 896.1945,
+            "Proj_O_hbm_w": 87.6045,
+            "Proj_QKV_frac": 0.033356,
+            "Attn_frac": 0.880567,
+            "Proj_O_frac": 0.086077
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 57517.5,
+          "hbm_util_per_cube": 0.998306,
+          "cmpt_util_per_cube": 0.293365,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.308341,
+            "Attn_V": 0.310736,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1019.2702,
+          "cmpt_power_total_w": 76.2749,
+          "d2d_energy_nj": 298.8442,
+          "d2d_power_w": 0.0052,
+          "total_power_w": 1350.4303,
+          "energy_per_token_nj": 77673374.5461,
+          "tdp_total_w": 1440,
+          "seq": 1048576,
+          "hybrid_wall_ns": 57517.5,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 18.0792,
+            "Attn_hbm_w": 954.5372,
+            "Proj_O_hbm_w": 46.6538,
+            "Proj_QKV_frac": 0.017737,
+            "Attn_frac": 0.936491,
+            "Proj_O_frac": 0.045772
+          }
+        }
+      ]
+    },
+    "hmp_reo_new": {
+      "data": [
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 2718.57,
+          "hbm_util_per_cube": 0.664422,
+          "cmpt_util_per_cube": 0.040556,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.017544,
+            "Attn_V": 0.017544,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 678.375,
+          "cmpt_power_total_w": 10.5446,
+          "d2d_energy_nj": 310.5178,
+          "d2d_power_w": 0.1142,
+          "total_power_w": 943.9139,
+          "energy_per_token_nj": 2566095.9188,
+          "tdp_total_w": 1440,
+          "seq": 1024,
+          "hybrid_wall_ns": 2718.57,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 281.1654,
+            "Attn_hbm_w": 215.2906,
+            "Proj_O_hbm_w": 181.919,
+            "Proj_QKV_frac": 0.414469,
+            "Attn_frac": 0.317362,
+            "Proj_O_frac": 0.268169
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 2718.0,
+          "hbm_util_per_cube": 0.685952,
+          "cmpt_util_per_cube": 0.046127,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.035088,
+            "Attn_V": 0.035088,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 700.3565,
+          "cmpt_power_total_w": 11.9929,
+          "d2d_energy_nj": 310.5178,
+          "d2d_power_w": 0.1142,
+          "total_power_w": 967.3437,
+          "energy_per_token_nj": 2629240.1761,
+          "tdp_total_w": 1440,
+          "seq": 2048,
+          "hybrid_wall_ns": 2718.0,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 290.3435,
+            "Attn_hbm_w": 222.1556,
+            "Proj_O_hbm_w": 187.8574,
+            "Proj_QKV_frac": 0.414565,
+            "Attn_frac": 0.317204,
+            "Proj_O_frac": 0.268231
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 2718.3,
+          "hbm_util_per_cube": 0.728612,
+          "cmpt_util_per_cube": 0.057258,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.070175,
+            "Attn_V": 0.070175,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 743.9133,
+          "cmpt_power_total_w": 14.8871,
+          "d2d_energy_nj": 310.5178,
+          "d2d_power_w": 0.1142,
+          "total_power_w": 1013.7946,
+          "energy_per_token_nj": 2755797.798,
+          "tdp_total_w": 1440,
+          "seq": 4096,
+          "hybrid_wall_ns": 2718.3,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 308.363,
+            "Attn_hbm_w": 236.034,
+            "Proj_O_hbm_w": 199.5163,
+            "Proj_QKV_frac": 0.414515,
+            "Attn_frac": 0.317287,
+            "Proj_O_frac": 0.268198
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 2718.15,
+          "hbm_util_per_cube": 0.814152,
+          "cmpt_util_per_cube": 0.07952,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.140351,
+            "Attn_V": 0.140351,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 831.2489,
+          "cmpt_power_total_w": 20.6752,
+          "d2d_energy_nj": 310.5178,
+          "d2d_power_w": 0.1142,
+          "total_power_w": 1106.9184,
+          "energy_per_token_nj": 3008770.2184,
+          "tdp_total_w": 1440,
+          "seq": 8192,
+          "hybrid_wall_ns": 2718.15,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 344.5859,
+            "Attn_hbm_w": 263.7098,
+            "Proj_O_hbm_w": 222.9532,
+            "Proj_QKV_frac": 0.41454,
+            "Attn_frac": 0.317245,
+            "Proj_O_frac": 0.268215
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 3242.53,
+          "hbm_util_per_cube": 0.811635,
+          "cmpt_util_per_cube": 0.102206,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.167715,
+            "Attn_V": 0.167715,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 828.6789,
+          "cmpt_power_total_w": 26.5734,
+          "d2d_energy_nj": 310.5178,
+          "d2d_power_w": 0.0958,
+          "total_power_w": 1110.2281,
+          "energy_per_token_nj": 3599947.8288,
+          "tdp_total_w": 1440,
+          "seq": 16384,
+          "hybrid_wall_ns": 3242.53,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 283.0184,
+            "Attn_hbm_w": 362.5425,
+            "Proj_O_hbm_w": 183.118,
+            "Proj_QKV_frac": 0.34153,
+            "Attn_frac": 0.437495,
+            "Proj_O_frac": 0.220976
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 3692.21,
+          "hbm_util_per_cube": 0.949914,
+          "cmpt_util_per_cube": 0.154126,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.239163,
+            "Attn_V": 0.264463,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 969.8618,
+          "cmpt_power_total_w": 40.0728,
+          "d2d_energy_nj": 310.5178,
+          "d2d_power_w": 0.0841,
+          "total_power_w": 1264.8986,
+          "energy_per_token_nj": 4670271.3232,
+          "tdp_total_w": 1440,
+          "seq": 32768,
+          "hybrid_wall_ns": 3692.21,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 287.773,
+            "Attn_hbm_w": 495.8945,
+            "Proj_O_hbm_w": 186.1943,
+            "Proj_QKV_frac": 0.296716,
+            "Attn_frac": 0.511304,
+            "Proj_O_frac": 0.19198
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 5317.53,
+          "hbm_util_per_cube": 0.976398,
+          "cmpt_util_per_cube": 0.199196,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.257028,
+            "Attn_V": 0.286482,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 996.9023,
+          "cmpt_power_total_w": 51.791,
+          "d2d_energy_nj": 310.5178,
+          "d2d_power_w": 0.0584,
+          "total_power_w": 1303.6317,
+          "energy_per_token_nj": 6932100.8016,
+          "tdp_total_w": 1440,
+          "seq": 65536,
+          "hybrid_wall_ns": 5317.53,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 200.6397,
+            "Attn_hbm_w": 666.4451,
+            "Proj_O_hbm_w": 129.8175,
+            "Proj_QKV_frac": 0.201263,
+            "Attn_frac": 0.668516,
+            "Proj_O_frac": 0.130221
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 8650.84,
+          "hbm_util_per_cube": 0.988419,
+          "cmpt_util_per_cube": 0.246041,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.290249,
+            "Attn_V": 0.298926,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1009.176,
+          "cmpt_power_total_w": 63.9706,
+          "d2d_energy_nj": 310.5178,
+          "d2d_power_w": 0.0359,
+          "total_power_w": 1328.0625,
+          "energy_per_token_nj": 11488855.9012,
+          "tdp_total_w": 1440,
+          "seq": 131072,
+          "hybrid_wall_ns": 8650.84,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 122.3734,
+            "Attn_hbm_w": 807.6248,
+            "Proj_O_hbm_w": 79.1778,
+            "Proj_QKV_frac": 0.121261,
+            "Attn_frac": 0.800281,
+            "Proj_O_frac": 0.078458
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 15361.74,
+          "hbm_util_per_cube": 0.993566,
+          "cmpt_util_per_cube": 0.273383,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.296502,
+            "Attn_V": 0.305562,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1014.4312,
+          "cmpt_power_total_w": 71.0796,
+          "d2d_energy_nj": 310.5178,
+          "d2d_power_w": 0.0202,
+          "total_power_w": 1340.411,
+          "energy_per_token_nj": 20591045.8005,
+          "tdp_total_w": 1440,
+          "seq": 262144,
+          "hybrid_wall_ns": 15361.74,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 68.3285,
+            "Attn_hbm_w": 901.893,
+            "Proj_O_hbm_w": 44.2097,
+            "Proj_QKV_frac": 0.067356,
+            "Attn_frac": 0.889063,
+            "Proj_O_frac": 0.043581
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 28783.5,
+          "hbm_util_per_cube": 0.996595,
+          "cmpt_util_per_cube": 0.292746,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.306624,
+            "Attn_V": 0.308992,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1017.5232,
+          "cmpt_power_total_w": 76.1139,
+          "d2d_energy_nj": 310.5178,
+          "d2d_power_w": 0.0108,
+          "total_power_w": 1348.5279,
+          "energy_per_token_nj": 38815353.4176,
+          "tdp_total_w": 1440,
+          "seq": 524288,
+          "hybrid_wall_ns": 28783.5,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 36.2808,
+            "Attn_hbm_w": 957.768,
+            "Proj_O_hbm_w": 23.4744,
+            "Proj_QKV_frac": 0.035656,
+            "Attn_frac": 0.941274,
+            "Proj_O_frac": 0.02307
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 55627.06,
+          "hbm_util_per_cube": 0.998246,
+          "cmpt_util_per_cube": 0.30173,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.308341,
+            "Attn_V": 0.310736,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1019.2087,
+          "cmpt_power_total_w": 78.4497,
+          "d2d_energy_nj": 310.5178,
+          "d2d_power_w": 0.0056,
+          "total_power_w": 1352.544,
+          "energy_per_token_nj": 75238047.028,
+          "tdp_total_w": 1440,
+          "seq": 1048576,
+          "hybrid_wall_ns": 55627.06,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 18.7201,
+            "Attn_hbm_w": 988.3763,
+            "Proj_O_hbm_w": 12.1123,
+            "Proj_QKV_frac": 0.018367,
+            "Attn_frac": 0.969749,
+            "Proj_O_frac": 0.011884
+          }
+        }
+      ]
+    },
+    "hmp": {
+      "data": [
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 2921.96,
+          "hbm_util_per_cube": 0.664422,
+          "cmpt_util_per_cube": 0.040556,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.017544,
+            "Attn_V": 0.017544,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 678.375,
+          "cmpt_power_total_w": 10.5446,
+          "d2d_energy_nj": 719.0938,
+          "d2d_power_w": 0.2461,
+          "total_power_w": 944.0457,
+          "energy_per_token_nj": 2758463.9047,
+          "tdp_total_w": 1440,
+          "seq": 1024,
+          "hybrid_wall_ns": 2921.96,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 281.1654,
+            "Attn_hbm_w": 215.2906,
+            "Proj_O_hbm_w": 181.919,
+            "Proj_QKV_frac": 0.414469,
+            "Attn_frac": 0.317362,
+            "Proj_O_frac": 0.268169
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 2921.39,
+          "hbm_util_per_cube": 0.685952,
+          "cmpt_util_per_cube": 0.046127,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.035088,
+            "Attn_V": 0.035088,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 700.3565,
+          "cmpt_power_total_w": 11.9929,
+          "d2d_energy_nj": 719.0938,
+          "d2d_power_w": 0.2461,
+          "total_power_w": 967.4756,
+          "energy_per_token_nj": 2826373.5509,
+          "tdp_total_w": 1440,
+          "seq": 2048,
+          "hybrid_wall_ns": 2921.39,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 290.3435,
+            "Attn_hbm_w": 222.1556,
+            "Proj_O_hbm_w": 187.8574,
+            "Proj_QKV_frac": 0.414565,
+            "Attn_frac": 0.317204,
+            "Proj_O_frac": 0.268231
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 2921.69,
+          "hbm_util_per_cube": 0.728612,
+          "cmpt_util_per_cube": 0.057258,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.070175,
+            "Attn_V": 0.070175,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 743.9133,
+          "cmpt_power_total_w": 14.8871,
+          "d2d_energy_nj": 719.0938,
+          "d2d_power_w": 0.2461,
+          "total_power_w": 1013.9265,
+          "energy_per_token_nj": 2962378.8192,
+          "tdp_total_w": 1440,
+          "seq": 4096,
+          "hybrid_wall_ns": 2921.69,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 308.363,
+            "Attn_hbm_w": 236.034,
+            "Proj_O_hbm_w": 199.5163,
+            "Proj_QKV_frac": 0.414515,
+            "Attn_frac": 0.317287,
+            "Proj_O_frac": 0.268198
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 2921.54,
+          "hbm_util_per_cube": 0.814152,
+          "cmpt_util_per_cube": 0.07952,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.140351,
+            "Attn_V": 0.140351,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 831.2489,
+          "cmpt_power_total_w": 20.6752,
+          "d2d_energy_nj": 719.0938,
+          "d2d_power_w": 0.2461,
+          "total_power_w": 1107.0503,
+          "energy_per_token_nj": 3234291.6904,
+          "tdp_total_w": 1440,
+          "seq": 8192,
+          "hybrid_wall_ns": 2921.54,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 344.5859,
+            "Attn_hbm_w": 263.7098,
+            "Proj_O_hbm_w": 222.9532,
+            "Proj_QKV_frac": 0.41454,
+            "Attn_frac": 0.317245,
+            "Proj_O_frac": 0.268215
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 3445.92,
+          "hbm_util_per_cube": 0.811635,
+          "cmpt_util_per_cube": 0.102206,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.167715,
+            "Attn_V": 0.167715,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 828.6789,
+          "cmpt_power_total_w": 26.5734,
+          "d2d_energy_nj": 719.0938,
+          "d2d_power_w": 0.2087,
+          "total_power_w": 1110.341,
+          "energy_per_token_nj": 3826146.2148,
+          "tdp_total_w": 1440,
+          "seq": 16384,
+          "hybrid_wall_ns": 3445.92,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 283.0184,
+            "Attn_hbm_w": 362.5425,
+            "Proj_O_hbm_w": 183.118,
+            "Proj_QKV_frac": 0.34153,
+            "Attn_frac": 0.437495,
+            "Proj_O_frac": 0.220976
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 3895.6,
+          "hbm_util_per_cube": 0.949914,
+          "cmpt_util_per_cube": 0.154126,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.239163,
+            "Attn_V": 0.264463,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 969.8618,
+          "cmpt_power_total_w": 40.0728,
+          "d2d_energy_nj": 719.0938,
+          "d2d_power_w": 0.1846,
+          "total_power_w": 1264.9991,
+          "energy_per_token_nj": 4927930.5237,
+          "tdp_total_w": 1440,
+          "seq": 32768,
+          "hybrid_wall_ns": 3895.6,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 287.773,
+            "Attn_hbm_w": 495.8945,
+            "Proj_O_hbm_w": 186.1943,
+            "Proj_QKV_frac": 0.296716,
+            "Attn_frac": 0.511304,
+            "Proj_O_frac": 0.19198
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 5520.92,
+          "hbm_util_per_cube": 0.976398,
+          "cmpt_util_per_cube": 0.199196,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.257028,
+            "Attn_V": 0.286482,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 996.9023,
+          "cmpt_power_total_w": 51.791,
+          "d2d_energy_nj": 719.0938,
+          "d2d_power_w": 0.1302,
+          "total_power_w": 1303.7036,
+          "energy_per_token_nj": 7197643.1569,
+          "tdp_total_w": 1440,
+          "seq": 65536,
+          "hybrid_wall_ns": 5520.92,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 200.6397,
+            "Attn_hbm_w": 666.4451,
+            "Proj_O_hbm_w": 129.8175,
+            "Proj_QKV_frac": 0.201263,
+            "Attn_frac": 0.668516,
+            "Proj_O_frac": 0.130221
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 8854.23,
+          "hbm_util_per_cube": 0.988419,
+          "cmpt_util_per_cube": 0.246041,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.290249,
+            "Attn_V": 0.298926,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1009.176,
+          "cmpt_power_total_w": 63.9706,
+          "d2d_energy_nj": 719.0938,
+          "d2d_power_w": 0.0812,
+          "total_power_w": 1328.1078,
+          "energy_per_token_nj": 11759371.8016,
+          "tdp_total_w": 1440,
+          "seq": 131072,
+          "hybrid_wall_ns": 8854.23,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 122.3734,
+            "Attn_hbm_w": 807.6248,
+            "Proj_O_hbm_w": 79.1778,
+            "Proj_QKV_frac": 0.121261,
+            "Attn_frac": 0.800281,
+            "Proj_O_frac": 0.078458
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 15565.13,
+          "hbm_util_per_cube": 0.993566,
+          "cmpt_util_per_cube": 0.273383,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.296502,
+            "Attn_V": 0.305562,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1014.4312,
+          "cmpt_power_total_w": 71.0796,
+          "d2d_energy_nj": 719.0938,
+          "d2d_power_w": 0.0462,
+          "total_power_w": 1340.437,
+          "energy_per_token_nj": 20864076.4655,
+          "tdp_total_w": 1440,
+          "seq": 262144,
+          "hybrid_wall_ns": 15565.13,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 68.3285,
+            "Attn_hbm_w": 901.893,
+            "Proj_O_hbm_w": 44.2097,
+            "Proj_QKV_frac": 0.067356,
+            "Attn_frac": 0.889063,
+            "Proj_O_frac": 0.043581
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 28986.89,
+          "hbm_util_per_cube": 0.996595,
+          "cmpt_util_per_cube": 0.292746,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.306624,
+            "Attn_V": 0.308992,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1017.5232,
+          "cmpt_power_total_w": 76.1139,
+          "d2d_energy_nj": 719.0938,
+          "d2d_power_w": 0.0248,
+          "total_power_w": 1348.5419,
+          "energy_per_token_nj": 39090036.8933,
+          "tdp_total_w": 1440,
+          "seq": 524288,
+          "hybrid_wall_ns": 28986.89,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 36.2808,
+            "Attn_hbm_w": 957.768,
+            "Proj_O_hbm_w": 23.4744,
+            "Proj_QKV_frac": 0.035656,
+            "Attn_frac": 0.941274,
+            "Proj_O_frac": 0.02307
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 55830.45,
+          "hbm_util_per_cube": 0.998246,
+          "cmpt_util_per_cube": 0.30173,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.308341,
+            "Attn_V": 0.310736,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1019.2087,
+          "cmpt_power_total_w": 78.4497,
+          "d2d_energy_nj": 719.0938,
+          "d2d_power_w": 0.0129,
+          "total_power_w": 1352.5513,
+          "energy_per_token_nj": 75513548.3957,
+          "tdp_total_w": 1440,
+          "seq": 1048576,
+          "hybrid_wall_ns": 55830.45,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 18.7201,
+            "Attn_hbm_w": 988.3763,
+            "Proj_O_hbm_w": 12.1123,
+            "Proj_QKV_frac": 0.018367,
+            "Attn_frac": 0.969749,
+            "Proj_O_frac": 0.011884
+          }
+        }
+      ]
+    },
+    "tp16": {
+      "data": [
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 1782.17,
+          "hbm_util_per_cube": 0.709976,
+          "cmpt_util_per_cube": 0.041258,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.017544,
+            "Attn_V": 0.017544,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 724.8857,
+          "cmpt_power_total_w": 10.7271,
+          "d2d_energy_nj": 1120.6656,
+          "d2d_power_w": 0.6288,
+          "total_power_w": 991.1216,
+          "energy_per_token_nj": 1766347.0979,
+          "tdp_total_w": 1440,
+          "seq": 1024,
+          "hybrid_wall_ns": 1782.17,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 345.3029,
+            "Attn_hbm_w": 205.3624,
+            "Proj_O_hbm_w": 174.2204,
+            "Proj_QKV_frac": 0.476355,
+            "Attn_frac": 0.283303,
+            "Proj_O_frac": 0.240342
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 1782.74,
+          "hbm_util_per_cube": 0.747874,
+          "cmpt_util_per_cube": 0.046224,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.035088,
+            "Attn_V": 0.035088,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 763.5795,
+          "cmpt_power_total_w": 12.0181,
+          "d2d_energy_nj": 1867.776,
+          "d2d_power_w": 1.0477,
+          "total_power_w": 1031.5254,
+          "energy_per_token_nj": 1838941.5323,
+          "tdp_total_w": 1440,
+          "seq": 2048,
+          "hybrid_wall_ns": 1782.74,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 363.5839,
+            "Attn_hbm_w": 216.5517,
+            "Proj_O_hbm_w": 183.444,
+            "Proj_QKV_frac": 0.476157,
+            "Attn_frac": 0.283601,
+            "Proj_O_frac": 0.240242
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 1960.46,
+          "hbm_util_per_cube": 0.824428,
+          "cmpt_util_per_cube": 0.056171,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.070175,
+            "Attn_V": 0.070175,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 841.7409,
+          "cmpt_power_total_w": 14.6046,
+          "d2d_energy_nj": 3735.552,
+          "d2d_power_w": 1.9054,
+          "total_power_w": 1113.131,
+          "energy_per_token_nj": 2182248.731,
+          "tdp_total_w": 1440,
+          "seq": 4096,
+          "hybrid_wall_ns": 1960.46,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 400.8827,
+            "Attn_hbm_w": 238.5953,
+            "Proj_O_hbm_w": 202.2629,
+            "Proj_QKV_frac": 0.476254,
+            "Attn_frac": 0.283455,
+            "Proj_O_frac": 0.240291
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 1857.87,
+          "hbm_util_per_cube": 0.956047,
+          "cmpt_util_per_cube": 0.077457,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.140351,
+            "Attn_V": 0.140351,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 976.1239,
+          "cmpt_power_total_w": 20.1387,
+          "d2d_energy_nj": 6350.4384,
+          "d2d_power_w": 3.4181,
+          "total_power_w": 1254.5608,
+          "energy_per_token_nj": 2330810.9028,
+          "tdp_total_w": 1440,
+          "seq": 8192,
+          "hybrid_wall_ns": 1857.87,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 454.806,
+            "Attn_hbm_w": 291.8484,
+            "Proj_O_hbm_w": 229.4695,
+            "Proj_QKV_frac": 0.465931,
+            "Attn_frac": 0.298987,
+            "Proj_O_frac": 0.235082
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 2322.29,
+          "hbm_util_per_cube": 0.966169,
+          "cmpt_util_per_cube": 0.104529,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.167715,
+            "Attn_V": 0.167715,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 986.4585,
+          "cmpt_power_total_w": 27.1776,
+          "d2d_energy_nj": 12327.3216,
+          "d2d_power_w": 5.3083,
+          "total_power_w": 1273.8243,
+          "energy_per_token_nj": 2958189.4442,
+          "tdp_total_w": 1440,
+          "seq": 16384,
+          "hybrid_wall_ns": 2322.29,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 353.8343,
+            "Attn_hbm_w": 454.0993,
+            "Proj_O_hbm_w": 178.5249,
+            "Proj_QKV_frac": 0.358692,
+            "Attn_frac": 0.460333,
+            "Proj_O_frac": 0.180976
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 3433.15,
+          "hbm_util_per_cube": 0.976834,
+          "cmpt_util_per_cube": 0.177867,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.239163,
+            "Attn_V": 0.264463,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 997.3471,
+          "cmpt_power_total_w": 46.2454,
+          "d2d_energy_nj": 24654.6432,
+          "d2d_power_w": 7.1813,
+          "total_power_w": 1305.6539,
+          "energy_per_token_nj": 4482505.6627,
+          "tdp_total_w": 1440,
+          "seq": 32768,
+          "hybrid_wall_ns": 3433.15,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 244.9715,
+            "Attn_hbm_w": 628.7767,
+            "Proj_O_hbm_w": 123.5989,
+            "Proj_QKV_frac": 0.245623,
+            "Attn_frac": 0.630449,
+            "Proj_O_frac": 0.123928
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 5383.87,
+          "hbm_util_per_cube": 0.985792,
+          "cmpt_util_per_cube": 0.222253,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.257028,
+            "Attn_V": 0.286482,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1006.4934,
+          "cmpt_power_total_w": 57.7859,
+          "d2d_energy_nj": 48562.176,
+          "d2d_power_w": 9.0199,
+          "total_power_w": 1328.1792,
+          "energy_per_token_nj": 7150744.2616,
+          "tdp_total_w": 1440,
+          "seq": 65536,
+          "hybrid_wall_ns": 5383.87,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 151.6257,
+            "Attn_hbm_w": 778.3658,
+            "Proj_O_hbm_w": 76.5018,
+            "Proj_QKV_frac": 0.150648,
+            "Attn_frac": 0.773344,
+            "Proj_O_frac": 0.076008
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 9339.31,
+          "hbm_util_per_cube": 0.991988,
+          "cmpt_util_per_cube": 0.263463,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.290249,
+            "Attn_V": 0.298926,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1012.8201,
+          "cmpt_power_total_w": 68.5003,
+          "d2d_energy_nj": 96377.2416,
+          "d2d_power_w": 10.3195,
+          "total_power_w": 1346.5199,
+          "energy_per_token_nj": 12575566.5023,
+          "tdp_total_w": 1440,
+          "seq": 131072,
+          "hybrid_wall_ns": 9339.31,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 86.0402,
+            "Attn_hbm_w": 883.3689,
+            "Proj_O_hbm_w": 43.411,
+            "Proj_QKV_frac": 0.084951,
+            "Attn_frac": 0.872187,
+            "Proj_O_frac": 0.042862
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 17274.21,
+          "hbm_util_per_cube": 0.99572,
+          "cmpt_util_per_cube": 0.284001,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.296502,
+            "Attn_V": 0.305562,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1016.6299,
+          "cmpt_power_total_w": 73.8402,
+          "d2d_energy_nj": 192007.3728,
+          "d2d_power_w": 11.1153,
+          "total_power_w": 1356.4654,
+          "energy_per_token_nj": 23431867.524,
+          "tdp_total_w": 1440,
+          "seq": 262144,
+          "hybrid_wall_ns": 17274.21,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 46.1298,
+            "Attn_hbm_w": 947.2255,
+            "Proj_O_hbm_w": 23.2745,
+            "Proj_QKV_frac": 0.045375,
+            "Attn_frac": 0.931731,
+            "Proj_O_frac": 0.022894
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 32983.97,
+          "hbm_util_per_cube": 0.997785,
+          "cmpt_util_per_cube": 0.298724,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.306624,
+            "Attn_V": 0.308992,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1018.7382,
+          "cmpt_power_total_w": 77.6681,
+          "d2d_energy_nj": 382894.08,
+          "d2d_power_w": 11.6085,
+          "total_power_w": 1362.8948,
+          "energy_per_token_nj": 44953680.8405,
+          "tdp_total_w": 1440,
+          "seq": 524288,
+          "hybrid_wall_ns": 32983.97,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 23.9296,
+            "Attn_hbm_w": 982.7351,
+            "Proj_O_hbm_w": 12.0735,
+            "Proj_QKV_frac": 0.023489,
+            "Attn_frac": 0.964659,
+            "Proj_O_frac": 0.011851
+          }
+        },
+        {
+          "arch": "ours",
+          "n_cubes": 16,
+          "time_ns": 64859.53,
+          "hbm_util_per_cube": 0.998872,
+          "cmpt_util_per_cube": 0.304886,
+          "per_module_cmpt_util": {
+            "Proj_QKV": 0.046998,
+            "Score": 0.308341,
+            "Attn_V": 0.310736,
+            "Proj_O": 0.057834
+          },
+          "static_power_w": 254.88,
+          "hbm_power_total_w": 1019.8485,
+          "cmpt_power_total_w": 79.2703,
+          "d2d_energy_nj": 765788.16,
+          "d2d_power_w": 11.8069,
+          "total_power_w": 1365.8056,
+          "energy_per_token_nj": 88585512.1705,
+          "tdp_total_w": 1440,
+          "seq": 1048576,
+          "hybrid_wall_ns": 64859.53,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 12.1933,
+            "Attn_hbm_w": 1001.5032,
+            "Proj_O_hbm_w": 6.1521,
+            "Proj_QKV_frac": 0.011956,
+            "Attn_frac": 0.982012,
+            "Proj_O_frac": 0.006032
+          }
+        }
+      ]
+    },
+    "rubin": {
+      "data": [
+        {
+          "arch": "rubin",
+          "time_ns": 6389.62,
+          "hbm_util_per_cube": 0.462642,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.042,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 389.4,
+          "hbm_power_total_w": 832.7561,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 1222.1561,
+          "energy_per_token_nj": 7809113.328,
+          "tdp_total_w": 2200,
+          "seq": 1024,
+          "hybrid_wall_ns": 6389.62,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 316.5756,
+            "Attn_hbm_w": 295.8167,
+            "Proj_O_hbm_w": 220.3638,
+            "Proj_QKV_frac": 0.380154,
+            "Attn_frac": 0.355226,
+            "Proj_O_frac": 0.26462
+          }
+        },
+        {
+          "arch": "rubin",
+          "time_ns": 6085.33,
+          "hbm_util_per_cube": 0.501441,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.097,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 389.4,
+          "hbm_power_total_w": 902.5936,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 1291.9936,
+          "energy_per_token_nj": 7862207.2879,
+          "tdp_total_w": 2200,
+          "seq": 2048,
+          "hybrid_wall_ns": 6085.33,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 360.2828,
+            "Attn_hbm_w": 291.5231,
+            "Proj_O_hbm_w": 250.7877,
+            "Proj_QKV_frac": 0.399164,
+            "Attn_frac": 0.322984,
+            "Proj_O_frac": 0.277852
+          }
+        },
+        {
+          "arch": "rubin",
+          "time_ns": 6628.41,
+          "hbm_util_per_cube": 0.489119,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.152,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 389.4,
+          "hbm_power_total_w": 880.4134,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 1269.8134,
+          "energy_per_token_nj": 8416843.578,
+          "tdp_total_w": 2200,
+          "seq": 4096,
+          "hybrid_wall_ns": 6628.41,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 322.6353,
+            "Attn_hbm_w": 333.1962,
+            "Proj_O_hbm_w": 224.5819,
+            "Proj_QKV_frac": 0.366459,
+            "Attn_frac": 0.378454,
+            "Proj_O_frac": 0.255087
+          }
+        },
+        {
+          "arch": "rubin",
+          "time_ns": 7146.05,
+          "hbm_util_per_cube": 0.507046,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.252,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 389.4,
+          "hbm_power_total_w": 912.6834,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 1302.0834,
+          "energy_per_token_nj": 9304753.098,
+          "tdp_total_w": 2200,
+          "seq": 8192,
+          "hybrid_wall_ns": 7146.05,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 310.2336,
+            "Attn_hbm_w": 386.5007,
+            "Proj_O_hbm_w": 215.9491,
+            "Proj_QKV_frac": 0.339914,
+            "Attn_frac": 0.423477,
+            "Proj_O_frac": 0.236609
+          }
+        },
+        {
+          "arch": "rubin",
+          "time_ns": 8452.82,
+          "hbm_util_per_cube": 0.518878,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.352,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 389.4,
+          "hbm_power_total_w": 933.9804,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 1323.3804,
+          "energy_per_token_nj": 11186296.0118,
+          "tdp_total_w": 2200,
+          "seq": 16384,
+          "hybrid_wall_ns": 8452.82,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 268.3931,
+            "Attn_hbm_w": 478.7627,
+            "Proj_O_hbm_w": 186.8246,
+            "Proj_QKV_frac": 0.287365,
+            "Attn_frac": 0.512605,
+            "Proj_O_frac": 0.200031
+          }
+        },
+        {
+          "arch": "rubin",
+          "time_ns": 10422.34,
+          "hbm_util_per_cube": 0.567164,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.484,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 389.4,
+          "hbm_power_total_w": 1020.8957,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 1410.2957,
+          "energy_per_token_nj": 14698581.216,
+          "tdp_total_w": 2200,
+          "seq": 32768,
+          "hybrid_wall_ns": 10422.34,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 237.9309,
+            "Attn_hbm_w": 617.3445,
+            "Proj_O_hbm_w": 165.6203,
+            "Proj_QKV_frac": 0.233061,
+            "Attn_frac": 0.604709,
+            "Proj_O_frac": 0.16223
+          }
+        },
+        {
+          "arch": "rubin",
+          "time_ns": 14023.77,
+          "hbm_util_per_cube": 0.639028,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.616,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 389.4,
+          "hbm_power_total_w": 1150.2511,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 1539.6511,
+          "energy_per_token_nj": 21591712.89,
+          "tdp_total_w": 2200,
+          "seq": 65536,
+          "hybrid_wall_ns": 14023.77,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 199.2336,
+            "Attn_hbm_w": 812.3339,
+            "Proj_O_hbm_w": 138.6836,
+            "Proj_QKV_frac": 0.173209,
+            "Attn_frac": 0.706223,
+            "Proj_O_frac": 0.120568
+          }
+        },
+        {
+          "arch": "rubin",
+          "time_ns": 20519.88,
+          "hbm_util_per_cube": 0.734039,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.744,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 389.4,
+          "hbm_power_total_w": 1321.2703,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 1710.6703,
+          "energy_per_token_nj": 35102749.3207,
+          "tdp_total_w": 2200,
+          "seq": 131072,
+          "hybrid_wall_ns": 20519.88,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 156.4054,
+            "Attn_hbm_w": 1055.9933,
+            "Proj_O_hbm_w": 108.8716,
+            "Proj_QKV_frac": 0.118375,
+            "Attn_frac": 0.799226,
+            "Proj_O_frac": 0.082399
+          }
+        },
+        {
+          "arch": "rubin",
+          "time_ns": 33485.95,
+          "hbm_util_per_cube": 0.814192,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.831,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 389.4,
+          "hbm_power_total_w": 1465.546,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 1854.946,
+          "energy_per_token_nj": 62114627.796,
+          "tdp_total_w": 2200,
+          "seq": 262144,
+          "hybrid_wall_ns": 33485.95,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 106.3094,
+            "Attn_hbm_w": 1285.2362,
+            "Proj_O_hbm_w": 74.0004,
+            "Proj_QKV_frac": 0.072539,
+            "Attn_frac": 0.876968,
+            "Proj_O_frac": 0.050493
+          }
+        },
+        {
+          "arch": "rubin",
+          "time_ns": 59330.78,
+          "hbm_util_per_cube": 0.870834,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.884,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 389.4,
+          "hbm_power_total_w": 1567.5003,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 1956.9003,
+          "energy_per_token_nj": 116104423.08,
+          "tdp_total_w": 2200,
+          "seq": 524288,
+          "hybrid_wall_ns": 59330.78,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 64.1745,
+            "Attn_hbm_w": 1458.6549,
+            "Proj_O_hbm_w": 44.6709,
+            "Proj_QKV_frac": 0.040941,
+            "Attn_frac": 0.930561,
+            "Proj_O_frac": 0.028498
+          }
+        },
+        {
+          "arch": "rubin",
+          "time_ns": 110684.15,
+          "hbm_util_per_cube": 0.907751,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.916,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 389.4,
+          "hbm_power_total_w": 1633.9521,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 2023.3521,
+          "energy_per_token_nj": 223953010.806,
+          "tdp_total_w": 2200,
+          "seq": 1048576,
+          "hybrid_wall_ns": 110684.15,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 35.8582,
+            "Attn_hbm_w": 1573.1335,
+            "Proj_O_hbm_w": 24.9604,
+            "Proj_QKV_frac": 0.021946,
+            "Attn_frac": 0.962778,
+            "Proj_O_frac": 0.015276
+          }
+        }
+      ]
+    },
+    "rubin_tp2": {
+      "data": [
+        {
+          "arch": "rubin_tp2",
+          "time_ns": 6543.55,
+          "hbm_util_per_cube": 0.311742,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.023,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 778.8,
+          "hbm_power_total_w": 1122.2728,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.013,
+          "total_power_w": 1901.0858,
+          "energy_per_token_nj": 12439849.9866,
+          "tdp_total_w": 4400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 1024,
+          "hybrid_wall_ns": 6543.55,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 379.8065,
+            "Attn_hbm_w": 490.5409,
+            "Proj_O_hbm_w": 251.9254,
+            "Proj_QKV_frac": 0.338426,
+            "Attn_frac": 0.437096,
+            "Proj_O_frac": 0.224478
+          }
+        },
+        {
+          "arch": "rubin_tp2",
+          "time_ns": 6269.74,
+          "hbm_util_per_cube": 0.341517,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.053,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 778.8,
+          "hbm_power_total_w": 1229.4622,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0136,
+          "total_power_w": 2008.2758,
+          "energy_per_token_nj": 12591367.1143,
+          "tdp_total_w": 4400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 2048,
+          "hybrid_wall_ns": 6269.74,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 441.5838,
+            "Attn_hbm_w": 494.9761,
+            "Proj_O_hbm_w": 292.9022,
+            "Proj_QKV_frac": 0.359168,
+            "Attn_frac": 0.402596,
+            "Proj_O_frac": 0.238236
+          }
+        },
+        {
+          "arch": "rubin_tp2",
+          "time_ns": 6768.15,
+          "hbm_util_per_cube": 0.326436,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.083,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 778.8,
+          "hbm_power_total_w": 1175.1706,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0126,
+          "total_power_w": 1953.9832,
+          "energy_per_token_nj": 13224851.3951,
+          "tdp_total_w": 4400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 4096,
+          "hybrid_wall_ns": 6768.15,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 379.7207,
+            "Attn_hbm_w": 543.5815,
+            "Proj_O_hbm_w": 251.8684,
+            "Proj_QKV_frac": 0.32312,
+            "Attn_frac": 0.462555,
+            "Proj_O_frac": 0.214325
+          }
+        },
+        {
+          "arch": "rubin_tp2",
+          "time_ns": 7137.59,
+          "hbm_util_per_cube": 0.339566,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.143,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 778.8,
+          "hbm_power_total_w": 1222.4374,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0119,
+          "total_power_w": 2001.2493,
+          "energy_per_token_nj": 14284096.9912,
+          "tdp_total_w": 4400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 8192,
+          "hybrid_wall_ns": 7137.59,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 367.6424,
+            "Attn_hbm_w": 610.938,
+            "Proj_O_hbm_w": 243.8569,
+            "Proj_QKV_frac": 0.300745,
+            "Attn_frac": 0.49977,
+            "Proj_O_frac": 0.199484
+          }
+        },
+        {
+          "arch": "rubin_tp2",
+          "time_ns": 8227.81,
+          "hbm_util_per_cube": 0.341293,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.203,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 778.8,
+          "hbm_power_total_w": 1228.6556,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0104,
+          "total_power_w": 2007.466,
+          "energy_per_token_nj": 16517048.8295,
+          "tdp_total_w": 4400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 16384,
+          "hybrid_wall_ns": 8227.81,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 306.8173,
+            "Attn_hbm_w": 718.3266,
+            "Proj_O_hbm_w": 203.5117,
+            "Proj_QKV_frac": 0.249718,
+            "Attn_frac": 0.584644,
+            "Proj_O_frac": 0.165638
+          }
+        },
+        {
+          "arch": "rubin_tp2",
+          "time_ns": 7937.52,
+          "hbm_util_per_cube": 0.48174,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.44,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 778.8,
+          "hbm_power_total_w": 1734.2628,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0107,
+          "total_power_w": 2513.0735,
+          "energy_per_token_nj": 19947571.1677,
+          "tdp_total_w": 4400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 32768,
+          "hybrid_wall_ns": 7937.52,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 453.5676,
+            "Attn_hbm_w": 979.8442,
+            "Proj_O_hbm_w": 300.851,
+            "Proj_QKV_frac": 0.261533,
+            "Attn_frac": 0.564992,
+            "Proj_O_frac": 0.173475
+          }
+        },
+        {
+          "arch": "rubin_tp2",
+          "time_ns": 11403.9,
+          "hbm_util_per_cube": 0.466671,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.44,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 778.8,
+          "hbm_power_total_w": 1680.0148,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0075,
+          "total_power_w": 2458.8223,
+          "energy_per_token_nj": 28040163.627,
+          "tdp_total_w": 4400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 65536,
+          "hybrid_wall_ns": 11403.9,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 280.7548,
+            "Attn_hbm_w": 1213.0355,
+            "Proj_O_hbm_w": 186.2245,
+            "Proj_QKV_frac": 0.167115,
+            "Attn_frac": 0.722039,
+            "Proj_O_frac": 0.110847
+          }
+        },
+        {
+          "arch": "rubin_tp2",
+          "time_ns": 14989.79,
+          "hbm_util_per_cube": 0.571085,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.58,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 778.8,
+          "hbm_power_total_w": 2055.9078,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0057,
+          "total_power_w": 2834.7135,
+          "energy_per_token_nj": 42491760.0752,
+          "tdp_total_w": 4400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 131072,
+          "hybrid_wall_ns": 14989.79,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 250.1494,
+            "Attn_hbm_w": 1639.8345,
+            "Proj_O_hbm_w": 165.9239,
+            "Proj_QKV_frac": 0.121673,
+            "Attn_frac": 0.797621,
+            "Proj_O_frac": 0.080706
+          }
+        },
+        {
+          "arch": "rubin_tp2",
+          "time_ns": 23185.29,
+          "hbm_util_per_cube": 0.637516,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.652,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 778.8,
+          "hbm_power_total_w": 2295.0562,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0037,
+          "total_power_w": 3073.8599,
+          "energy_per_token_nj": 71268333.2009,
+          "tdp_total_w": 4400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 262144,
+          "hybrid_wall_ns": 23185.29,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 172.2198,
+            "Attn_hbm_w": 2008.6031,
+            "Proj_O_hbm_w": 114.2333,
+            "Proj_QKV_frac": 0.075039,
+            "Attn_frac": 0.875187,
+            "Proj_O_frac": 0.049774
+          }
+        },
+        {
+          "arch": "rubin_tp2",
+          "time_ns": 33872.64,
+          "hbm_util_per_cube": 0.805529,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.83,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 778.8,
+          "hbm_power_total_w": 2899.906,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0025,
+          "total_power_w": 3678.7085,
+          "energy_per_token_nj": 124607568.6854,
+          "tdp_total_w": 4400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 524288,
+          "hybrid_wall_ns": 33872.64,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 145.0904,
+            "Attn_hbm_w": 2658.5772,
+            "Proj_O_hbm_w": 96.2384,
+            "Proj_QKV_frac": 0.050033,
+            "Attn_frac": 0.91678,
+            "Proj_O_frac": 0.033187
+          }
+        },
+        {
+          "arch": "rubin_tp2",
+          "time_ns": 59996.13,
+          "hbm_util_per_cube": 0.863267,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.879,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 778.8,
+          "hbm_power_total_w": 3107.7618,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0014,
+          "total_power_w": 3886.5632,
+          "energy_per_token_nj": 233178751.0004,
+          "tdp_total_w": 4400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 1048576,
+          "hybrid_wall_ns": 59996.13,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 85.6898,
+            "Attn_hbm_w": 2965.234,
+            "Proj_O_hbm_w": 56.838,
+            "Proj_QKV_frac": 0.027573,
+            "Attn_frac": 0.954138,
+            "Proj_O_frac": 0.018289
+          }
+        }
+      ]
+    },
+    "h100": {
+      "data": [
+        {
+          "arch": "h100",
+          "time_ns": 41961.02,
+          "hbm_util_per_cube": 0.462649,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.042,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 123.9,
+          "hbm_power_total_w": 268.3362,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 392.2362,
+          "energy_per_token_nj": 16458632.8392,
+          "tdp_total_w": 700,
+          "seq": 1024,
+          "hybrid_wall_ns": 41961.02,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 102.0106,
+            "Attn_hbm_w": 95.3174,
+            "Proj_O_hbm_w": 71.0082,
+            "Proj_QKV_frac": 0.380159,
+            "Attn_frac": 0.355216,
+            "Proj_O_frac": 0.264624
+          }
+        },
+        {
+          "arch": "h100",
+          "time_ns": 39963.3,
+          "hbm_util_per_cube": 0.50144,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.097,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 123.9,
+          "hbm_power_total_w": 290.8355,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 414.7355,
+          "energy_per_token_nj": 16574198.4142,
+          "tdp_total_w": 700,
+          "seq": 2048,
+          "hybrid_wall_ns": 39963.3,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 116.0908,
+            "Attn_hbm_w": 93.9354,
+            "Proj_O_hbm_w": 80.8093,
+            "Proj_QKV_frac": 0.399163,
+            "Attn_frac": 0.322985,
+            "Proj_O_frac": 0.277852
+          }
+        },
+        {
+          "arch": "h100",
+          "time_ns": 43529.86,
+          "hbm_util_per_cube": 0.489118,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.152,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 123.9,
+          "hbm_power_total_w": 283.6886,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 407.5886,
+          "energy_per_token_nj": 17742275.3616,
+          "tdp_total_w": 700,
+          "seq": 4096,
+          "hybrid_wall_ns": 43529.86,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 103.9601,
+            "Attn_hbm_w": 107.3633,
+            "Proj_O_hbm_w": 72.3653,
+            "Proj_QKV_frac": 0.366458,
+            "Attn_frac": 0.378455,
+            "Proj_O_frac": 0.255087
+          }
+        },
+        {
+          "arch": "h100",
+          "time_ns": 46929.27,
+          "hbm_util_per_cube": 0.507046,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.252,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 123.9,
+          "hbm_power_total_w": 294.0868,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 417.9868,
+          "energy_per_token_nj": 19615816.6662,
+          "tdp_total_w": 700,
+          "seq": 8192,
+          "hybrid_wall_ns": 46929.27,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 99.964,
+            "Attn_hbm_w": 124.5391,
+            "Proj_O_hbm_w": 69.5837,
+            "Proj_QKV_frac": 0.339913,
+            "Attn_frac": 0.423478,
+            "Proj_O_frac": 0.236609
+          }
+        },
+        {
+          "arch": "h100",
+          "time_ns": 55511.03,
+          "hbm_util_per_cube": 0.518878,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.352,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 123.9,
+          "hbm_power_total_w": 300.9491,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 424.8491,
+          "energy_per_token_nj": 23583810.3039,
+          "tdp_total_w": 700,
+          "seq": 16384,
+          "hybrid_wall_ns": 55511.03,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 86.482,
+            "Attn_hbm_w": 154.2681,
+            "Proj_O_hbm_w": 60.199,
+            "Proj_QKV_frac": 0.287364,
+            "Attn_frac": 0.512605,
+            "Proj_O_frac": 0.20003
+          }
+        },
+        {
+          "arch": "h100",
+          "time_ns": 68445.24,
+          "hbm_util_per_cube": 0.567164,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.484,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 123.9,
+          "hbm_power_total_w": 328.9552,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 452.8552,
+          "energy_per_token_nj": 30995785.262,
+          "tdp_total_w": 700,
+          "seq": 32768,
+          "hybrid_wall_ns": 68445.24,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 76.6665,
+            "Attn_hbm_w": 198.9222,
+            "Proj_O_hbm_w": 53.3665,
+            "Proj_QKV_frac": 0.23306,
+            "Attn_frac": 0.604709,
+            "Proj_O_frac": 0.16223
+          }
+        },
+        {
+          "arch": "h100",
+          "time_ns": 92096.35,
+          "hbm_util_per_cube": 0.639028,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.616,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 123.9,
+          "hbm_power_total_w": 370.6365,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 494.5365,
+          "energy_per_token_nj": 45545003.4294,
+          "tdp_total_w": 700,
+          "seq": 65536,
+          "hybrid_wall_ns": 92096.35,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 64.1974,
+            "Attn_hbm_w": 261.7521,
+            "Proj_O_hbm_w": 44.687,
+            "Proj_QKV_frac": 0.173209,
+            "Attn_frac": 0.706223,
+            "Proj_O_frac": 0.120568
+          }
+        },
+        {
+          "arch": "h100",
+          "time_ns": 134757.38,
+          "hbm_util_per_cube": 0.734039,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.744,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 123.9,
+          "hbm_power_total_w": 425.7427,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 549.6427,
+          "energy_per_token_nj": 74068404.6288,
+          "tdp_total_w": 700,
+          "seq": 131072,
+          "hybrid_wall_ns": 134757.38,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 50.3972,
+            "Attn_hbm_w": 340.2646,
+            "Proj_O_hbm_w": 35.0809,
+            "Proj_QKV_frac": 0.118375,
+            "Attn_frac": 0.799226,
+            "Proj_O_frac": 0.082399
+          }
+        },
+        {
+          "arch": "h100",
+          "time_ns": 219907.73,
+          "hbm_util_per_cube": 0.814192,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.831,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 123.9,
+          "hbm_power_total_w": 472.2315,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 596.1315,
+          "energy_per_token_nj": 131093921.4228,
+          "tdp_total_w": 700,
+          "seq": 262144,
+          "hybrid_wall_ns": 219907.73,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 34.2552,
+            "Attn_hbm_w": 414.1317,
+            "Proj_O_hbm_w": 23.8446,
+            "Proj_QKV_frac": 0.072539,
+            "Attn_frac": 0.876968,
+            "Proj_O_frac": 0.050493
+          }
+        },
+        {
+          "arch": "h100",
+          "time_ns": 389634.91,
+          "hbm_util_per_cube": 0.870834,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.884,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 123.9,
+          "hbm_power_total_w": 505.0834,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 628.9834,
+          "energy_per_token_nj": 245073907.6974,
+          "tdp_total_w": 700,
+          "seq": 524288,
+          "hybrid_wall_ns": 389634.91,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 20.6784,
+            "Attn_hbm_w": 470.011,
+            "Proj_O_hbm_w": 14.394,
+            "Proj_QKV_frac": 0.040941,
+            "Attn_frac": 0.930561,
+            "Proj_O_frac": 0.028498
+          }
+        },
+        {
+          "arch": "h100",
+          "time_ns": 726880.99,
+          "hbm_util_per_cube": 0.907751,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.687,
+            "Attn": 0.916,
+            "Proj_O": 0.705
+          },
+          "static_power_w": 123.9,
+          "hbm_power_total_w": 526.4957,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0,
+          "total_power_w": 650.3957,
+          "energy_per_token_nj": 472760263.0446,
+          "tdp_total_w": 700,
+          "seq": 1048576,
+          "hybrid_wall_ns": 726880.99,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 11.5543,
+            "Attn_hbm_w": 506.8986,
+            "Proj_O_hbm_w": 8.0428,
+            "Proj_QKV_frac": 0.021946,
+            "Attn_frac": 0.962778,
+            "Proj_O_frac": 0.015276
+          }
+        }
+      ]
+    },
+    "h100_tp2": {
+      "data": [
+        {
+          "arch": "h100_tp2",
+          "time_ns": 32940.63,
+          "hbm_util_per_cube": 0.311748,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.023,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 247.8,
+          "hbm_power_total_w": 361.6274,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0026,
+          "total_power_w": 609.43,
+          "energy_per_token_nj": 20075008.1409,
+          "tdp_total_w": 1400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 1024,
+          "hybrid_wall_ns": 32940.63,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 122.3862,
+            "Attn_hbm_w": 158.0621,
+            "Proj_O_hbm_w": 81.1791,
+            "Proj_QKV_frac": 0.338432,
+            "Attn_frac": 0.437086,
+            "Proj_O_frac": 0.224483
+          }
+        },
+        {
+          "arch": "h100_tp2",
+          "time_ns": 31143.11,
+          "hbm_util_per_cube": 0.341517,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.053,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 247.8,
+          "hbm_power_total_w": 396.1596,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0027,
+          "total_power_w": 643.9623,
+          "energy_per_token_nj": 20054988.7448,
+          "tdp_total_w": 1400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 2048,
+          "hybrid_wall_ns": 31143.11,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 142.2875,
+            "Attn_hbm_w": 159.4925,
+            "Proj_O_hbm_w": 94.3796,
+            "Proj_QKV_frac": 0.359167,
+            "Attn_frac": 0.402597,
+            "Proj_O_frac": 0.238236
+          }
+        },
+        {
+          "arch": "h100_tp2",
+          "time_ns": 34416.2,
+          "hbm_util_per_cube": 0.326436,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.083,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 247.8,
+          "hbm_power_total_w": 378.666,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0025,
+          "total_power_w": 626.4685,
+          "energy_per_token_nj": 21560665.1897,
+          "tdp_total_w": 1400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 4096,
+          "hybrid_wall_ns": 34416.2,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 122.3541,
+            "Attn_hbm_w": 175.1541,
+            "Proj_O_hbm_w": 81.1578,
+            "Proj_QKV_frac": 0.323119,
+            "Attn_frac": 0.462556,
+            "Proj_O_frac": 0.214326
+          }
+        },
+        {
+          "arch": "h100_tp2",
+          "time_ns": 36842.41,
+          "hbm_util_per_cube": 0.339566,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.143,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 247.8,
+          "hbm_power_total_w": 393.8962,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0023,
+          "total_power_w": 641.6985,
+          "energy_per_token_nj": 23641719.2334,
+          "tdp_total_w": 1400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 8192,
+          "hybrid_wall_ns": 36842.41,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 118.4621,
+            "Attn_hbm_w": 196.8579,
+            "Proj_O_hbm_w": 78.5762,
+            "Proj_QKV_frac": 0.300744,
+            "Attn_frac": 0.499771,
+            "Proj_O_frac": 0.199485
+          }
+        },
+        {
+          "arch": "h100_tp2",
+          "time_ns": 44002.07,
+          "hbm_util_per_cube": 0.341293,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.203,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 247.8,
+          "hbm_power_total_w": 395.9,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0019,
+          "total_power_w": 643.7019,
+          "energy_per_token_nj": 28324216.0629,
+          "tdp_total_w": 1400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 16384,
+          "hybrid_wall_ns": 44002.07,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 98.863,
+            "Attn_hbm_w": 231.461,
+            "Proj_O_hbm_w": 65.5761,
+            "Proj_QKV_frac": 0.249717,
+            "Attn_frac": 0.584645,
+            "Proj_O_frac": 0.165638
+          }
+        },
+        {
+          "arch": "h100_tp2",
+          "time_ns": 42095.71,
+          "hbm_util_per_cube": 0.48174,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.44,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 247.8,
+          "hbm_power_total_w": 558.818,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.002,
+          "total_power_w": 806.62,
+          "energy_per_token_nj": 33955241.6002,
+          "tdp_total_w": 1400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 32768,
+          "hybrid_wall_ns": 42095.71,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 146.149,
+            "Attn_hbm_w": 315.728,
+            "Proj_O_hbm_w": 96.941,
+            "Proj_QKV_frac": 0.261532,
+            "Attn_frac": 0.564993,
+            "Proj_O_frac": 0.173475
+          }
+        },
+        {
+          "arch": "h100_tp2",
+          "time_ns": 64859.9,
+          "hbm_util_per_cube": 0.466671,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.44,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 247.8,
+          "hbm_power_total_w": 541.3382,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0013,
+          "total_power_w": 789.1395,
+          "energy_per_token_nj": 51183509.0561,
+          "tdp_total_w": 1400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 65536,
+          "hybrid_wall_ns": 64859.9,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 90.4653,
+            "Attn_hbm_w": 390.8671,
+            "Proj_O_hbm_w": 60.0058,
+            "Proj_QKV_frac": 0.167114,
+            "Attn_frac": 0.722039,
+            "Proj_O_frac": 0.110847
+          }
+        },
+        {
+          "arch": "h100_tp2",
+          "time_ns": 88409.08,
+          "hbm_util_per_cube": 0.571085,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.58,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 247.8,
+          "hbm_power_total_w": 662.4592,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.001,
+          "total_power_w": 910.2602,
+          "energy_per_token_nj": 80475266.8426,
+          "tdp_total_w": 1400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 131072,
+          "hybrid_wall_ns": 88409.08,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 80.6035,
+            "Attn_hbm_w": 528.3913,
+            "Proj_O_hbm_w": 53.4645,
+            "Proj_QKV_frac": 0.121673,
+            "Attn_frac": 0.797621,
+            "Proj_O_frac": 0.080706
+          }
+        },
+        {
+          "arch": "h100_tp2",
+          "time_ns": 142230.25,
+          "hbm_util_per_cube": 0.637516,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.652,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 247.8,
+          "hbm_power_total_w": 739.5182,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0006,
+          "total_power_w": 987.3188,
+          "energy_per_token_nj": 140426599.7537,
+          "tdp_total_w": 1400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 262144,
+          "hybrid_wall_ns": 142230.25,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 55.4929,
+            "Attn_hbm_w": 647.2167,
+            "Proj_O_hbm_w": 36.8086,
+            "Proj_QKV_frac": 0.075039,
+            "Attn_frac": 0.875187,
+            "Proj_O_frac": 0.049774
+          }
+        },
+        {
+          "arch": "h100_tp2",
+          "time_ns": 212415.81,
+          "hbm_util_per_cube": 0.805529,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.83,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 247.8,
+          "hbm_power_total_w": 934.4142,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0004,
+          "total_power_w": 1182.2146,
+          "energy_per_token_nj": 251121071.8528,
+          "tdp_total_w": 1400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 524288,
+          "hybrid_wall_ns": 212415.81,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 46.7512,
+            "Attn_hbm_w": 856.6528,
+            "Proj_O_hbm_w": 31.0102,
+            "Proj_QKV_frac": 0.050033,
+            "Attn_frac": 0.916781,
+            "Proj_O_frac": 0.033187
+          }
+        },
+        {
+          "arch": "h100_tp2",
+          "time_ns": 383973.08,
+          "hbm_util_per_cube": 0.863267,
+          "cmpt_util_per_die": 0.0,
+          "per_module_bw_util": {
+            "Proj_QKV": 0.52,
+            "Attn": 0.879,
+            "Proj_O": 0.56
+          },
+          "static_power_w": 247.8,
+          "hbm_power_total_w": 1001.39,
+          "cmpt_power_total_w": 0.0,
+          "d2d_power_w": 0.0002,
+          "total_power_w": 1249.1902,
+          "energy_per_token_nj": 479655408.5998,
+          "tdp_total_w": 1400,
+          "d2d_energy_nj": 85.1968,
+          "n_gpus": 2,
+          "seq": 1048576,
+          "hybrid_wall_ns": 383973.08,
+          "hbm_breakdown": {
+            "Proj_QKV_hbm_w": 27.6111,
+            "Attn_hbm_w": 955.4644,
+            "Proj_O_hbm_w": 18.3145,
+            "Proj_QKV_frac": 0.027573,
+            "Attn_frac": 0.954138,
+            "Proj_O_frac": 0.018289
+          }
+        }
+      ]
+    }
+  },
+  "summary_table": [
+    {
+      "seq": 1024,
+      "HMP_reo": {
+        "total_power_w": 1098.2861,
+        "static_power_w": 254.88,
+        "hbm_power_w": 830.7982,
+        "cmpt_power_w": 12.5431,
+        "d2d_power_w": 0.0648,
+        "energy_nj": 5062011.639,
+        "time_ns": 4609.01,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 191.1539,
+          "Attn_hbm_w": 146.3681,
+          "Proj_O_hbm_w": 493.2762,
+          "Proj_QKV_frac": 0.230085,
+          "Attn_frac": 0.176178,
+          "Proj_O_frac": 0.593738
+        }
+      },
+      "hmp_reo_new": {
+        "total_power_w": 943.9139,
+        "static_power_w": 254.88,
+        "hbm_power_w": 678.375,
+        "cmpt_power_w": 10.5446,
+        "d2d_power_w": 0.1142,
+        "energy_nj": 2566095.9188,
+        "time_ns": 2718.57,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 281.1654,
+          "Attn_hbm_w": 215.2906,
+          "Proj_O_hbm_w": 181.919,
+          "Proj_QKV_frac": 0.414469,
+          "Attn_frac": 0.317362,
+          "Proj_O_frac": 0.268169
+        }
+      },
+      "hmp": {
+        "total_power_w": 944.0457,
+        "static_power_w": 254.88,
+        "hbm_power_w": 678.375,
+        "cmpt_power_w": 10.5446,
+        "d2d_power_w": 0.2461,
+        "energy_nj": 2758463.9047,
+        "time_ns": 2921.96,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 281.1654,
+          "Attn_hbm_w": 215.2906,
+          "Proj_O_hbm_w": 181.919,
+          "Proj_QKV_frac": 0.414469,
+          "Attn_frac": 0.317362,
+          "Proj_O_frac": 0.268169
+        }
+      },
+      "tp16": {
+        "total_power_w": 991.1216,
+        "static_power_w": 254.88,
+        "hbm_power_w": 724.8857,
+        "cmpt_power_w": 10.7271,
+        "d2d_power_w": 0.6288,
+        "energy_nj": 1766347.0979,
+        "time_ns": 1782.17,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 345.3029,
+          "Attn_hbm_w": 205.3624,
+          "Proj_O_hbm_w": 174.2204,
+          "Proj_QKV_frac": 0.476355,
+          "Attn_frac": 0.283303,
+          "Proj_O_frac": 0.240342
+        }
+      },
+      "rubin": {
+        "total_power_w": 1222.1561,
+        "static_power_w": 389.4,
+        "hbm_power_w": 832.7561,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 7809113.328,
+        "time_ns": 6389.62,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 316.5756,
+          "Attn_hbm_w": 295.8167,
+          "Proj_O_hbm_w": 220.3638,
+          "Proj_QKV_frac": 0.380154,
+          "Attn_frac": 0.355226,
+          "Proj_O_frac": 0.26462
+        }
+      },
+      "rubin_tp2": {
+        "total_power_w": 1901.0858,
+        "static_power_w": 778.8,
+        "hbm_power_w": 1122.2728,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.013,
+        "energy_nj": 12439849.9866,
+        "time_ns": 6543.55,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 379.8065,
+          "Attn_hbm_w": 490.5409,
+          "Proj_O_hbm_w": 251.9254,
+          "Proj_QKV_frac": 0.338426,
+          "Attn_frac": 0.437096,
+          "Proj_O_frac": 0.224478
+        }
+      },
+      "h100": {
+        "total_power_w": 392.2362,
+        "static_power_w": 123.9,
+        "hbm_power_w": 268.3362,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 16458632.8392,
+        "time_ns": 41961.02,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 102.0106,
+          "Attn_hbm_w": 95.3174,
+          "Proj_O_hbm_w": 71.0082,
+          "Proj_QKV_frac": 0.380159,
+          "Attn_frac": 0.355216,
+          "Proj_O_frac": 0.264624
+        }
+      },
+      "h100_tp2": {
+        "total_power_w": 609.43,
+        "static_power_w": 247.8,
+        "hbm_power_w": 361.6274,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0026,
+        "energy_nj": 20075008.1409,
+        "time_ns": 32940.63,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 122.3862,
+          "Attn_hbm_w": 158.0621,
+          "Proj_O_hbm_w": 81.1791,
+          "Proj_QKV_frac": 0.338432,
+          "Attn_frac": 0.437086,
+          "Proj_O_frac": 0.224483
+        }
+      }
+    },
+    {
+      "seq": 2048,
+      "HMP_reo": {
+        "total_power_w": 1111.3113,
+        "static_power_w": 254.88,
+        "hbm_power_w": 843.0192,
+        "cmpt_power_w": 13.3472,
+        "d2d_power_w": 0.0648,
+        "energy_nj": 5121411.4702,
+        "time_ns": 4608.44,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 193.9908,
+          "Attn_hbm_w": 148.4315,
+          "Proj_O_hbm_w": 500.5968,
+          "Proj_QKV_frac": 0.230114,
+          "Attn_frac": 0.176071,
+          "Proj_O_frac": 0.593814
+        }
+      },
+      "hmp_reo_new": {
+        "total_power_w": 967.3437,
+        "static_power_w": 254.88,
+        "hbm_power_w": 700.3565,
+        "cmpt_power_w": 11.9929,
+        "d2d_power_w": 0.1142,
+        "energy_nj": 2629240.1761,
+        "time_ns": 2718.0,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 290.3435,
+          "Attn_hbm_w": 222.1556,
+          "Proj_O_hbm_w": 187.8574,
+          "Proj_QKV_frac": 0.414565,
+          "Attn_frac": 0.317204,
+          "Proj_O_frac": 0.268231
+        }
+      },
+      "hmp": {
+        "total_power_w": 967.4756,
+        "static_power_w": 254.88,
+        "hbm_power_w": 700.3565,
+        "cmpt_power_w": 11.9929,
+        "d2d_power_w": 0.2461,
+        "energy_nj": 2826373.5509,
+        "time_ns": 2921.39,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 290.3435,
+          "Attn_hbm_w": 222.1556,
+          "Proj_O_hbm_w": 187.8574,
+          "Proj_QKV_frac": 0.414565,
+          "Attn_frac": 0.317204,
+          "Proj_O_frac": 0.268231
+        }
+      },
+      "tp16": {
+        "total_power_w": 1031.5254,
+        "static_power_w": 254.88,
+        "hbm_power_w": 763.5795,
+        "cmpt_power_w": 12.0181,
+        "d2d_power_w": 1.0477,
+        "energy_nj": 1838941.5323,
+        "time_ns": 1782.74,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 363.5839,
+          "Attn_hbm_w": 216.5517,
+          "Proj_O_hbm_w": 183.444,
+          "Proj_QKV_frac": 0.476157,
+          "Attn_frac": 0.283601,
+          "Proj_O_frac": 0.240242
+        }
+      },
+      "rubin": {
+        "total_power_w": 1291.9936,
+        "static_power_w": 389.4,
+        "hbm_power_w": 902.5936,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 7862207.2879,
+        "time_ns": 6085.33,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 360.2828,
+          "Attn_hbm_w": 291.5231,
+          "Proj_O_hbm_w": 250.7877,
+          "Proj_QKV_frac": 0.399164,
+          "Attn_frac": 0.322984,
+          "Proj_O_frac": 0.277852
+        }
+      },
+      "rubin_tp2": {
+        "total_power_w": 2008.2758,
+        "static_power_w": 778.8,
+        "hbm_power_w": 1229.4622,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0136,
+        "energy_nj": 12591367.1143,
+        "time_ns": 6269.74,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 441.5838,
+          "Attn_hbm_w": 494.9761,
+          "Proj_O_hbm_w": 292.9022,
+          "Proj_QKV_frac": 0.359168,
+          "Attn_frac": 0.402596,
+          "Proj_O_frac": 0.238236
+        }
+      },
+      "h100": {
+        "total_power_w": 414.7355,
+        "static_power_w": 123.9,
+        "hbm_power_w": 290.8355,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 16574198.4142,
+        "time_ns": 39963.3,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 116.0908,
+          "Attn_hbm_w": 93.9354,
+          "Proj_O_hbm_w": 80.8093,
+          "Proj_QKV_frac": 0.399163,
+          "Attn_frac": 0.322985,
+          "Proj_O_frac": 0.277852
+        }
+      },
+      "h100_tp2": {
+        "total_power_w": 643.9623,
+        "static_power_w": 247.8,
+        "hbm_power_w": 396.1596,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0027,
+        "energy_nj": 20054988.7448,
+        "time_ns": 31143.11,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 142.2875,
+          "Attn_hbm_w": 159.4925,
+          "Proj_O_hbm_w": 94.3796,
+          "Proj_QKV_frac": 0.359167,
+          "Attn_frac": 0.402597,
+          "Proj_O_frac": 0.238236
+        }
+      }
+    },
+    {
+      "seq": 4096,
+      "HMP_reo": {
+        "total_power_w": 1137.0866,
+        "static_power_w": 254.88,
+        "hbm_power_w": 867.1881,
+        "cmpt_power_w": 14.9537,
+        "d2d_power_w": 0.0648,
+        "energy_nj": 5240536.4883,
+        "time_ns": 4608.74,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 199.5389,
+          "Attn_hbm_w": 152.7355,
+          "Proj_O_hbm_w": 514.9137,
+          "Proj_QKV_frac": 0.230099,
+          "Attn_frac": 0.176127,
+          "Proj_O_frac": 0.593774
+        }
+      },
+      "hmp_reo_new": {
+        "total_power_w": 1013.7946,
+        "static_power_w": 254.88,
+        "hbm_power_w": 743.9133,
+        "cmpt_power_w": 14.8871,
+        "d2d_power_w": 0.1142,
+        "energy_nj": 2755797.798,
+        "time_ns": 2718.3,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 308.363,
+          "Attn_hbm_w": 236.034,
+          "Proj_O_hbm_w": 199.5163,
+          "Proj_QKV_frac": 0.414515,
+          "Attn_frac": 0.317287,
+          "Proj_O_frac": 0.268198
+        }
+      },
+      "hmp": {
+        "total_power_w": 1013.9265,
+        "static_power_w": 254.88,
+        "hbm_power_w": 743.9133,
+        "cmpt_power_w": 14.8871,
+        "d2d_power_w": 0.2461,
+        "energy_nj": 2962378.8192,
+        "time_ns": 2921.69,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 308.363,
+          "Attn_hbm_w": 236.034,
+          "Proj_O_hbm_w": 199.5163,
+          "Proj_QKV_frac": 0.414515,
+          "Attn_frac": 0.317287,
+          "Proj_O_frac": 0.268198
+        }
+      },
+      "tp16": {
+        "total_power_w": 1113.131,
+        "static_power_w": 254.88,
+        "hbm_power_w": 841.7409,
+        "cmpt_power_w": 14.6046,
+        "d2d_power_w": 1.9054,
+        "energy_nj": 2182248.731,
+        "time_ns": 1960.46,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 400.8827,
+          "Attn_hbm_w": 238.5953,
+          "Proj_O_hbm_w": 202.2629,
+          "Proj_QKV_frac": 0.476254,
+          "Attn_frac": 0.283455,
+          "Proj_O_frac": 0.240291
+        }
+      },
+      "rubin": {
+        "total_power_w": 1269.8134,
+        "static_power_w": 389.4,
+        "hbm_power_w": 880.4134,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 8416843.578,
+        "time_ns": 6628.41,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 322.6353,
+          "Attn_hbm_w": 333.1962,
+          "Proj_O_hbm_w": 224.5819,
+          "Proj_QKV_frac": 0.366459,
+          "Attn_frac": 0.378454,
+          "Proj_O_frac": 0.255087
+        }
+      },
+      "rubin_tp2": {
+        "total_power_w": 1953.9832,
+        "static_power_w": 778.8,
+        "hbm_power_w": 1175.1706,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0126,
+        "energy_nj": 13224851.3951,
+        "time_ns": 6768.15,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 379.7207,
+          "Attn_hbm_w": 543.5815,
+          "Proj_O_hbm_w": 251.8684,
+          "Proj_QKV_frac": 0.32312,
+          "Attn_frac": 0.462555,
+          "Proj_O_frac": 0.214325
+        }
+      },
+      "h100": {
+        "total_power_w": 407.5886,
+        "static_power_w": 123.9,
+        "hbm_power_w": 283.6886,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 17742275.3616,
+        "time_ns": 43529.86,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 103.9601,
+          "Attn_hbm_w": 107.3633,
+          "Proj_O_hbm_w": 72.3653,
+          "Proj_QKV_frac": 0.366458,
+          "Attn_frac": 0.378455,
+          "Proj_O_frac": 0.255087
+        }
+      },
+      "h100_tp2": {
+        "total_power_w": 626.4685,
+        "static_power_w": 247.8,
+        "hbm_power_w": 378.666,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0025,
+        "energy_nj": 21560665.1897,
+        "time_ns": 34416.2,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 122.3541,
+          "Attn_hbm_w": 175.1541,
+          "Proj_O_hbm_w": 81.1578,
+          "Proj_QKV_frac": 0.323119,
+          "Attn_frac": 0.462556,
+          "Proj_O_frac": 0.214326
+        }
+      }
+    },
+    {
+      "seq": 8192,
+      "HMP_reo": {
+        "total_power_w": 1188.7828,
+        "static_power_w": 254.88,
+        "hbm_power_w": 915.6713,
+        "cmpt_power_w": 18.1667,
+        "d2d_power_w": 0.0648,
+        "energy_nj": 5478612.4169,
+        "time_ns": 4608.59,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 210.702,
+          "Attn_hbm_w": 161.2491,
+          "Proj_O_hbm_w": 543.7202,
+          "Proj_QKV_frac": 0.230107,
+          "Attn_frac": 0.176099,
+          "Proj_O_frac": 0.593794
+        }
+      },
+      "hmp_reo_new": {
+        "total_power_w": 1106.9184,
+        "static_power_w": 254.88,
+        "hbm_power_w": 831.2489,
+        "cmpt_power_w": 20.6752,
+        "d2d_power_w": 0.1142,
+        "energy_nj": 3008770.2184,
+        "time_ns": 2718.15,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 344.5859,
+          "Attn_hbm_w": 263.7098,
+          "Proj_O_hbm_w": 222.9532,
+          "Proj_QKV_frac": 0.41454,
+          "Attn_frac": 0.317245,
+          "Proj_O_frac": 0.268215
+        }
+      },
+      "hmp": {
+        "total_power_w": 1107.0503,
+        "static_power_w": 254.88,
+        "hbm_power_w": 831.2489,
+        "cmpt_power_w": 20.6752,
+        "d2d_power_w": 0.2461,
+        "energy_nj": 3234291.6904,
+        "time_ns": 2921.54,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 344.5859,
+          "Attn_hbm_w": 263.7098,
+          "Proj_O_hbm_w": 222.9532,
+          "Proj_QKV_frac": 0.41454,
+          "Attn_frac": 0.317245,
+          "Proj_O_frac": 0.268215
+        }
+      },
+      "tp16": {
+        "total_power_w": 1254.5608,
+        "static_power_w": 254.88,
+        "hbm_power_w": 976.1239,
+        "cmpt_power_w": 20.1387,
+        "d2d_power_w": 3.4181,
+        "energy_nj": 2330810.9028,
+        "time_ns": 1857.87,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 454.806,
+          "Attn_hbm_w": 291.8484,
+          "Proj_O_hbm_w": 229.4695,
+          "Proj_QKV_frac": 0.465931,
+          "Attn_frac": 0.298987,
+          "Proj_O_frac": 0.235082
+        }
+      },
+      "rubin": {
+        "total_power_w": 1302.0834,
+        "static_power_w": 389.4,
+        "hbm_power_w": 912.6834,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 9304753.098,
+        "time_ns": 7146.05,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 310.2336,
+          "Attn_hbm_w": 386.5007,
+          "Proj_O_hbm_w": 215.9491,
+          "Proj_QKV_frac": 0.339914,
+          "Attn_frac": 0.423477,
+          "Proj_O_frac": 0.236609
+        }
+      },
+      "rubin_tp2": {
+        "total_power_w": 2001.2493,
+        "static_power_w": 778.8,
+        "hbm_power_w": 1222.4374,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0119,
+        "energy_nj": 14284096.9912,
+        "time_ns": 7137.59,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 367.6424,
+          "Attn_hbm_w": 610.938,
+          "Proj_O_hbm_w": 243.8569,
+          "Proj_QKV_frac": 0.300745,
+          "Attn_frac": 0.49977,
+          "Proj_O_frac": 0.199484
+        }
+      },
+      "h100": {
+        "total_power_w": 417.9868,
+        "static_power_w": 123.9,
+        "hbm_power_w": 294.0868,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 19615816.6662,
+        "time_ns": 46929.27,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 99.964,
+          "Attn_hbm_w": 124.5391,
+          "Proj_O_hbm_w": 69.5837,
+          "Proj_QKV_frac": 0.339913,
+          "Attn_frac": 0.423478,
+          "Proj_O_frac": 0.236609
+        }
+      },
+      "h100_tp2": {
+        "total_power_w": 641.6985,
+        "static_power_w": 247.8,
+        "hbm_power_w": 393.8962,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0023,
+        "energy_nj": 23641719.2334,
+        "time_ns": 36842.41,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 118.4621,
+          "Attn_hbm_w": 196.8579,
+          "Proj_O_hbm_w": 78.5762,
+          "Proj_QKV_frac": 0.300744,
+          "Attn_frac": 0.499771,
+          "Proj_O_frac": 0.199485
+        }
+      }
+    },
+    {
+      "seq": 16384,
+      "HMP_reo": {
+        "total_power_w": 1182.0915,
+        "static_power_w": 254.88,
+        "hbm_power_w": 905.1682,
+        "cmpt_power_w": 21.9851,
+        "d2d_power_w": 0.0582,
+        "energy_nj": 6067640.3632,
+        "time_ns": 5132.97,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 186.191,
+          "Attn_hbm_w": 238.5079,
+          "Proj_O_hbm_w": 480.4693,
+          "Proj_QKV_frac": 0.205698,
+          "Attn_frac": 0.263496,
+          "Proj_O_frac": 0.530807
+        }
+      },
+      "hmp_reo_new": {
+        "total_power_w": 1110.2281,
+        "static_power_w": 254.88,
+        "hbm_power_w": 828.6789,
+        "cmpt_power_w": 26.5734,
+        "d2d_power_w": 0.0958,
+        "energy_nj": 3599947.8288,
+        "time_ns": 3242.53,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 283.0184,
+          "Attn_hbm_w": 362.5425,
+          "Proj_O_hbm_w": 183.118,
+          "Proj_QKV_frac": 0.34153,
+          "Attn_frac": 0.437495,
+          "Proj_O_frac": 0.220976
+        }
+      },
+      "hmp": {
+        "total_power_w": 1110.341,
+        "static_power_w": 254.88,
+        "hbm_power_w": 828.6789,
+        "cmpt_power_w": 26.5734,
+        "d2d_power_w": 0.2087,
+        "energy_nj": 3826146.2148,
+        "time_ns": 3445.92,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 283.0184,
+          "Attn_hbm_w": 362.5425,
+          "Proj_O_hbm_w": 183.118,
+          "Proj_QKV_frac": 0.34153,
+          "Attn_frac": 0.437495,
+          "Proj_O_frac": 0.220976
+        }
+      },
+      "tp16": {
+        "total_power_w": 1273.8243,
+        "static_power_w": 254.88,
+        "hbm_power_w": 986.4585,
+        "cmpt_power_w": 27.1776,
+        "d2d_power_w": 5.3083,
+        "energy_nj": 2958189.4442,
+        "time_ns": 2322.29,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 353.8343,
+          "Attn_hbm_w": 454.0993,
+          "Proj_O_hbm_w": 178.5249,
+          "Proj_QKV_frac": 0.358692,
+          "Attn_frac": 0.460333,
+          "Proj_O_frac": 0.180976
+        }
+      },
+      "rubin": {
+        "total_power_w": 1323.3804,
+        "static_power_w": 389.4,
+        "hbm_power_w": 933.9804,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 11186296.0118,
+        "time_ns": 8452.82,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 268.3931,
+          "Attn_hbm_w": 478.7627,
+          "Proj_O_hbm_w": 186.8246,
+          "Proj_QKV_frac": 0.287365,
+          "Attn_frac": 0.512605,
+          "Proj_O_frac": 0.200031
+        }
+      },
+      "rubin_tp2": {
+        "total_power_w": 2007.466,
+        "static_power_w": 778.8,
+        "hbm_power_w": 1228.6556,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0104,
+        "energy_nj": 16517048.8295,
+        "time_ns": 8227.81,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 306.8173,
+          "Attn_hbm_w": 718.3266,
+          "Proj_O_hbm_w": 203.5117,
+          "Proj_QKV_frac": 0.249718,
+          "Attn_frac": 0.584644,
+          "Proj_O_frac": 0.165638
+        }
+      },
+      "h100": {
+        "total_power_w": 424.8491,
+        "static_power_w": 123.9,
+        "hbm_power_w": 300.9491,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 23583810.3039,
+        "time_ns": 55511.03,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 86.482,
+          "Attn_hbm_w": 154.2681,
+          "Proj_O_hbm_w": 60.199,
+          "Proj_QKV_frac": 0.287364,
+          "Attn_frac": 0.512605,
+          "Proj_O_frac": 0.20003
+        }
+      },
+      "h100_tp2": {
+        "total_power_w": 643.7019,
+        "static_power_w": 247.8,
+        "hbm_power_w": 395.9,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0019,
+        "energy_nj": 28324216.0629,
+        "time_ns": 44002.07,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 98.863,
+          "Attn_hbm_w": 231.461,
+          "Proj_O_hbm_w": 65.5761,
+          "Proj_QKV_frac": 0.249717,
+          "Attn_frac": 0.584645,
+          "Proj_O_frac": 0.165638
+        }
+      }
+    },
+    {
+      "seq": 32768,
+      "HMP_reo": {
+        "total_power_w": 1274.3838,
+        "static_power_w": 254.88,
+        "hbm_power_w": 988.5044,
+        "cmpt_power_w": 30.9458,
+        "d2d_power_w": 0.0535,
+        "energy_nj": 7114438.566,
+        "time_ns": 5582.65,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 186.379,
+          "Attn_hbm_w": 321.1709,
+          "Proj_O_hbm_w": 480.9545,
+          "Proj_QKV_frac": 0.188546,
+          "Attn_frac": 0.324906,
+          "Proj_O_frac": 0.486548
+        }
+      },
+      "hmp_reo_new": {
+        "total_power_w": 1264.8986,
+        "static_power_w": 254.88,
+        "hbm_power_w": 969.8618,
+        "cmpt_power_w": 40.0728,
+        "d2d_power_w": 0.0841,
+        "energy_nj": 4670271.3232,
+        "time_ns": 3692.21,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 287.773,
+          "Attn_hbm_w": 495.8945,
+          "Proj_O_hbm_w": 186.1943,
+          "Proj_QKV_frac": 0.296716,
+          "Attn_frac": 0.511304,
+          "Proj_O_frac": 0.19198
+        }
+      },
+      "hmp": {
+        "total_power_w": 1264.9991,
+        "static_power_w": 254.88,
+        "hbm_power_w": 969.8618,
+        "cmpt_power_w": 40.0728,
+        "d2d_power_w": 0.1846,
+        "energy_nj": 4927930.5237,
+        "time_ns": 3895.6,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 287.773,
+          "Attn_hbm_w": 495.8945,
+          "Proj_O_hbm_w": 186.1943,
+          "Proj_QKV_frac": 0.296716,
+          "Attn_frac": 0.511304,
+          "Proj_O_frac": 0.19198
+        }
+      },
+      "tp16": {
+        "total_power_w": 1305.6539,
+        "static_power_w": 254.88,
+        "hbm_power_w": 997.3471,
+        "cmpt_power_w": 46.2454,
+        "d2d_power_w": 7.1813,
+        "energy_nj": 4482505.6627,
+        "time_ns": 3433.15,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 244.9715,
+          "Attn_hbm_w": 628.7767,
+          "Proj_O_hbm_w": 123.5989,
+          "Proj_QKV_frac": 0.245623,
+          "Attn_frac": 0.630449,
+          "Proj_O_frac": 0.123928
+        }
+      },
+      "rubin": {
+        "total_power_w": 1410.2957,
+        "static_power_w": 389.4,
+        "hbm_power_w": 1020.8957,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 14698581.216,
+        "time_ns": 10422.34,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 237.9309,
+          "Attn_hbm_w": 617.3445,
+          "Proj_O_hbm_w": 165.6203,
+          "Proj_QKV_frac": 0.233061,
+          "Attn_frac": 0.604709,
+          "Proj_O_frac": 0.16223
+        }
+      },
+      "rubin_tp2": {
+        "total_power_w": 2513.0735,
+        "static_power_w": 778.8,
+        "hbm_power_w": 1734.2628,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0107,
+        "energy_nj": 19947571.1677,
+        "time_ns": 7937.52,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 453.5676,
+          "Attn_hbm_w": 979.8442,
+          "Proj_O_hbm_w": 300.851,
+          "Proj_QKV_frac": 0.261533,
+          "Attn_frac": 0.564992,
+          "Proj_O_frac": 0.173475
+        }
+      },
+      "h100": {
+        "total_power_w": 452.8552,
+        "static_power_w": 123.9,
+        "hbm_power_w": 328.9552,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 30995785.262,
+        "time_ns": 68445.24,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 76.6665,
+          "Attn_hbm_w": 198.9222,
+          "Proj_O_hbm_w": 53.3665,
+          "Proj_QKV_frac": 0.23306,
+          "Attn_frac": 0.604709,
+          "Proj_O_frac": 0.16223
+        }
+      },
+      "h100_tp2": {
+        "total_power_w": 806.62,
+        "static_power_w": 247.8,
+        "hbm_power_w": 558.818,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.002,
+        "energy_nj": 33955241.6002,
+        "time_ns": 42095.71,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 146.149,
+          "Attn_hbm_w": 315.728,
+          "Proj_O_hbm_w": 96.941,
+          "Proj_QKV_frac": 0.261532,
+          "Attn_frac": 0.564993,
+          "Proj_O_frac": 0.173475
+        }
+      }
+    },
+    {
+      "seq": 65536,
+      "HMP_reo": {
+        "total_power_w": 1300.0693,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1003.6528,
+        "cmpt_power_w": 41.495,
+        "d2d_power_w": 0.0415,
+        "energy_nj": 9370860.5764,
+        "time_ns": 7207.97,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 145.4123,
+          "Attn_hbm_w": 483.0015,
+          "Proj_O_hbm_w": 375.239,
+          "Proj_QKV_frac": 0.144883,
+          "Attn_frac": 0.481244,
+          "Proj_O_frac": 0.373873
+        }
+      },
+      "hmp_reo_new": {
+        "total_power_w": 1303.6317,
+        "static_power_w": 254.88,
+        "hbm_power_w": 996.9023,
+        "cmpt_power_w": 51.791,
+        "d2d_power_w": 0.0584,
+        "energy_nj": 6932100.8016,
+        "time_ns": 5317.53,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 200.6397,
+          "Attn_hbm_w": 666.4451,
+          "Proj_O_hbm_w": 129.8175,
+          "Proj_QKV_frac": 0.201263,
+          "Attn_frac": 0.668516,
+          "Proj_O_frac": 0.130221
+        }
+      },
+      "hmp": {
+        "total_power_w": 1303.7036,
+        "static_power_w": 254.88,
+        "hbm_power_w": 996.9023,
+        "cmpt_power_w": 51.791,
+        "d2d_power_w": 0.1302,
+        "energy_nj": 7197643.1569,
+        "time_ns": 5520.92,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 200.6397,
+          "Attn_hbm_w": 666.4451,
+          "Proj_O_hbm_w": 129.8175,
+          "Proj_QKV_frac": 0.201263,
+          "Attn_frac": 0.668516,
+          "Proj_O_frac": 0.130221
+        }
+      },
+      "tp16": {
+        "total_power_w": 1328.1792,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1006.4934,
+        "cmpt_power_w": 57.7859,
+        "d2d_power_w": 9.0199,
+        "energy_nj": 7150744.2616,
+        "time_ns": 5383.87,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 151.6257,
+          "Attn_hbm_w": 778.3658,
+          "Proj_O_hbm_w": 76.5018,
+          "Proj_QKV_frac": 0.150648,
+          "Attn_frac": 0.773344,
+          "Proj_O_frac": 0.076008
+        }
+      },
+      "rubin": {
+        "total_power_w": 1539.6511,
+        "static_power_w": 389.4,
+        "hbm_power_w": 1150.2511,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 21591712.89,
+        "time_ns": 14023.77,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 199.2336,
+          "Attn_hbm_w": 812.3339,
+          "Proj_O_hbm_w": 138.6836,
+          "Proj_QKV_frac": 0.173209,
+          "Attn_frac": 0.706223,
+          "Proj_O_frac": 0.120568
+        }
+      },
+      "rubin_tp2": {
+        "total_power_w": 2458.8223,
+        "static_power_w": 778.8,
+        "hbm_power_w": 1680.0148,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0075,
+        "energy_nj": 28040163.627,
+        "time_ns": 11403.9,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 280.7548,
+          "Attn_hbm_w": 1213.0355,
+          "Proj_O_hbm_w": 186.2245,
+          "Proj_QKV_frac": 0.167115,
+          "Attn_frac": 0.722039,
+          "Proj_O_frac": 0.110847
+        }
+      },
+      "h100": {
+        "total_power_w": 494.5365,
+        "static_power_w": 123.9,
+        "hbm_power_w": 370.6365,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 45545003.4294,
+        "time_ns": 92096.35,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 64.1974,
+          "Attn_hbm_w": 261.7521,
+          "Proj_O_hbm_w": 44.687,
+          "Proj_QKV_frac": 0.173209,
+          "Attn_frac": 0.706223,
+          "Proj_O_frac": 0.120568
+        }
+      },
+      "h100_tp2": {
+        "total_power_w": 789.1395,
+        "static_power_w": 247.8,
+        "hbm_power_w": 541.3382,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0013,
+        "energy_nj": 51183509.0561,
+        "time_ns": 64859.9,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 90.4653,
+          "Attn_hbm_w": 390.8671,
+          "Proj_O_hbm_w": 60.0058,
+          "Proj_QKV_frac": 0.167114,
+          "Attn_frac": 0.722039,
+          "Proj_O_frac": 0.110847
+        }
+      }
+    },
+    {
+      "seq": 131072,
+      "HMP_reo": {
+        "total_power_w": 1321.0068,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1011.4217,
+        "cmpt_power_w": 54.6767,
+        "d2d_power_w": 0.0283,
+        "energy_nj": 13925102.0989,
+        "time_ns": 10541.28,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 99.3519,
+          "Attn_hbm_w": 655.6904,
+          "Proj_O_hbm_w": 256.3794,
+          "Proj_QKV_frac": 0.09823,
+          "Attn_frac": 0.648286,
+          "Proj_O_frac": 0.253484
+        }
+      },
+      "hmp_reo_new": {
+        "total_power_w": 1328.0625,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1009.176,
+        "cmpt_power_w": 63.9706,
+        "d2d_power_w": 0.0359,
+        "energy_nj": 11488855.9012,
+        "time_ns": 8650.84,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 122.3734,
+          "Attn_hbm_w": 807.6248,
+          "Proj_O_hbm_w": 79.1778,
+          "Proj_QKV_frac": 0.121261,
+          "Attn_frac": 0.800281,
+          "Proj_O_frac": 0.078458
+        }
+      },
+      "hmp": {
+        "total_power_w": 1328.1078,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1009.176,
+        "cmpt_power_w": 63.9706,
+        "d2d_power_w": 0.0812,
+        "energy_nj": 11759371.8016,
+        "time_ns": 8854.23,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 122.3734,
+          "Attn_hbm_w": 807.6248,
+          "Proj_O_hbm_w": 79.1778,
+          "Proj_QKV_frac": 0.121261,
+          "Attn_frac": 0.800281,
+          "Proj_O_frac": 0.078458
+        }
+      },
+      "tp16": {
+        "total_power_w": 1346.5199,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1012.8201,
+        "cmpt_power_w": 68.5003,
+        "d2d_power_w": 10.3195,
+        "energy_nj": 12575566.5023,
+        "time_ns": 9339.31,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 86.0402,
+          "Attn_hbm_w": 883.3689,
+          "Proj_O_hbm_w": 43.411,
+          "Proj_QKV_frac": 0.084951,
+          "Attn_frac": 0.872187,
+          "Proj_O_frac": 0.042862
+        }
+      },
+      "rubin": {
+        "total_power_w": 1710.6703,
+        "static_power_w": 389.4,
+        "hbm_power_w": 1321.2703,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 35102749.3207,
+        "time_ns": 20519.88,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 156.4054,
+          "Attn_hbm_w": 1055.9933,
+          "Proj_O_hbm_w": 108.8716,
+          "Proj_QKV_frac": 0.118375,
+          "Attn_frac": 0.799226,
+          "Proj_O_frac": 0.082399
+        }
+      },
+      "rubin_tp2": {
+        "total_power_w": 2834.7135,
+        "static_power_w": 778.8,
+        "hbm_power_w": 2055.9078,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0057,
+        "energy_nj": 42491760.0752,
+        "time_ns": 14989.79,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 250.1494,
+          "Attn_hbm_w": 1639.8345,
+          "Proj_O_hbm_w": 165.9239,
+          "Proj_QKV_frac": 0.121673,
+          "Attn_frac": 0.797621,
+          "Proj_O_frac": 0.080706
+        }
+      },
+      "h100": {
+        "total_power_w": 549.6427,
+        "static_power_w": 123.9,
+        "hbm_power_w": 425.7427,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 74068404.6288,
+        "time_ns": 134757.38,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 50.3972,
+          "Attn_hbm_w": 340.2646,
+          "Proj_O_hbm_w": 35.0809,
+          "Proj_QKV_frac": 0.118375,
+          "Attn_frac": 0.799226,
+          "Proj_O_frac": 0.082399
+        }
+      },
+      "h100_tp2": {
+        "total_power_w": 910.2602,
+        "static_power_w": 247.8,
+        "hbm_power_w": 662.4592,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.001,
+        "energy_nj": 80475266.8426,
+        "time_ns": 88409.08,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 80.6035,
+          "Attn_hbm_w": 528.3913,
+          "Proj_O_hbm_w": 53.4645,
+          "Proj_QKV_frac": 0.121673,
+          "Attn_frac": 0.797621,
+          "Proj_O_frac": 0.080706
+        }
+      }
+    },
+    {
+      "seq": 262144,
+      "HMP_reo": {
+        "total_power_w": 1334.7074,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1015.1881,
+        "cmpt_power_w": 64.6219,
+        "d2d_power_w": 0.0173,
+        "energy_nj": 23026612.1687,
+        "time_ns": 17252.18,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 60.5003,
+          "Attn_hbm_w": 798.5657,
+          "Proj_O_hbm_w": 156.1221,
+          "Proj_QKV_frac": 0.059595,
+          "Attn_frac": 0.786618,
+          "Proj_O_frac": 0.153786
+        }
+      },
+      "hmp_reo_new": {
+        "total_power_w": 1340.411,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1014.4312,
+        "cmpt_power_w": 71.0796,
+        "d2d_power_w": 0.0202,
+        "energy_nj": 20591045.8005,
+        "time_ns": 15361.74,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 68.3285,
+          "Attn_hbm_w": 901.893,
+          "Proj_O_hbm_w": 44.2097,
+          "Proj_QKV_frac": 0.067356,
+          "Attn_frac": 0.889063,
+          "Proj_O_frac": 0.043581
+        }
+      },
+      "hmp": {
+        "total_power_w": 1340.437,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1014.4312,
+        "cmpt_power_w": 71.0796,
+        "d2d_power_w": 0.0462,
+        "energy_nj": 20864076.4655,
+        "time_ns": 15565.13,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 68.3285,
+          "Attn_hbm_w": 901.893,
+          "Proj_O_hbm_w": 44.2097,
+          "Proj_QKV_frac": 0.067356,
+          "Attn_frac": 0.889063,
+          "Proj_O_frac": 0.043581
+        }
+      },
+      "tp16": {
+        "total_power_w": 1356.4654,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1016.6299,
+        "cmpt_power_w": 73.8402,
+        "d2d_power_w": 11.1153,
+        "energy_nj": 23431867.524,
+        "time_ns": 17274.21,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 46.1298,
+          "Attn_hbm_w": 947.2255,
+          "Proj_O_hbm_w": 23.2745,
+          "Proj_QKV_frac": 0.045375,
+          "Attn_frac": 0.931731,
+          "Proj_O_frac": 0.022894
+        }
+      },
+      "rubin": {
+        "total_power_w": 1854.946,
+        "static_power_w": 389.4,
+        "hbm_power_w": 1465.546,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 62114627.796,
+        "time_ns": 33485.95,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 106.3094,
+          "Attn_hbm_w": 1285.2362,
+          "Proj_O_hbm_w": 74.0004,
+          "Proj_QKV_frac": 0.072539,
+          "Attn_frac": 0.876968,
+          "Proj_O_frac": 0.050493
+        }
+      },
+      "rubin_tp2": {
+        "total_power_w": 3073.8599,
+        "static_power_w": 778.8,
+        "hbm_power_w": 2295.0562,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0037,
+        "energy_nj": 71268333.2009,
+        "time_ns": 23185.29,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 172.2198,
+          "Attn_hbm_w": 2008.6031,
+          "Proj_O_hbm_w": 114.2333,
+          "Proj_QKV_frac": 0.075039,
+          "Attn_frac": 0.875187,
+          "Proj_O_frac": 0.049774
+        }
+      },
+      "h100": {
+        "total_power_w": 596.1315,
+        "static_power_w": 123.9,
+        "hbm_power_w": 472.2315,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 131093921.4228,
+        "time_ns": 219907.73,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 34.2552,
+          "Attn_hbm_w": 414.1317,
+          "Proj_O_hbm_w": 23.8446,
+          "Proj_QKV_frac": 0.072539,
+          "Attn_frac": 0.876968,
+          "Proj_O_frac": 0.050493
+        }
+      },
+      "h100_tp2": {
+        "total_power_w": 987.3188,
+        "static_power_w": 247.8,
+        "hbm_power_w": 739.5182,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0006,
+        "energy_nj": 140426599.7537,
+        "time_ns": 142230.25,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 55.4929,
+          "Attn_hbm_w": 647.2167,
+          "Proj_O_hbm_w": 36.8086,
+          "Proj_QKV_frac": 0.075039,
+          "Attn_frac": 0.875187,
+          "Proj_O_frac": 0.049774
+        }
+      }
+    },
+    {
+      "seq": 524288,
+      "HMP_reo": {
+        "total_power_w": 1344.812,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1017.7474,
+        "cmpt_power_w": 72.1748,
+        "d2d_power_w": 0.0097,
+        "energy_nj": 41250681.5276,
+        "time_ns": 30673.94,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 33.9484,
+          "Attn_hbm_w": 896.1945,
+          "Proj_O_hbm_w": 87.6045,
+          "Proj_QKV_frac": 0.033356,
+          "Attn_frac": 0.880567,
+          "Proj_O_frac": 0.086077
+        }
+      },
+      "hmp_reo_new": {
+        "total_power_w": 1348.5279,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1017.5232,
+        "cmpt_power_w": 76.1139,
+        "d2d_power_w": 0.0108,
+        "energy_nj": 38815353.4176,
+        "time_ns": 28783.5,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 36.2808,
+          "Attn_hbm_w": 957.768,
+          "Proj_O_hbm_w": 23.4744,
+          "Proj_QKV_frac": 0.035656,
+          "Attn_frac": 0.941274,
+          "Proj_O_frac": 0.02307
+        }
+      },
+      "hmp": {
+        "total_power_w": 1348.5419,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1017.5232,
+        "cmpt_power_w": 76.1139,
+        "d2d_power_w": 0.0248,
+        "energy_nj": 39090036.8933,
+        "time_ns": 28986.89,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 36.2808,
+          "Attn_hbm_w": 957.768,
+          "Proj_O_hbm_w": 23.4744,
+          "Proj_QKV_frac": 0.035656,
+          "Attn_frac": 0.941274,
+          "Proj_O_frac": 0.02307
+        }
+      },
+      "tp16": {
+        "total_power_w": 1362.8948,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1018.7382,
+        "cmpt_power_w": 77.6681,
+        "d2d_power_w": 11.6085,
+        "energy_nj": 44953680.8405,
+        "time_ns": 32983.97,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 23.9296,
+          "Attn_hbm_w": 982.7351,
+          "Proj_O_hbm_w": 12.0735,
+          "Proj_QKV_frac": 0.023489,
+          "Attn_frac": 0.964659,
+          "Proj_O_frac": 0.011851
+        }
+      },
+      "rubin": {
+        "total_power_w": 1956.9003,
+        "static_power_w": 389.4,
+        "hbm_power_w": 1567.5003,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 116104423.08,
+        "time_ns": 59330.78,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 64.1745,
+          "Attn_hbm_w": 1458.6549,
+          "Proj_O_hbm_w": 44.6709,
+          "Proj_QKV_frac": 0.040941,
+          "Attn_frac": 0.930561,
+          "Proj_O_frac": 0.028498
+        }
+      },
+      "rubin_tp2": {
+        "total_power_w": 3678.7085,
+        "static_power_w": 778.8,
+        "hbm_power_w": 2899.906,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0025,
+        "energy_nj": 124607568.6854,
+        "time_ns": 33872.64,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 145.0904,
+          "Attn_hbm_w": 2658.5772,
+          "Proj_O_hbm_w": 96.2384,
+          "Proj_QKV_frac": 0.050033,
+          "Attn_frac": 0.91678,
+          "Proj_O_frac": 0.033187
+        }
+      },
+      "h100": {
+        "total_power_w": 628.9834,
+        "static_power_w": 123.9,
+        "hbm_power_w": 505.0834,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 245073907.6974,
+        "time_ns": 389634.91,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 20.6784,
+          "Attn_hbm_w": 470.011,
+          "Proj_O_hbm_w": 14.394,
+          "Proj_QKV_frac": 0.040941,
+          "Attn_frac": 0.930561,
+          "Proj_O_frac": 0.028498
+        }
+      },
+      "h100_tp2": {
+        "total_power_w": 1182.2146,
+        "static_power_w": 247.8,
+        "hbm_power_w": 934.4142,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0004,
+        "energy_nj": 251121071.8528,
+        "time_ns": 212415.81,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 46.7512,
+          "Attn_hbm_w": 856.6528,
+          "Proj_O_hbm_w": 31.0102,
+          "Proj_QKV_frac": 0.050033,
+          "Attn_frac": 0.916781,
+          "Proj_O_frac": 0.033187
+        }
+      }
+    },
+    {
+      "seq": 1048576,
+      "HMP_reo": {
+        "total_power_w": 1350.4303,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1019.2702,
+        "cmpt_power_w": 76.2749,
+        "d2d_power_w": 0.0052,
+        "energy_nj": 77673374.5461,
+        "time_ns": 57517.5,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 18.0792,
+          "Attn_hbm_w": 954.5372,
+          "Proj_O_hbm_w": 46.6538,
+          "Proj_QKV_frac": 0.017737,
+          "Attn_frac": 0.936491,
+          "Proj_O_frac": 0.045772
+        }
+      },
+      "hmp_reo_new": {
+        "total_power_w": 1352.544,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1019.2087,
+        "cmpt_power_w": 78.4497,
+        "d2d_power_w": 0.0056,
+        "energy_nj": 75238047.028,
+        "time_ns": 55627.06,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 18.7201,
+          "Attn_hbm_w": 988.3763,
+          "Proj_O_hbm_w": 12.1123,
+          "Proj_QKV_frac": 0.018367,
+          "Attn_frac": 0.969749,
+          "Proj_O_frac": 0.011884
+        }
+      },
+      "hmp": {
+        "total_power_w": 1352.5513,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1019.2087,
+        "cmpt_power_w": 78.4497,
+        "d2d_power_w": 0.0129,
+        "energy_nj": 75513548.3957,
+        "time_ns": 55830.45,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 18.7201,
+          "Attn_hbm_w": 988.3763,
+          "Proj_O_hbm_w": 12.1123,
+          "Proj_QKV_frac": 0.018367,
+          "Attn_frac": 0.969749,
+          "Proj_O_frac": 0.011884
+        }
+      },
+      "tp16": {
+        "total_power_w": 1365.8056,
+        "static_power_w": 254.88,
+        "hbm_power_w": 1019.8485,
+        "cmpt_power_w": 79.2703,
+        "d2d_power_w": 11.8069,
+        "energy_nj": 88585512.1705,
+        "time_ns": 64859.53,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 12.1933,
+          "Attn_hbm_w": 1001.5032,
+          "Proj_O_hbm_w": 6.1521,
+          "Proj_QKV_frac": 0.011956,
+          "Attn_frac": 0.982012,
+          "Proj_O_frac": 0.006032
+        }
+      },
+      "rubin": {
+        "total_power_w": 2023.3521,
+        "static_power_w": 389.4,
+        "hbm_power_w": 1633.9521,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 223953010.806,
+        "time_ns": 110684.15,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 35.8582,
+          "Attn_hbm_w": 1573.1335,
+          "Proj_O_hbm_w": 24.9604,
+          "Proj_QKV_frac": 0.021946,
+          "Attn_frac": 0.962778,
+          "Proj_O_frac": 0.015276
+        }
+      },
+      "rubin_tp2": {
+        "total_power_w": 3886.5632,
+        "static_power_w": 778.8,
+        "hbm_power_w": 3107.7618,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0014,
+        "energy_nj": 233178751.0004,
+        "time_ns": 59996.13,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 85.6898,
+          "Attn_hbm_w": 2965.234,
+          "Proj_O_hbm_w": 56.838,
+          "Proj_QKV_frac": 0.027573,
+          "Attn_frac": 0.954138,
+          "Proj_O_frac": 0.018289
+        }
+      },
+      "h100": {
+        "total_power_w": 650.3957,
+        "static_power_w": 123.9,
+        "hbm_power_w": 526.4957,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0,
+        "energy_nj": 472760263.0446,
+        "time_ns": 726880.99,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 11.5543,
+          "Attn_hbm_w": 506.8986,
+          "Proj_O_hbm_w": 8.0428,
+          "Proj_QKV_frac": 0.021946,
+          "Attn_frac": 0.962778,
+          "Proj_O_frac": 0.015276
+        }
+      },
+      "h100_tp2": {
+        "total_power_w": 1249.1902,
+        "static_power_w": 247.8,
+        "hbm_power_w": 1001.39,
+        "cmpt_power_w": 0.0,
+        "d2d_power_w": 0.0002,
+        "energy_nj": 479655408.5998,
+        "time_ns": 383973.08,
+        "hbm_breakdown": {
+          "Proj_QKV_hbm_w": 27.6111,
+          "Attn_hbm_w": 955.4644,
+          "Proj_O_hbm_w": 18.3145,
+          "Proj_QKV_frac": 0.027573,
+          "Attn_frac": 0.954138,
+          "Proj_O_frac": 0.018289
+        }
+      }
+    }
+  ]
+}

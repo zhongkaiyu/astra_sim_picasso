@@ -1,0 +1,39 @@
+{
+  "_description": "DeepSeek-V3 MLA H100 SXM5 BW utilization — absorbed form, overhead-folded (compatible with GQA modeling)",
+  "_source": "profiling/H100_results/dsv3_attn_e2e_tp1.txt — bs=1, 100 iters median",
+  "_hbm_bw_tbs": 3.35,
+  "_dtype": "bfloat16 (2 bytes/elem)",
+  "_mla_config": {
+    "d_model": 7168,
+    "n_h": 128,
+    "d_nope": 128,
+    "d_rope": 64,
+    "d_v": 128,
+    "d_c_prime": 1536,
+    "d_c": 512,
+    "d_r": 64,
+    "kv_absorbed_per_tok_B": 2176,
+    "sram_tiling_overhead": 3.0,
+    "_absorbed_kv_formula": "(2*d_c + d_r) * 2B; sram_tiling_overhead captures FlashAttn tiling inefficiency",
+    "_note": "Matches profile: attn_prac = attn_meas_expanded × (2176/98304) × 3 = attn_meas / 15"
+  },
+  "_note": "bw_util values fold element-wise overhead (norms+rope) into proj_qkv, matching GQA h100_tp2_profile convention. attn_absorbed[65536] patched from raw 0.420 to 0.9072 (outlier).",
+  "bw_util": {
+    "proj_qkv": {
+      "1": 0.687,
+      "_description": "Effective bw_util = theoretical_weight_time / (q_a+q_a_norm+q_b+kv_a+kv_a_norm+kv_b+rope measured); includes all pre-attn element-wise ops"
+    },
+    "attn_absorbed": {
+      "1024": 0.5199,
+      "4096": 0.7805,
+      "16384": 0.8975,
+      "65536": 0.9072,
+      "131072": 0.9169,
+      "262144": 0.9191
+    },
+    "proj_o": {
+      "1": 0.7019,
+      "_description": "Pure MatMul, no element-wise overhead"
+    }
+  }
+}

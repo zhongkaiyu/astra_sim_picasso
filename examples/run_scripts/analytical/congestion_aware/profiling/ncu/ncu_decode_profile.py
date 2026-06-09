@@ -69,7 +69,7 @@ GATE_UP_DIM  = 2 * INTERMEDIATE        # 28672 (fused gate+up)
 RMS_EPS      = 1e-6
 
 # TP GPU mapping: rank → cuda device id
-TP_GPU_MAP = {0: 1, 1: 2}
+TP_GPU_MAP = {0: 0, 1: 1}
 
 DTYPE_CONFIGS = {
     "fp16": torch.float16,

@@ -21,24 +21,24 @@ BASE = Path(__file__).resolve().parents[4]  # congestion_aware/
 OUT = Path(__file__).resolve().parents[1] / "plots"
 
 # ── 策略与配色 (仿 fig2 策略色) ──
-STRATEGIES = ["h100", "h100_tp2", "rubin", "rubin_tp2", "hmp_reo_new"]
+STRATEGIES = ["rubin", "rubin_tp2", "tp16", "hmp", "hmp_reo_new"]
 LABELS = {
-    "hmp_reo_new": "Ours",
-    "h100":        "H100",
-    "h100_tp2":    "H100 TP2",
+    "hmp_reo_new": "AMMA(HP+RO)",
     "rubin":       "Rubin",
     "rubin_tp2":   "Rubin TP2",
+    "tp16":        "AMMA(TP16)",
+    "hmp":         "AMMA(HMP)",
 }
-# Compute 部分配色 (仿 fig3 色系: Ours 暖色, 其余冷色)
+# Compute 部分配色
 COMPUTE_COLORS = {
-    "h100":        "#CDE2E8",   # 浅青
-    "h100_tp2":    "#A8C8D8",   # 中青
-    "rubin":       "#C8D4E9",   # 浅蓝紫
-    "rubin_tp2":   "#9BB5D6",   # 中蓝
-    "hmp_reo_new": "#F59790",   # 暖珊瑚 (与 fig3 RO_new 一致)
+    "rubin":       "#C8D4E9",
+    "rubin_tp2":   "#9BB5D6",
+    "tp16":        "#7BC0CD",
+    "hmp":         "#BFDFD2",
+    "hmp_reo_new": "#F59790",
 }
-# Comm 统一用亮红
-COMM_COLOR = "#FF4136"
+# Comm 统一用珊瑚橙
+COMM_COLOR = "#ED8D5A"
 
 # ── 通信子操作配色 (QKV AG / Attn RS / Final Red 用蓝色系) ──
 COMM_COLORS = {
@@ -70,11 +70,11 @@ COMM_STRAT_LABELS = {
     "rubin_tp2":   "Rubin TP2",
 }
 
-# ── Compute 子操作配色 ──
+# ── Compute 子操作配色 (冷暖各2) ──
 COMP_PART_COLORS = {
-    "Proj_QKV": "#5B9BD5",   # 蓝
-    "Attn":     "#70AD47",   # 绿
-    "Proj_O":   "#FFC000",   # 金
+    "Proj_QKV": "#7BC0CD",   # 天蓝
+    "Attn":     "#51999F",   # 深青
+    "Proj_O":   "#DBCB92",   # 卡其
 }
 COMP_PART_LABELS = {
     "Proj_QKV": "Proj QKV",
@@ -83,7 +83,7 @@ COMP_PART_LABELS = {
 }
 
 # ── 参数 ──
-BS_LIST = [1, 8]
+BS_LIST = [1, 4]
 SEQS = [8192, 131072]  # 8K, 128K
 BS = 8  # kept for fig5b
 
@@ -114,10 +114,10 @@ def main():
 
     # ==================================================================
     #  Fig 5a: 2×2 Compute/Comm Breakdown
-    #  Rows = seq (8K, 128K), Cols = batch (1, 8)
-    #  3 panels share ylim=100; panel [1,1] (bs=8 seq=128K) uses broken axis
+    #  Cols = seq (8K, 128K), Rows = batch (1, 4)
+    #  Seq titles above first row only; Bs titles right of second column
+    #  Device names only below second row
     # ==================================================================
-    from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 
     bs_data = {}
     for bs in BS_LIST:
@@ -129,8 +129,6 @@ def main():
 
     n_strats = len(STRATEGIES)
     bar_w = 0.55
-    YLIM = 100          # y-axis cap for 3 regular panels & broken-axis bottom
-    BREAK_TOP = (260, 490)   # upper portion of broken axis
 
     # ── helper: draw stacked bars, return [(si, total, comm), ...] ──
     def _draw_bars(ax, bs, seq):
@@ -165,88 +163,54 @@ def main():
             if total > 0 and cm / total > 0.01:
                 ax.text(xpos[si], total + headroom,
                         f"C{cm / total * 100:.0f}%", ha="center", va="bottom",
-                        fontsize=7.5, fontweight="bold", color="#C0392B")
+                        fontsize=16, fontweight="bold", color="#C0392B")
 
-    # ── helper: common axis styling ──
-    def _style(ax, title, ylabel=False, xticks=True):
+    # ── layout: 2×2, cols=seq, rows=bs ──
+    fig_a, axes = plt.subplots(2, 2, figsize=(14, 10))
+    fig_a.subplots_adjust(hspace=0.12, wspace=0.15)
+
+    panels = [
+        (0, 0, SEQS[0], BS_LIST[0]),   # Seq=8K,   Bs=1
+        (0, 1, SEQS[1], BS_LIST[0]),   # Seq=128K, Bs=1
+        (1, 0, SEQS[0], BS_LIST[1]),   # Seq=8K,   Bs=4
+        (1, 1, SEQS[1], BS_LIST[1]),   # Seq=128K, Bs=4
+    ]
+
+    for ri, ci, seq, bs in panels:
+        ax = axes[ri, ci]
+        res = _draw_bars(ax, bs, seq)
+        ymax = max((t for _, t, _ in res), default=1) * 1.15
+        ax.set_ylim(0, ymax)
+        _annotate(ax, res, ymax * 0.01)
+
+        # Seq titles: only above first row
+        if ri == 0:
+            ax.set_title(f"Seq={seq_label(seq)}", fontsize=26, fontweight="bold")
+
+        # X-tick device names: only below second row
         xpos = np.arange(n_strats)
-        if xticks:
+        if ri == 1:
             ax.set_xticks(xpos)
             ax.set_xticklabels([LABELS[sk] for sk in STRATEGIES],
-                               fontsize=12, rotation=25, ha="right")
-        ax.set_title(title, fontsize=14, fontweight="bold")
-        ax.grid(axis="y", ls="--", alpha=0.25)
-        ax.tick_params(axis="y", labelsize=11)
-        if ylabel:
-            ax.set_ylabel("Latency (\u03bcs)", fontsize=14)
-
-    # ── layout ──
-    fig_a = plt.figure(figsize=(11, 5.5))
-    outer = GridSpec(2, 2, figure=fig_a, hspace=0.55, wspace=0.25)
-
-    # 3 regular panels --------------------------------------------------
-    regular = [
-        (0, 0, SEQS[0], BS_LIST[0]),   # seq=8K,   bs=1
-        (0, 1, SEQS[0], BS_LIST[1]),   # seq=8K,   bs=8
-        (1, 0, SEQS[1], BS_LIST[0]),   # seq=128K, bs=1
-    ]
-    for ri, ci, seq, bs in regular:
-        ax = fig_a.add_subplot(outer[ri, ci])
-        res = _draw_bars(ax, bs, seq)
-        ax.set_ylim(0, YLIM)
-        _annotate(ax, res, YLIM * 0.01)
-        _style(ax, f"Seq={seq_label(seq)}, BS={bs}", ylabel=(ci == 0))
-
-    # Broken-axis panel [1,1]: seq=128K, bs=8 ---------------------------
-    inner = GridSpecFromSubplotSpec(
-        2, 1, subplot_spec=outer[1, 1],
-        height_ratios=[1, 2], hspace=0.10)
-    ax_top = fig_a.add_subplot(inner[0])
-    ax_bot = fig_a.add_subplot(inner[1])
-
-    # draw bars on both halves (matplotlib clips to ylim)
-    _draw_bars(ax_top, BS_LIST[1], SEQS[1])
-    res_brk = _draw_bars(ax_bot, BS_LIST[1], SEQS[1])
-
-    ax_top.set_ylim(*BREAK_TOP)
-    ax_bot.set_ylim(0, YLIM)
-
-    # annotations: tall bars on top axis, short bars on bottom
-    xpos = np.arange(n_strats)
-    for si, total, cm in res_brk:
-        if total <= 0 or cm / total <= 0.01:
-            continue
-        pct_txt = f"C{cm / total * 100:.0f}%"
-        if total > BREAK_TOP[0]:
-            ax_top.text(xpos[si], total + (BREAK_TOP[1] - BREAK_TOP[0]) * 0.02,
-                        pct_txt, ha="center", va="bottom",
-                        fontsize=7.5, fontweight="bold", color="#C0392B")
+                               fontsize=24, rotation=25, ha="right")
         else:
-            ax_bot.text(xpos[si], total + YLIM * 0.01,
-                        pct_txt, ha="center", va="bottom",
-                        fontsize=7.5, fontweight="bold", color="#C0392B")
+            ax.set_xticks(xpos)
+            ax.set_xticklabels([])
 
-    # cosmetics: hide spines between halves
-    ax_top.spines["bottom"].set_visible(False)
-    ax_bot.spines["top"].set_visible(False)
-    ax_top.tick_params(axis="x", bottom=False, labelbottom=False)
-    ax_top.set_xticks([])
-    ax_bot.set_xticks(xpos)
-    ax_bot.set_xticklabels([LABELS[sk] for sk in STRATEGIES],
-                           fontsize=12, rotation=25, ha="right")
-    ax_top.set_title(f"Seq={seq_label(SEQS[1])}, BS={BS_LIST[1]}",
-                     fontsize=14, fontweight="bold")
-    for a in (ax_top, ax_bot):
-        a.grid(axis="y", ls="--", alpha=0.25)
-        a.tick_params(axis="y", labelsize=11)
+        # Y-axis label only on left column
+        if ci == 0:
+            ax.set_ylabel("Latency (\u03bcs)", fontsize=26)
 
-    # diagonal break marks
-    d = 0.015
-    kw = dict(color="k", clip_on=False, lw=1)
-    ax_top.plot((-d, +d), (-d, +d), transform=ax_top.transAxes, **kw)
-    ax_top.plot((1 - d, 1 + d), (-d, +d), transform=ax_top.transAxes, **kw)
-    ax_bot.plot((-d, +d), (1 - d, 1 + d), transform=ax_bot.transAxes, **kw)
-    ax_bot.plot((1 - d, 1 + d), (1 - d, 1 + d), transform=ax_bot.transAxes, **kw)
+        ax.grid(axis="y", ls="--", alpha=0.25)
+        ax.tick_params(axis="y", labelsize=24)
+        ax.tick_params(axis="x", labelsize=24)
+
+    # Bs titles on the right side of second column
+    for ri, bs in enumerate(BS_LIST):
+        ax_right = axes[ri, 1]
+        ax_right.annotate(f"BS={bs}", xy=(1.0, 0.5), xycoords="axes fraction",
+                          fontsize=26, fontweight="bold", rotation=-90,
+                          ha="left", va="center")
 
     # ── Legend ──
     handles_a = [plt.Rectangle((0, 0), 1, 1, fc=COMP_PART_COLORS[k])
@@ -256,7 +220,7 @@ def main():
                      for k in ["Proj_QKV", "Attn", "Proj_O"]] + ["Comm"]
     fig_a.legend(handles_a, legend_labels,
                  loc="upper center", ncol=4,
-                 fontsize=12, frameon=True, fancybox=True,
+                 fontsize=26, frameon=True, fancybox=True,
                  bbox_to_anchor=(0.5, 1.02))
 
     fname_a = OUT / "fig5a_compute_breakdown.pdf"

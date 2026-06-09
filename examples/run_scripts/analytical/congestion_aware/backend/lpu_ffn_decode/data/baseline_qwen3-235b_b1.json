@@ -1,0 +1,491 @@
+{
+  "meta": {
+    "model": {
+      "name": "qwen3-235b",
+      "d_model": 4096,
+      "num_layers": 94,
+      "is_moe": true,
+      "gated": true,
+      "d_ff": 18432,
+      "n_experts": 128,
+      "top_k": 8,
+      "d_moe_inter": 1536,
+      "n_shared_experts": 0
+    },
+    "gpu": {
+      "name": "rubin",
+      "compute_TFLOPs": 17500.0,
+      "hbm_bw_TBs": 22.0,
+      "capacity_GB": 288.0,
+      "power_W": 2200.0,
+      "nvlink_bw_GBs": 1800.0,
+      "allreduce_lat_ns": 900.0,
+      "w_bytes": 1,
+      "act_bytes": 1
+    },
+    "lpu": {
+      "sram_bw_TBs": 150.0,
+      "sram_cap_GB": 0.5,
+      "compute_TFLOPs": 1200.0,
+      "c2c_bw_GBs": 2500.0,
+      "c2c_num_ports": 96,
+      "hop_latency_ns": 300.0,
+      "bisection_bw_GBs": 2500.0,
+      "coll_knee_kib": [
+        32.0,
+        80.0
+      ],
+      "coll_knee_frac": [
+        0.5,
+        0.9
+      ],
+      "power_W": 388.0,
+      "w_bytes": 1,
+      "act_bytes": 1
+    },
+    "run": {
+      "TP": 16,
+      "PP": 1,
+      "batch": 1,
+      "tp_diameter_hops": 3,
+      "expert_mode": "per_token"
+    },
+    "link_gpu_lpu": {
+      "interpool_bw_GBs": 50.0,
+      "interpool_latency_ns": 2000.0,
+      "name": "nic_cx7"
+    },
+    "attn_hw": "Rubin(rubin_single_layer) + h100_rubin_util",
+    "ffn_util_profile": "/home/haotian/waferchip/mesh2D/astra_sim_picasso/examples/run_scripts/analytical/congestion_aware/backend/lpu_ffn_decode/data/gpu_ffn_utilization.json",
+    "tp_attn": {
+      "tp_h": 4,
+      "tp_hd": 4
+    }
+  },
+  "baselines": {
+    "gpu_gpu": [
+      {
+        "per_layer": {
+          "baseline": "gpu_gpu",
+          "t_attn_ns": 983.9346679134707,
+          "attn_parts": {
+            "qkv": 0.3924800998128508,
+            "attn": 78.93555729694036,
+            "output": 0.3399638500506586,
+            "comm": 904.2666666666668
+          },
+          "attn_source": "roofline/attention.py:GQA(qwen3) @rubin +nvlink_ar /h100_rubin_util",
+          "attn_approx": null,
+          "t_xfer_a2f_ns": 2081.9200000000005,
+          "t_ffn_ns": 2144.5097361606377,
+          "ffn_hw": "Rubin(rubin)",
+          "ffn_bound_breakdown_ns": {
+            "compute": 0.0,
+            "mem": 1240.243069493971,
+            "comm": 904.2666666666668
+          },
+          "t_xfer_f2a_ns": 2081.9200000000005,
+          "layer_total_ns": 7292.284404074109
+        },
+        "decode": {
+          "baseline": "gpu_gpu",
+          "context_length": 2048,
+          "num_layers": 94,
+          "tpot_ns": 685474.7339829663,
+          "tpot_us": 685.4747339829663,
+          "throughput_tok_s": 1458.8429746921197,
+          "breakdown_ns": {
+            "attn": 92489.85878386624,
+            "ffn": 201583.91519909995,
+            "xfer": 391400.9600000001
+          },
+          "breakdown_frac": {
+            "attn": 0.1349281807171095,
+            "ffn": 0.294079278499139,
+            "xfer": 0.5709925407837515
+          }
+        }
+      },
+      {
+        "per_layer": {
+          "baseline": "gpu_gpu",
+          "t_attn_ns": 1018.423235291855,
+          "attn_parts": {
+            "qkv": 0.3924800998128508,
+            "attn": 113.42412467532466,
+            "output": 0.3399638500506586,
+            "comm": 904.2666666666668
+          },
+          "attn_source": "roofline/attention.py:GQA(qwen3) @rubin +nvlink_ar /h100_rubin_util",
+          "attn_approx": null,
+          "t_xfer_a2f_ns": 2081.9200000000005,
+          "t_ffn_ns": 2144.5097361606377,
+          "ffn_hw": "Rubin(rubin)",
+          "ffn_bound_breakdown_ns": {
+            "compute": 0.0,
+            "mem": 1240.243069493971,
+            "comm": 904.2666666666668
+          },
+          "t_xfer_f2a_ns": 2081.9200000000005,
+          "layer_total_ns": 7326.772971452494
+        },
+        "decode": {
+          "baseline": "gpu_gpu",
+          "context_length": 8192,
+          "num_layers": 94,
+          "tpot_ns": 688716.6593165344,
+          "tpot_us": 688.7166593165344,
+          "throughput_tok_s": 1451.9759126959054,
+          "breakdown_ns": {
+            "attn": 95731.78411743438,
+            "ffn": 201583.91519909995,
+            "xfer": 391400.9600000001
+          },
+          "breakdown_frac": {
+            "attn": 0.13900024461791916,
+            "ffn": 0.29269498925602716,
+            "xfer": 0.5683047661260536
+          }
+        }
+      },
+      {
+        "per_layer": {
+          "baseline": "gpu_gpu",
+          "t_attn_ns": 1130.3899915610402,
+          "attn_parts": {
+            "qkv": 0.3924800998128508,
+            "attn": 225.39088094451003,
+            "output": 0.3399638500506586,
+            "comm": 904.2666666666668
+          },
+          "attn_source": "roofline/attention.py:GQA(qwen3) @rubin +nvlink_ar /h100_rubin_util",
+          "attn_approx": null,
+          "t_xfer_a2f_ns": 2081.9200000000005,
+          "t_ffn_ns": 2144.5097361606377,
+          "ffn_hw": "Rubin(rubin)",
+          "ffn_bound_breakdown_ns": {
+            "compute": 0.0,
+            "mem": 1240.243069493971,
+            "comm": 904.2666666666668
+          },
+          "t_xfer_f2a_ns": 2081.9200000000005,
+          "layer_total_ns": 7438.739727721679
+        },
+        "decode": {
+          "baseline": "gpu_gpu",
+          "context_length": 32768,
+          "num_layers": 94,
+          "tpot_ns": 699241.5344058378,
+          "tpot_us": 699.2415344058378,
+          "throughput_tok_s": 1430.1209965305106,
+          "breakdown_ns": {
+            "attn": 106256.65920673778,
+            "ffn": 201583.91519909995,
+            "xfer": 391400.9600000001
+          },
+          "breakdown_frac": {
+            "attn": 0.1519598793527427,
+            "ffn": 0.28828938968905876,
+            "xfer": 0.5597507309581986
+          }
+        }
+      },
+      {
+        "per_layer": {
+          "baseline": "gpu_gpu",
+          "t_attn_ns": 1438.1330313538574,
+          "attn_parts": {
+            "qkv": 0.3924800998128508,
+            "attn": 533.1339207373272,
+            "output": 0.3399638500506586,
+            "comm": 904.2666666666668
+          },
+          "attn_source": "roofline/attention.py:GQA(qwen3) @rubin +nvlink_ar /h100_rubin_util",
+          "attn_approx": null,
+          "t_xfer_a2f_ns": 2081.9200000000005,
+          "t_ffn_ns": 2144.5097361606377,
+          "ffn_hw": "Rubin(rubin)",
+          "ffn_bound_breakdown_ns": {
+            "compute": 0.0,
+            "mem": 1240.243069493971,
+            "comm": 904.2666666666668
+          },
+          "t_xfer_f2a_ns": 2081.9200000000005,
+          "layer_total_ns": 7746.482767514495
+        },
+        "decode": {
+          "baseline": "gpu_gpu",
+          "context_length": 131072,
+          "num_layers": 94,
+          "tpot_ns": 728169.3801463626,
+          "tpot_us": 728.1693801463626,
+          "throughput_tok_s": 1373.3068531376578,
+          "breakdown_ns": {
+            "attn": 135184.50494726258,
+            "ffn": 201583.91519909995,
+            "xfer": 391400.9600000001
+          },
+          "breakdown_frac": {
+            "attn": 0.1856498070820973,
+            "ffn": 0.2768365722252444,
+            "xfer": 0.5375136206926583
+          }
+        }
+      },
+      {
+        "per_layer": {
+          "baseline": "gpu_gpu",
+          "t_attn_ns": 4369.113046078448,
+          "attn_parts": {
+            "qkv": 0.3924800998128508,
+            "attn": 3464.113935461918,
+            "output": 0.3399638500506586,
+            "comm": 904.2666666666668
+          },
+          "attn_source": "roofline/attention.py:GQA(qwen3) @rubin +nvlink_ar /h100_rubin_util",
+          "attn_approx": null,
+          "t_xfer_a2f_ns": 2081.9200000000005,
+          "t_ffn_ns": 2144.5097361606377,
+          "ffn_hw": "Rubin(rubin)",
+          "ffn_bound_breakdown_ns": {
+            "compute": 0.0,
+            "mem": 1240.243069493971,
+            "comm": 904.2666666666668
+          },
+          "t_xfer_f2a_ns": 2081.9200000000005,
+          "layer_total_ns": 10677.462782239085
+        },
+        "decode": {
+          "baseline": "gpu_gpu",
+          "context_length": 1048576,
+          "num_layers": 94,
+          "tpot_ns": 1003681.5015304739,
+          "tpot_us": 1003.681501530474,
+          "throughput_tok_s": 996.3320022090073,
+          "breakdown_ns": {
+            "attn": 410696.6263313741,
+            "ffn": 201583.91519909995,
+            "xfer": 391400.9600000001
+          },
+          "breakdown_frac": {
+            "attn": 0.4091901920132225,
+            "ffn": 0.20084450584345,
+            "xfer": 0.3899653021433277
+          }
+        }
+      }
+    ],
+    "gpu_lpu": [
+      {
+        "per_layer": {
+          "baseline": "gpu_lpu",
+          "t_attn_ns": 983.9346679134707,
+          "attn_parts": {
+            "qkv": 0.3924800998128508,
+            "attn": 78.93555729694036,
+            "output": 0.3399638500506586,
+            "comm": 904.2666666666668
+          },
+          "attn_source": "roofline/attention.py:GQA(qwen3) @rubin +nvlink_ar /h100_rubin_util",
+          "attn_approx": null,
+          "t_xfer_a2f_ns": 2081.9200000000005,
+          "t_ffn_ns": 1012.3430933333335,
+          "ffn_hw": "LPU(lpx)",
+          "ffn_bound_breakdown_ns": {
+            "compute": 0.0,
+            "mem": 63.191093333333335,
+            "comm": 949.1520000000002
+          },
+          "t_xfer_f2a_ns": 2081.9200000000005,
+          "layer_total_ns": 6160.1177612468055
+        },
+        "decode": {
+          "baseline": "gpu_lpu",
+          "context_length": 2048,
+          "num_layers": 94,
+          "tpot_ns": 579051.0695571997,
+          "tpot_us": 579.0510695571998,
+          "throughput_tok_s": 1726.9633933405905,
+          "breakdown_ns": {
+            "attn": 92489.85878386624,
+            "ffn": 95160.25077333335,
+            "xfer": 391400.9600000001
+          },
+          "breakdown_frac": {
+            "attn": 0.15972660037497766,
+            "ffn": 0.16433826958665732,
+            "xfer": 0.6759351300383649
+          }
+        }
+      },
+      {
+        "per_layer": {
+          "baseline": "gpu_lpu",
+          "t_attn_ns": 1018.423235291855,
+          "attn_parts": {
+            "qkv": 0.3924800998128508,
+            "attn": 113.42412467532466,
+            "output": 0.3399638500506586,
+            "comm": 904.2666666666668
+          },
+          "attn_source": "roofline/attention.py:GQA(qwen3) @rubin +nvlink_ar /h100_rubin_util",
+          "attn_approx": null,
+          "t_xfer_a2f_ns": 2081.9200000000005,
+          "t_ffn_ns": 1012.3430933333335,
+          "ffn_hw": "LPU(lpx)",
+          "ffn_bound_breakdown_ns": {
+            "compute": 0.0,
+            "mem": 63.191093333333335,
+            "comm": 949.1520000000002
+          },
+          "t_xfer_f2a_ns": 2081.9200000000005,
+          "layer_total_ns": 6194.60632862519
+        },
+        "decode": {
+          "baseline": "gpu_lpu",
+          "context_length": 8192,
+          "num_layers": 94,
+          "tpot_ns": 582292.9948907678,
+          "tpot_us": 582.2929948907679,
+          "throughput_tok_s": 1717.3484977053342,
+          "breakdown_ns": {
+            "attn": 95731.78411743438,
+            "ffn": 95160.25077333335,
+            "xfer": 391400.9600000001
+          },
+          "breakdown_frac": {
+            "attn": 0.1644048356367273,
+            "ffn": 0.1634233137068469,
+            "xfer": 0.6721718506564257
+          }
+        }
+      },
+      {
+        "per_layer": {
+          "baseline": "gpu_lpu",
+          "t_attn_ns": 1130.3899915610402,
+          "attn_parts": {
+            "qkv": 0.3924800998128508,
+            "attn": 225.39088094451003,
+            "output": 0.3399638500506586,
+            "comm": 904.2666666666668
+          },
+          "attn_source": "roofline/attention.py:GQA(qwen3) @rubin +nvlink_ar /h100_rubin_util",
+          "attn_approx": null,
+          "t_xfer_a2f_ns": 2081.9200000000005,
+          "t_ffn_ns": 1012.3430933333335,
+          "ffn_hw": "LPU(lpx)",
+          "ffn_bound_breakdown_ns": {
+            "compute": 0.0,
+            "mem": 63.191093333333335,
+            "comm": 949.1520000000002
+          },
+          "t_xfer_f2a_ns": 2081.9200000000005,
+          "layer_total_ns": 6306.573084894375
+        },
+        "decode": {
+          "baseline": "gpu_lpu",
+          "context_length": 32768,
+          "num_layers": 94,
+          "tpot_ns": 592817.8699800712,
+          "tpot_us": 592.8178699800712,
+          "throughput_tok_s": 1686.8587312214745,
+          "breakdown_ns": {
+            "attn": 106256.65920673778,
+            "ffn": 95160.25077333335,
+            "xfer": 391400.9600000001
+          },
+          "breakdown_frac": {
+            "attn": 0.1792399733333103,
+            "ffn": 0.16052189988222243,
+            "xfer": 0.6602381267844672
+          }
+        }
+      },
+      {
+        "per_layer": {
+          "baseline": "gpu_lpu",
+          "t_attn_ns": 1438.1330313538574,
+          "attn_parts": {
+            "qkv": 0.3924800998128508,
+            "attn": 533.1339207373272,
+            "output": 0.3399638500506586,
+            "comm": 904.2666666666668
+          },
+          "attn_source": "roofline/attention.py:GQA(qwen3) @rubin +nvlink_ar /h100_rubin_util",
+          "attn_approx": null,
+          "t_xfer_a2f_ns": 2081.9200000000005,
+          "t_ffn_ns": 1012.3430933333335,
+          "ffn_hw": "LPU(lpx)",
+          "ffn_bound_breakdown_ns": {
+            "compute": 0.0,
+            "mem": 63.191093333333335,
+            "comm": 949.1520000000002
+          },
+          "t_xfer_f2a_ns": 2081.9200000000005,
+          "layer_total_ns": 6614.316124687191
+        },
+        "decode": {
+          "baseline": "gpu_lpu",
+          "context_length": 131072,
+          "num_layers": 94,
+          "tpot_ns": 621745.715720596,
+          "tpot_us": 621.7457157205961,
+          "throughput_tok_s": 1608.3745729409839,
+          "breakdown_ns": {
+            "attn": 135184.50494726258,
+            "ffn": 95160.25077333335,
+            "xfer": 391400.9600000001
+          },
+          "breakdown_frac": {
+            "attn": 0.21742732041279178,
+            "ffn": 0.15305332769851696,
+            "xfer": 0.6295193518886912
+          }
+        }
+      },
+      {
+        "per_layer": {
+          "baseline": "gpu_lpu",
+          "t_attn_ns": 4369.113046078448,
+          "attn_parts": {
+            "qkv": 0.3924800998128508,
+            "attn": 3464.113935461918,
+            "output": 0.3399638500506586,
+            "comm": 904.2666666666668
+          },
+          "attn_source": "roofline/attention.py:GQA(qwen3) @rubin +nvlink_ar /h100_rubin_util",
+          "attn_approx": null,
+          "t_xfer_a2f_ns": 2081.9200000000005,
+          "t_ffn_ns": 1012.3430933333335,
+          "ffn_hw": "LPU(lpx)",
+          "ffn_bound_breakdown_ns": {
+            "compute": 0.0,
+            "mem": 63.191093333333335,
+            "comm": 949.1520000000002
+          },
+          "t_xfer_f2a_ns": 2081.9200000000005,
+          "layer_total_ns": 9545.296139411783
+        },
+        "decode": {
+          "baseline": "gpu_lpu",
+          "context_length": 1048576,
+          "num_layers": 94,
+          "tpot_ns": 897257.8371047076,
+          "tpot_us": 897.2578371047076,
+          "throughput_tok_s": 1114.5068436814363,
+          "breakdown_ns": {
+            "attn": 410696.6263313741,
+            "ffn": 95160.25077333335,
+            "xfer": 391400.9600000001
+          },
+          "breakdown_frac": {
+            "attn": 0.45772420072319403,
+            "ffn": 0.10605675073332171,
+            "xfer": 0.4362190485434842
+          }
+        }
+      }
+    ]
+  }
+}

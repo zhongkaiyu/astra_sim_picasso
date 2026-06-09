@@ -48,54 +48,113 @@ def main():
 
     # ==================================================================
     #  Fig 6a: 热力图 (4 batch)
+    #
+    #  布局: 2×2 子图, 每个子图对应一个 batch size。
+    #  - 横轴: D2D Link BW (TB/s)      — lbw_vals
+    #  - 纵轴: Compute Power (TFLOPS)   — sa_vals
+    #  - 色彩: 绿(低延迟/快) → 黄(中) → 红(高延迟/慢), 对数归一化
+    #  - 格内数字: 延迟值 (μs), ≥10 取整, <10 保留一位小数
+    #  - colorbar: 4 个子图共用同一个, 放在图的最右侧
+    #  - 热力图: aspect="equal" 确保每个格子是严格正方形
     # ==================================================================
     n_bs = len(bs_vals)
-    fig, axes = plt.subplots(1, n_bs, figsize=(5.5 * n_bs, 5))
 
-    for bi, bs in enumerate(bs_vals):
-        ax = axes[bi]
+    # ── 第一遍: 遍历所有 batch, 构建网格并收集全局 min/max ──
+    #    用于建立统一的 LogNorm, 使 4 个子图共享同一色彩范围
+    grids = {}
+    global_min, global_max = np.inf, -np.inf
+    for bs in bs_vals:
         grid = np.zeros((len(sa_vals), len(lbw_vals)))
         for ci, pp in enumerate(sa_vals):
             for li, lbw in enumerate(lbw_vals):
                 e = lookup.get((pp, lbw, bs))
                 grid[ci, li] = e["wall_ns"] / 1e3 if e else 0
+        grids[bs] = grid
+        # 只统计 >0 的值来确定色彩范围
+        valid = grid[grid > 0]
+        if valid.size > 0:
+            global_min = min(global_min, valid.min())
+            global_max = max(global_max, valid.max())
 
-        # 自定义色彩: 深紫红(高值/慢) → 浅肉色(中) → 藏青(低值/快)
-        custom_colors = [
-            "#053061", "#134b87", "#327db7", "#6fafd2", "#c7e0ed",
-            "#fbd2bc", "#feab88", "#b71c2c", "#8b0824", "#6a0624",
-        ]
-        custom_cmap = mcolors.LinearSegmentedColormap.from_list("custom", custom_colors, N=256)
-        norm = mcolors.LogNorm(vmin=max(grid.min(), 1), vmax=grid.max())
+    # ── 自定义色彩映射: 绿 → 黄 → 红 (10 个锚点, 256 级插值) ──
+    custom_colors = [
+       "#8FB4BE", "#AFC9CF", "#D5E1E3", "#EBBFC2", "#E28187", "#D93F49"
+    ]
+    custom_cmap = mcolors.LinearSegmentedColormap.from_list("custom", custom_colors, N=256)
+
+    # ── 全局统一的对数归一化 ──
+    shared_norm = mcolors.LogNorm(vmin=max(global_min, 1), vmax=global_max)
+
+    # ── 创建 figure, 预留右侧空间给共享 colorbar ──
+    fig, axes = plt.subplots(2, 2, figsize=(11, 10))
+
+    for bi, bs in enumerate(bs_vals):
+        ax = axes[bi // 2, bi % 2]
+        grid = grids[bs]
+
+        # ── 绘制热力图 ──
+        #    aspect="auto": 格子自动拉伸填满子图区域
+        #    origin="lower": y 轴从下到上递增 (低算力在底部)
+        #    extent: 像素中心对齐到整数坐标 (-0.5 偏移)
+        #    set_box_aspect(1): 强制子图本身为正方形
+        ax.set_box_aspect(1)
         im = ax.imshow(grid, origin="lower", aspect="auto",
-                       cmap=custom_cmap, norm=norm,
+                       cmap=custom_cmap, norm=shared_norm,
                        extent=[-0.5, len(lbw_vals)-0.5, -0.5, len(sa_vals)-0.5])
 
+        # ── 在每个格子中标注延迟数值 ──
         for ci in range(len(sa_vals)):
             for li in range(len(lbw_vals)):
                 val = grid[ci, li]
                 if val > 0:
+                    # 格式: ≥10 显示整数, <10 保留一位小数
                     txt = f"{val:.0f}" if val >= 10 else f"{val:.1f}"
-                    # 浅色背景用黑字, 深色背景用白字
-                    ratio = (np.log(val) - np.log(grid.min())) / (np.log(grid.max()) - np.log(grid.min())) if grid.max() > grid.min() else 0.5
+                    # 根据数值在 log 色彩范围中的位置选择字体颜色:
+                    #   绿色区域 (ratio<0.25) 和红色区域 (ratio>0.65) 用白字
+                    #   中间黄色区域用黑字, 保证可读性
+                    ratio = (np.log(val) - np.log(global_min)) / (np.log(global_max) - np.log(global_min)) if global_max > global_min else 0.5
                     ax.text(li, ci, txt, ha="center", va="center",
-                            fontsize=8, fontweight="bold",
-                            color="white" if ratio > 0.55 or ratio < 0.15 else "black")
+                            fontsize=24, fontweight="normal",
+                            color="white" if ratio > 0.65 or ratio < 0.25 else "black")
+
+        # ── 坐标轴刻度与标签 ──
+        row, col = bi // 2, bi % 2
 
         ax.set_xticks(range(len(lbw_vals)))
-        ax.set_xticklabels([f"{v}" for v in lbw_vals], fontsize=11)
         ax.set_yticks(range(len(sa_vals)))
-        ax.set_yticklabels([f"{v}T" for v in sa_vals], fontsize=11)
-        ax.set_xlabel("D2D Link BW (TB/s)", fontsize=13)
-        ax.set_title(f"bs={bs}", fontsize=14, fontweight="bold")
-        cbar = plt.colorbar(im, ax=ax, shrink=0.85)
-        cbar.set_label("Wall Time (μs)", fontsize=11)
 
-    axes[0].set_ylabel("Compute Power (TFLOPS/NPU)", fontsize=13)
-    fig.suptitle("Design Space: Wall Time with Utilization (Qwen3-235B, seq=64K, RO_new)",
-                 fontsize=16, fontweight="bold", y=1.02)
-    fig.tight_layout()
-    fname = OUT / "fig6a_heatmap_util.pdf"
+        # 第一行: 隐藏 x 轴刻度标签和标题, 节省纵向空间
+        if row == 0:
+            ax.set_xticklabels([])
+            ax.set_xlabel("")
+        else:
+            ax.set_xticklabels([f"{v}" for v in lbw_vals], fontsize=24, fontweight="normal")
+            ax.set_xlabel("")
+
+        # 第二列: 隐藏 y 轴刻度标签和标题, 节省横向空间
+        if col == 1:
+            ax.set_yticklabels([])
+            ax.set_ylabel("")
+        else:
+            ax.set_yticklabels([f"{v}T" for v in sa_vals], fontsize=24, fontweight="normal")
+
+        ax.set_title(f"BS={bs}", fontsize=26, fontweight="normal")
+
+    # ── 共享轴标题: 各放一个, 居中于两行/两列之间 ──
+    fig.tight_layout(rect=[0.06, 0.06, 0.92, 1])
+    fig.text(0.05, 0.5, "Compute Power (TFLOPS/NPU)", fontsize=26,
+             ha="center", va="center", rotation=90)
+    fig.text(0.48, 0.04, "D2D Link BW (TB/s)", fontsize=26,
+             ha="center", va="center")
+    # cbar_ax 位置: 与子图上下边界对齐
+    pos_top = axes[0, 1].get_position()
+    pos_bot = axes[1, 1].get_position()
+    cbar_ax = fig.add_axes([0.90, pos_bot.y0, 0.025, pos_top.y1 - pos_bot.y0])
+    cbar = fig.colorbar(im, cax=cbar_ax)
+    cbar.set_label("Latency (μs)", fontsize=26, fontweight="normal")
+    cbar.ax.tick_params(labelsize=24)
+
+    fname = OUT / "fig6a_heatmap_wall.pdf"
     fig.savefig(fname, dpi=300, bbox_inches="tight")
     fig.savefig(fname.with_suffix(".png"), dpi=200, bbox_inches="tight")
     print(f"Saved: {fname}")

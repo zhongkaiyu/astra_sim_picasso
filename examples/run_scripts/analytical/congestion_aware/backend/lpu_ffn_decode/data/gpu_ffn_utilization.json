@@ -1,0 +1,48 @@
+{
+  "_description": "Real-card GPU FFN-stage utilization for decode (batch=1). Used by rubin_ffn_decode.py to derate the Rubin FFN roofline: t_mem = bytes/(peak_BW*mem_util), t_compute = flops/(peak*compute_util). Same methodology as h100_rubin_utilization.json (attention side): GPU kernel efficiency is assumed to transfer across GPU generations (H100 -> Rubin).",
+  "_peak_ref": "H100 SXM: HBM3 3350 GB/s, FP8 Tensor Core 1979 TFLOPS",
+  "_metrics": {
+    "mem_util": "achieved HBM read BW / peak (ncu HBM-BW% equivalent)",
+    "compute_util": "achieved TFLOPS / peak (ncu TensorCore% equivalent)"
+  },
+  "_caveats": [
+    "DENSE numbers: ncu-MEASURED on real H100 (single_gpu_decode.ncu-rep, Qwen3-235B dense MLP inter=14336, fp16, decode b=1, seq-independent, MEM-bound).",
+    "MoE numbers: MEASURED on H100 GPU0 (2026-06-07) via profiling/microbench/microbench_moe_util.py (FP8, CUDA-graph + 16-distinct-weight pool to defeat L2/launch overhead), calibrated to ncu by /0.87 (the graph-vs-ncu ratio validated on the dense shape: graph 72.0%/66.5% vs ncu 82%/77%). Per-model because util depends on per-expert weight size.",
+    "Key result: MoE expert GEMVs realize FAR lower HBM util than the dense MLP -- qwen3 expert ~43%/28%, deepseek3 ~66%/48% vs dense 82%/77% -- because the per-expert weight (6-29MB) is too small to saturate HBM. The earlier dense-proxy was ~2x optimistic.",
+    "dtype: dense measured at fp16, MoE at fp8. Applied as an efficiency ratio to FP8 Rubin modeling (bytes counted at FP8)."
+  ],
+
+  "dense": {
+    "_source": "profiling/H100_results/single_gpu_decode.ncu-rep (ncu, mean over seq)",
+    "_measured": true,
+    "gate_up_proj": {"mem_util": 0.823, "compute_util": 0.045, "bound": "mem"},
+    "down_proj":    {"mem_util": 0.766, "compute_util": 0.040, "bound": "mem"}
+  },
+
+  "moe_by_model": {
+    "_source": "microbench_moe_util.py CUDA-graph on H100 GPU0, fp8, /0.87 ncu-calibrated",
+    "_measured": true,
+    "qwen3-235b": {
+      "gating":         {"mem_util": 0.023, "compute_util": 0.0001, "bound": "mem"},
+      "expert_gate_up": {"mem_util": 0.430, "compute_util": 0.0013, "bound": "mem"},
+      "expert_down":    {"mem_util": 0.281, "compute_util": 0.0008, "bound": "mem"}
+    },
+    "deepseek3": {
+      "gating":         {"mem_util": 0.061, "compute_util": 0.0002, "bound": "mem"},
+      "expert_gate_up": {"mem_util": 0.662, "compute_util": 0.0019, "bound": "mem"},
+      "expert_down":    {"mem_util": 0.478, "compute_util": 0.0014, "bound": "mem"},
+      "shared_gate_up": {"mem_util": 0.628, "compute_util": 0.0018, "bound": "mem"},
+      "shared_down":    {"mem_util": 0.450, "compute_util": 0.0013, "bound": "mem"}
+    }
+  },
+
+  "moe": {
+    "_source": "generic fallback (deepseek3 measured) for models without moe_by_model entry",
+    "_measured": false,
+    "gating":         {"mem_util": 0.061, "compute_util": 0.0002, "bound": "mem"},
+    "expert_gate_up": {"mem_util": 0.662, "compute_util": 0.0019, "bound": "mem"},
+    "expert_down":    {"mem_util": 0.478, "compute_util": 0.0014, "bound": "mem"},
+    "shared_gate_up": {"mem_util": 0.628, "compute_util": 0.0018, "bound": "mem"},
+    "shared_down":    {"mem_util": 0.450, "compute_util": 0.0013, "bound": "mem"}
+  }
+}

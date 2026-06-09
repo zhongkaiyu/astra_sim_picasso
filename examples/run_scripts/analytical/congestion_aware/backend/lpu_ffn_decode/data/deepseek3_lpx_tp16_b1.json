@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "lpu_gen": "lpx",
+    "lpu": {
+      "sram_bw_TBs": 150.0,
+      "sram_cap_GB": 0.5,
+      "compute_TFLOPs": 1200.0,
+      "c2c_bw_GBs": 2500.0,
+      "c2c_num_ports": 96,
+      "hop_latency_ns": 300.0,
+      "bisection_bw_GBs": 2500.0,
+      "coll_knee_kib": [
+        32.0,
+        80.0
+      ],
+      "coll_knee_frac": [
+        0.5,
+        0.9
+      ],
+      "power_W": 388.0,
+      "w_bytes": 1,
+      "act_bytes": 1
+    },
+    "model": {
+      "name": "deepseek3",
+      "d_model": 7168,
+      "num_layers": 61,
+      "is_moe": true,
+      "gated": true,
+      "d_ff": 18432,
+      "n_experts": 256,
+      "top_k": 8,
+      "d_moe_inter": 2048,
+      "n_shared_experts": 1
+    },
+    "run": {
+      "TP": 16,
+      "PP": 1,
+      "batch": 1,
+      "tp_diameter_hops": 3,
+      "expert_mode": "per_token"
+    }
+  },
+  "per_layer": {
+    "stages": [
+      {
+        "name": "gating",
+        "flops": 3670016.0,
+        "weight_bytes": 1835008,
+        "act_bytes": 7424,
+        "t_compute_ns": 0.19114666666666666,
+        "t_mem_ns": 0.76768,
+        "t_ns": 0.76768,
+        "bound": "mem"
+      },
+      {
+        "name": "expert_gate",
+        "flops": 234881024.0,
+        "weight_bytes": 117440512,
+        "act_bytes": 73728,
+        "t_compute_ns": 12.233386666666666,
+        "t_mem_ns": 48.96426666666667,
+        "t_ns": 48.96426666666667,
+        "bound": "mem"
+      },
+      {
+        "name": "expert_up",
+        "flops": 234881024.0,
+        "weight_bytes": 117440512,
+        "act_bytes": 73728,
+        "t_compute_ns": 12.233386666666666,
+        "t_mem_ns": 48.96426666666667,
+        "t_ns": 48.96426666666667,
+        "bound": "mem"
+      },
+      {
+        "name": "expert_down",
+        "flops": 234881024.0,
+        "weight_bytes": 117440512,
+        "act_bytes": 73728,
+        "t_compute_ns": 12.233386666666666,
+        "t_mem_ns": 48.96426666666667,
+        "t_ns": 48.96426666666667,
+        "bound": "mem"
+      },
+      {
+        "name": "shared_gate",
+        "flops": 29360128.0,
+        "weight_bytes": 14680064,
+        "act_bytes": 9216,
+        "t_compute_ns": 1.5291733333333333,
+        "t_mem_ns": 6.120533333333333,
+        "t_ns": 6.120533333333333,
+        "bound": "mem"
+      },
+      {
+        "name": "shared_up",
+        "flops": 29360128.0,
+        "weight_bytes": 14680064,
+        "act_bytes": 9216,
+        "t_compute_ns": 1.5291733333333333,
+        "t_mem_ns": 6.120533333333333,
+        "t_ns": 6.120533333333333,
+        "bound": "mem"
+      },
+      {
+        "name": "shared_down",
+        "flops": 29360128.0,
+        "weight_bytes": 14680064,
+        "act_bytes": 9216,
+        "t_compute_ns": 1.5291733333333333,
+        "t_mem_ns": 6.120533333333333,
+        "t_ns": 6.120533333333333,
+        "bound": "mem"
+      },
+      {
+        "name": "AllReduce",
+        "payload_bytes": 7168,
+        "hops": 3,
+        "eff_bw_GBs": 273.4375,
+        "t_ns": 949.1520000000002
+      }
+    ],
+    "layer_total_ns": 1115.1740800000002,
+    "bound_breakdown_ns": {
+      "compute": 0.0,
+      "mem": 166.02208,
+      "comm": 949.1520000000002
+    }
+  },
+  "decode": {
+    "num_layers": 61,
+    "per_layer_ffn_ns": 1115.1740800000002,
+    "ffn_tpot_ns": 68025.61888000001,
+    "ffn_tpot_us": 68.02561888000001,
+    "bound_breakdown_per_layer_ns": {
+      "compute": 0.0,
+      "mem": 166.02208,
+      "comm": 949.1520000000002
+    }
+  }
+}

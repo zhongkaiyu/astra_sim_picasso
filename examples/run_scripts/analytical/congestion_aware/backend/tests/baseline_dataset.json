@@ -1,0 +1,1478 @@
+{
+  "_description": "Baseline dataset for the 13-function utilization/power API regression test.",
+  "_purpose": "Verify new utilization_lib.py reproduces these numbers within 1e-4 relative tolerance.",
+  "_source_code": {
+    "roofline": "backend/roofline/roofline_gqa_calc.py",
+    "power_coeffs": "backend/hybrid_merge/power_model.py:POWER_COEFFS",
+    "amma_util": "backend/roofline/utilization_profiles/deepseek3/util_{num_sa}.json",
+    "rubin_util": "backend/roofline/utilization_profiles/h100/h100_mla_profile.json"
+  },
+  "_conventions": {
+    "amma": "compute_util = SA profile; memory_util = realized = mem_ns / realized_time_ns; realized_time = max(compute_ns / profile_util, mem_ns)",
+    "rubin": "compute_util = 0 (decode bs=1 BW-bound); memory_util = BW profile; realized_time = ideal_total_ns / bw_profile",
+    "power": "P_kernel_w = static_w + cmpt_coeff \u00d7 U_cmpt + mem_coeff \u00d7 U_mem  (D2D not included in this baseline)"
+  },
+  "_grid": {
+    "batch_sizes": [
+      1,
+      4,
+      16,
+      32
+    ],
+    "seq_lengths": [
+      1024,
+      8192,
+      65536,
+      131072
+    ],
+    "hardware": [
+      "amma",
+      "rubin"
+    ]
+  },
+  "_coverage": {
+    "qkv": "OK",
+    "attention": "OK",
+    "proj_o": "OK",
+    "gating": "NOT COVERED \u2014 no existing impl, design from scratch",
+    "combine": "NOT COVERED \u2014 no existing impl, design from scratch",
+    "moe_per_expert": "NOT COVERED \u2014 no existing impl, design from scratch"
+  },
+  "_unresolved": [
+    "AMMA D2D power omitted (per-kernel comm bytes not part of single roofline call).",
+    "roofline_mla_qkv: num_attention_heads/n_npus may double-count tp_s vs n_npus \u2014 baseline preserves the existing arithmetic as-is.",
+    "B200: no POWER_COEFFS and no BW util profile yet \u2014 excluded from baseline.",
+    "Rubin compute_util fixed at 0 (decode BW-bound assumption); does not generalise to prefill/large-bs use cases."
+  ],
+  "hw_configs": {
+    "amma": {
+      "arch": "amma",
+      "peak_per_npu_tflops": 48,
+      "bw_per_npu_tbs": 2.5,
+      "TP": 16,
+      "tp_h": 4,
+      "tp_s": 4,
+      "num_sa_for_util": 64,
+      "power_key": "ours"
+    },
+    "rubin": {
+      "arch": "rubin",
+      "peak_per_npu_tflops": 17500,
+      "bw_per_npu_tbs": 22,
+      "TP": 1,
+      "tp_h": 1,
+      "tp_s": 1,
+      "power_key": "rubin"
+    }
+  },
+  "test_cases": [
+    {
+      "id": "amma_bs1_seq1024",
+      "inputs": {
+        "arch": "amma",
+        "bs": 1,
+        "seq_len": 1024,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 64
+      },
+      "qkv": {
+        "flops": 33816576,
+        "bytes": 16917184,
+        "compute_ns_ideal": 704.51,
+        "memory_ns": 6766.87,
+        "profile_util": 0.060681,
+        "expected_realized_time_ns": 11610.059162,
+        "expected_compute_util": 0.060681,
+        "expected_memory_util": 0.582845,
+        "expected_power_w": 865.7423
+      },
+      "attention": {
+        "kv_cache_elems": 147456,
+        "compute_ns_ideal": 371.37,
+        "memory_ns": 58.98,
+        "profile_util": 0.257591,
+        "expected_realized_time_ns": 1441.701298,
+        "expected_compute_util": 0.257591,
+        "expected_memory_util": 0.04091,
+        "expected_power_w": 363.6229
+      },
+      "proj_o": {
+        "flops": 14680064,
+        "bytes": 7348224,
+        "compute_ns_ideal": 305.83,
+        "memory_ns": 2939.29,
+        "profile_util": 0.062432,
+        "expected_realized_time_ns": 4898.609687,
+        "expected_compute_util": 0.062432,
+        "expected_memory_util": 0.600025,
+        "expected_power_w": 883.7382
+      }
+    },
+    {
+      "id": "amma_bs1_seq8192",
+      "inputs": {
+        "arch": "amma",
+        "bs": 1,
+        "seq_len": 8192,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 512
+      },
+      "qkv": {
+        "flops": 33816576,
+        "bytes": 16917184,
+        "compute_ns_ideal": 704.51,
+        "memory_ns": 6766.87,
+        "profile_util": 0.060681,
+        "expected_realized_time_ns": 11610.059162,
+        "expected_compute_util": 0.060681,
+        "expected_memory_util": 0.582845,
+        "expected_power_w": 865.7423
+      },
+      "attention": {
+        "kv_cache_elems": 1179648,
+        "compute_ns_ideal": 2970.96,
+        "memory_ns": 471.86,
+        "profile_util": 0.813944,
+        "expected_realized_time_ns": 3650.079121,
+        "expected_compute_util": 0.813944,
+        "expected_memory_util": 0.129274,
+        "expected_power_w": 598.4941
+      },
+      "proj_o": {
+        "flops": 14680064,
+        "bytes": 7348224,
+        "compute_ns_ideal": 305.83,
+        "memory_ns": 2939.29,
+        "profile_util": 0.062432,
+        "expected_realized_time_ns": 4898.609687,
+        "expected_compute_util": 0.062432,
+        "expected_memory_util": 0.600025,
+        "expected_power_w": 883.7382
+      }
+    },
+    {
+      "id": "amma_bs1_seq65536",
+      "inputs": {
+        "arch": "amma",
+        "bs": 1,
+        "seq_len": 65536,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 4096
+      },
+      "qkv": {
+        "flops": 33816576,
+        "bytes": 16917184,
+        "compute_ns_ideal": 704.51,
+        "memory_ns": 6766.87,
+        "profile_util": 0.060681,
+        "expected_realized_time_ns": 11610.059162,
+        "expected_compute_util": 0.060681,
+        "expected_memory_util": 0.582845,
+        "expected_power_w": 865.7423
+      },
+      "attention": {
+        "kv_cache_elems": 9437184,
+        "compute_ns_ideal": 23767.72,
+        "memory_ns": 3774.87,
+        "profile_util": 0.972206,
+        "expected_realized_time_ns": 24447.218206,
+        "expected_compute_util": 0.972206,
+        "expected_memory_util": 0.154409,
+        "expected_power_w": 665.305
+      },
+      "proj_o": {
+        "flops": 14680064,
+        "bytes": 7348224,
+        "compute_ns_ideal": 305.83,
+        "memory_ns": 2939.29,
+        "profile_util": 0.062432,
+        "expected_realized_time_ns": 4898.609687,
+        "expected_compute_util": 0.062432,
+        "expected_memory_util": 0.600025,
+        "expected_power_w": 883.7382
+      }
+    },
+    {
+      "id": "amma_bs1_seq131072",
+      "inputs": {
+        "arch": "amma",
+        "bs": 1,
+        "seq_len": 131072,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 8192
+      },
+      "qkv": {
+        "flops": 33816576,
+        "bytes": 16917184,
+        "compute_ns_ideal": 704.51,
+        "memory_ns": 6766.87,
+        "profile_util": 0.060681,
+        "expected_realized_time_ns": 11610.059162,
+        "expected_compute_util": 0.060681,
+        "expected_memory_util": 0.582845,
+        "expected_power_w": 865.7423
+      },
+      "attention": {
+        "kv_cache_elems": 18874368,
+        "compute_ns_ideal": 47535.44,
+        "memory_ns": 7549.75,
+        "profile_util": 0.985907,
+        "expected_realized_time_ns": 48214.957504,
+        "expected_compute_util": 0.985907,
+        "expected_memory_util": 0.156585,
+        "expected_power_w": 671.0892
+      },
+      "proj_o": {
+        "flops": 14680064,
+        "bytes": 7348224,
+        "compute_ns_ideal": 305.83,
+        "memory_ns": 2939.29,
+        "profile_util": 0.062432,
+        "expected_realized_time_ns": 4898.609687,
+        "expected_compute_util": 0.062432,
+        "expected_memory_util": 0.600025,
+        "expected_power_w": 883.7382
+      }
+    },
+    {
+      "id": "amma_bs4_seq1024",
+      "inputs": {
+        "arch": "amma",
+        "bs": 4,
+        "seq_len": 1024,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 64
+      },
+      "qkv": {
+        "flops": 135266304,
+        "bytes": 16943872,
+        "compute_ns_ideal": 2818.05,
+        "memory_ns": 6777.55,
+        "profile_util": 0.242724,
+        "expected_realized_time_ns": 11610.100361,
+        "expected_compute_util": 0.242724,
+        "expected_memory_util": 0.583763,
+        "expected_power_w": 914.0105
+      },
+      "attention": {
+        "kv_cache_elems": 589824,
+        "compute_ns_ideal": 1485.48,
+        "memory_ns": 235.93,
+        "profile_util": 0.257591,
+        "expected_realized_time_ns": 5766.805193,
+        "expected_compute_util": 0.257591,
+        "expected_memory_util": 0.040912,
+        "expected_power_w": 363.6247
+      },
+      "proj_o": {
+        "flops": 58720256,
+        "bytes": 7372800,
+        "compute_ns_ideal": 1223.34,
+        "memory_ns": 2949.12,
+        "profile_util": 0.24973,
+        "expected_realized_time_ns": 4898.650543,
+        "expected_compute_util": 0.24973,
+        "expected_memory_util": 0.602027,
+        "expected_power_w": 934.4794
+      }
+    },
+    {
+      "id": "amma_bs4_seq8192",
+      "inputs": {
+        "arch": "amma",
+        "bs": 4,
+        "seq_len": 8192,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 512
+      },
+      "qkv": {
+        "flops": 135266304,
+        "bytes": 16943872,
+        "compute_ns_ideal": 2818.05,
+        "memory_ns": 6777.55,
+        "profile_util": 0.242724,
+        "expected_realized_time_ns": 11610.100361,
+        "expected_compute_util": 0.242724,
+        "expected_memory_util": 0.583763,
+        "expected_power_w": 914.0105
+      },
+      "attention": {
+        "kv_cache_elems": 4718592,
+        "compute_ns_ideal": 11883.87,
+        "memory_ns": 1887.44,
+        "profile_util": 0.813944,
+        "expected_realized_time_ns": 14600.353341,
+        "expected_compute_util": 0.813944,
+        "expected_memory_util": 0.129274,
+        "expected_power_w": 598.4938
+      },
+      "proj_o": {
+        "flops": 58720256,
+        "bytes": 7372800,
+        "compute_ns_ideal": 1223.34,
+        "memory_ns": 2949.12,
+        "profile_util": 0.24973,
+        "expected_realized_time_ns": 4898.650543,
+        "expected_compute_util": 0.24973,
+        "expected_memory_util": 0.602027,
+        "expected_power_w": 934.4794
+      }
+    },
+    {
+      "id": "amma_bs4_seq65536",
+      "inputs": {
+        "arch": "amma",
+        "bs": 4,
+        "seq_len": 65536,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 4096
+      },
+      "qkv": {
+        "flops": 135266304,
+        "bytes": 16943872,
+        "compute_ns_ideal": 2818.05,
+        "memory_ns": 6777.55,
+        "profile_util": 0.242724,
+        "expected_realized_time_ns": 11610.100361,
+        "expected_compute_util": 0.242724,
+        "expected_memory_util": 0.583763,
+        "expected_power_w": 914.0105
+      },
+      "attention": {
+        "kv_cache_elems": 37748736,
+        "compute_ns_ideal": 95070.89,
+        "memory_ns": 15099.49,
+        "profile_util": 0.972206,
+        "expected_realized_time_ns": 97788.883112,
+        "expected_compute_util": 0.972206,
+        "expected_memory_util": 0.154409,
+        "expected_power_w": 665.3051
+      },
+      "proj_o": {
+        "flops": 58720256,
+        "bytes": 7372800,
+        "compute_ns_ideal": 1223.34,
+        "memory_ns": 2949.12,
+        "profile_util": 0.24973,
+        "expected_realized_time_ns": 4898.650543,
+        "expected_compute_util": 0.24973,
+        "expected_memory_util": 0.602027,
+        "expected_power_w": 934.4794
+      }
+    },
+    {
+      "id": "amma_bs4_seq131072",
+      "inputs": {
+        "arch": "amma",
+        "bs": 4,
+        "seq_len": 131072,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 8192
+      },
+      "qkv": {
+        "flops": 135266304,
+        "bytes": 16943872,
+        "compute_ns_ideal": 2818.05,
+        "memory_ns": 6777.55,
+        "profile_util": 0.242724,
+        "expected_realized_time_ns": 11610.100361,
+        "expected_compute_util": 0.242724,
+        "expected_memory_util": 0.583763,
+        "expected_power_w": 914.0105
+      },
+      "attention": {
+        "kv_cache_elems": 75497472,
+        "compute_ns_ideal": 190141.79,
+        "memory_ns": 30198.99,
+        "profile_util": 0.985907,
+        "expected_realized_time_ns": 192859.860443,
+        "expected_compute_util": 0.985907,
+        "expected_memory_util": 0.156585,
+        "expected_power_w": 671.0891
+      },
+      "proj_o": {
+        "flops": 58720256,
+        "bytes": 7372800,
+        "compute_ns_ideal": 1223.34,
+        "memory_ns": 2949.12,
+        "profile_util": 0.24973,
+        "expected_realized_time_ns": 4898.650543,
+        "expected_compute_util": 0.24973,
+        "expected_memory_util": 0.602027,
+        "expected_power_w": 934.4794
+      }
+    },
+    {
+      "id": "amma_bs16_seq1024",
+      "inputs": {
+        "arch": "amma",
+        "bs": 16,
+        "seq_len": 1024,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 64
+      },
+      "qkv": {
+        "flops": 541065216,
+        "bytes": 17050624,
+        "compute_ns_ideal": 11272.19,
+        "memory_ns": 6820.25,
+        "profile_util": 0.970895,
+        "expected_realized_time_ns": 11610.102019,
+        "expected_compute_util": 0.970895,
+        "expected_memory_util": 0.587441,
+        "expected_power_w": 1107.09
+      },
+      "attention": {
+        "kv_cache_elems": 2359296,
+        "compute_ns_ideal": 5941.93,
+        "memory_ns": 943.72,
+        "profile_util": 0.257591,
+        "expected_realized_time_ns": 23067.259595,
+        "expected_compute_util": 0.257591,
+        "expected_memory_util": 0.040912,
+        "expected_power_w": 363.6246
+      },
+      "proj_o": {
+        "flops": 234881024,
+        "bytes": 7471104,
+        "compute_ns_ideal": 4893.35,
+        "memory_ns": 2988.44,
+        "profile_util": 0.99892,
+        "expected_realized_time_ns": 4898.640532,
+        "expected_compute_util": 0.99892,
+        "expected_memory_util": 0.610055,
+        "expected_power_w": 1137.4653
+      }
+    },
+    {
+      "id": "amma_bs16_seq8192",
+      "inputs": {
+        "arch": "amma",
+        "bs": 16,
+        "seq_len": 8192,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 512
+      },
+      "qkv": {
+        "flops": 541065216,
+        "bytes": 17050624,
+        "compute_ns_ideal": 11272.19,
+        "memory_ns": 6820.25,
+        "profile_util": 0.970895,
+        "expected_realized_time_ns": 11610.102019,
+        "expected_compute_util": 0.970895,
+        "expected_memory_util": 0.587441,
+        "expected_power_w": 1107.09
+      },
+      "attention": {
+        "kv_cache_elems": 18874368,
+        "compute_ns_ideal": 47535.44,
+        "memory_ns": 7549.75,
+        "profile_util": 0.813944,
+        "expected_realized_time_ns": 58401.364222,
+        "expected_compute_util": 0.813944,
+        "expected_memory_util": 0.129274,
+        "expected_power_w": 598.4937
+      },
+      "proj_o": {
+        "flops": 234881024,
+        "bytes": 7471104,
+        "compute_ns_ideal": 4893.35,
+        "memory_ns": 2988.44,
+        "profile_util": 0.99892,
+        "expected_realized_time_ns": 4898.640532,
+        "expected_compute_util": 0.99892,
+        "expected_memory_util": 0.610055,
+        "expected_power_w": 1137.4653
+      }
+    },
+    {
+      "id": "amma_bs16_seq65536",
+      "inputs": {
+        "arch": "amma",
+        "bs": 16,
+        "seq_len": 65536,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 4096
+      },
+      "qkv": {
+        "flops": 541065216,
+        "bytes": 17050624,
+        "compute_ns_ideal": 11272.19,
+        "memory_ns": 6820.25,
+        "profile_util": 0.970895,
+        "expected_realized_time_ns": 11610.102019,
+        "expected_compute_util": 0.970895,
+        "expected_memory_util": 0.587441,
+        "expected_power_w": 1107.09
+      },
+      "attention": {
+        "kv_cache_elems": 150994944,
+        "compute_ns_ideal": 380283.56,
+        "memory_ns": 60397.98,
+        "profile_util": 0.972206,
+        "expected_realized_time_ns": 391155.532447,
+        "expected_compute_util": 0.972206,
+        "expected_memory_util": 0.154409,
+        "expected_power_w": 665.3051
+      },
+      "proj_o": {
+        "flops": 234881024,
+        "bytes": 7471104,
+        "compute_ns_ideal": 4893.35,
+        "memory_ns": 2988.44,
+        "profile_util": 0.99892,
+        "expected_realized_time_ns": 4898.640532,
+        "expected_compute_util": 0.99892,
+        "expected_memory_util": 0.610055,
+        "expected_power_w": 1137.4653
+      }
+    },
+    {
+      "id": "amma_bs16_seq131072",
+      "inputs": {
+        "arch": "amma",
+        "bs": 16,
+        "seq_len": 131072,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 8192
+      },
+      "qkv": {
+        "flops": 541065216,
+        "bytes": 17050624,
+        "compute_ns_ideal": 11272.19,
+        "memory_ns": 6820.25,
+        "profile_util": 0.970895,
+        "expected_realized_time_ns": 11610.102019,
+        "expected_compute_util": 0.970895,
+        "expected_memory_util": 0.587441,
+        "expected_power_w": 1107.09
+      },
+      "attention": {
+        "kv_cache_elems": 301989888,
+        "compute_ns_ideal": 760567.12,
+        "memory_ns": 120795.96,
+        "profile_util": 0.985907,
+        "expected_realized_time_ns": 771439.401201,
+        "expected_compute_util": 0.985907,
+        "expected_memory_util": 0.156585,
+        "expected_power_w": 671.0891
+      },
+      "proj_o": {
+        "flops": 234881024,
+        "bytes": 7471104,
+        "compute_ns_ideal": 4893.35,
+        "memory_ns": 2988.44,
+        "profile_util": 0.99892,
+        "expected_realized_time_ns": 4898.640532,
+        "expected_compute_util": 0.99892,
+        "expected_memory_util": 0.610055,
+        "expected_power_w": 1137.4653
+      }
+    },
+    {
+      "id": "amma_bs32_seq1024",
+      "inputs": {
+        "arch": "amma",
+        "bs": 32,
+        "seq_len": 1024,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 64
+      },
+      "qkv": {
+        "flops": 1082130432,
+        "bytes": 17192960,
+        "compute_ns_ideal": 22544.38,
+        "memory_ns": 6877.18,
+        "profile_util": 0.980108,
+        "expected_realized_time_ns": 23001.934481,
+        "expected_compute_util": 0.980108,
+        "expected_memory_util": 0.298983,
+        "expected_power_w": 814.9694
+      },
+      "attention": {
+        "kv_cache_elems": 4718592,
+        "compute_ns_ideal": 11883.87,
+        "memory_ns": 1887.44,
+        "profile_util": 0.257591,
+        "expected_realized_time_ns": 46134.558011,
+        "expected_compute_util": 0.257591,
+        "expected_memory_util": 0.040912,
+        "expected_power_w": 363.6246
+      },
+      "proj_o": {
+        "flops": 469762048,
+        "bytes": 7602176,
+        "compute_ns_ideal": 9786.71,
+        "memory_ns": 3040.87,
+        "profile_util": 0.99946,
+        "expected_realized_time_ns": 9791.997679,
+        "expected_compute_util": 0.99946,
+        "expected_memory_util": 0.310546,
+        "expected_power_w": 831.8075
+      }
+    },
+    {
+      "id": "amma_bs32_seq8192",
+      "inputs": {
+        "arch": "amma",
+        "bs": 32,
+        "seq_len": 8192,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 512
+      },
+      "qkv": {
+        "flops": 1082130432,
+        "bytes": 17192960,
+        "compute_ns_ideal": 22544.38,
+        "memory_ns": 6877.18,
+        "profile_util": 0.980108,
+        "expected_realized_time_ns": 23001.934481,
+        "expected_compute_util": 0.980108,
+        "expected_memory_util": 0.298983,
+        "expected_power_w": 814.9694
+      },
+      "attention": {
+        "kv_cache_elems": 37748736,
+        "compute_ns_ideal": 95070.89,
+        "memory_ns": 15099.49,
+        "profile_util": 0.813944,
+        "expected_realized_time_ns": 116802.740729,
+        "expected_compute_util": 0.813944,
+        "expected_memory_util": 0.129273,
+        "expected_power_w": 598.4936
+      },
+      "proj_o": {
+        "flops": 469762048,
+        "bytes": 7602176,
+        "compute_ns_ideal": 9786.71,
+        "memory_ns": 3040.87,
+        "profile_util": 0.99946,
+        "expected_realized_time_ns": 9791.997679,
+        "expected_compute_util": 0.99946,
+        "expected_memory_util": 0.310546,
+        "expected_power_w": 831.8075
+      }
+    },
+    {
+      "id": "amma_bs32_seq65536",
+      "inputs": {
+        "arch": "amma",
+        "bs": 32,
+        "seq_len": 65536,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 4096
+      },
+      "qkv": {
+        "flops": 1082130432,
+        "bytes": 17192960,
+        "compute_ns_ideal": 22544.38,
+        "memory_ns": 6877.18,
+        "profile_util": 0.980108,
+        "expected_realized_time_ns": 23001.934481,
+        "expected_compute_util": 0.980108,
+        "expected_memory_util": 0.298983,
+        "expected_power_w": 814.9694
+      },
+      "attention": {
+        "kv_cache_elems": 301989888,
+        "compute_ns_ideal": 760567.12,
+        "memory_ns": 120795.96,
+        "profile_util": 0.972206,
+        "expected_realized_time_ns": 782311.064893,
+        "expected_compute_util": 0.972206,
+        "expected_memory_util": 0.154409,
+        "expected_power_w": 665.3051
+      },
+      "proj_o": {
+        "flops": 469762048,
+        "bytes": 7602176,
+        "compute_ns_ideal": 9786.71,
+        "memory_ns": 3040.87,
+        "profile_util": 0.99946,
+        "expected_realized_time_ns": 9791.997679,
+        "expected_compute_util": 0.99946,
+        "expected_memory_util": 0.310546,
+        "expected_power_w": 831.8075
+      }
+    },
+    {
+      "id": "amma_bs32_seq131072",
+      "inputs": {
+        "arch": "amma",
+        "bs": 32,
+        "seq_len": 131072,
+        "TP": 16,
+        "peak_per_npu_tflops": 48,
+        "bw_per_npu_tbs": 2.5,
+        "cache_seq": 8192
+      },
+      "qkv": {
+        "flops": 1082130432,
+        "bytes": 17192960,
+        "compute_ns_ideal": 22544.38,
+        "memory_ns": 6877.18,
+        "profile_util": 0.980108,
+        "expected_realized_time_ns": 23001.934481,
+        "expected_compute_util": 0.980108,
+        "expected_memory_util": 0.298983,
+        "expected_power_w": 814.9694
+      },
+      "attention": {
+        "kv_cache_elems": 603979776,
+        "compute_ns_ideal": 1521134.25,
+        "memory_ns": 241591.91,
+        "profile_util": 0.985907,
+        "expected_realized_time_ns": 1542878.812545,
+        "expected_compute_util": 0.985907,
+        "expected_memory_util": 0.156585,
+        "expected_power_w": 671.0891
+      },
+      "proj_o": {
+        "flops": 469762048,
+        "bytes": 7602176,
+        "compute_ns_ideal": 9786.71,
+        "memory_ns": 3040.87,
+        "profile_util": 0.99946,
+        "expected_realized_time_ns": 9791.997679,
+        "expected_compute_util": 0.99946,
+        "expected_memory_util": 0.310546,
+        "expected_power_w": 831.8075
+      }
+    },
+    {
+      "id": "rubin_bs1_seq1024",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 1,
+        "seq_len": 1024,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 1024
+      },
+      "qkv": {
+        "flops": 256770048,
+        "bytes": 128466496,
+        "compute_ns_ideal": 14.67,
+        "memory_ns": 5839.39,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8499.834326,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 589824,
+        "compute_ns_ideal": 16.3,
+        "memory_ns": 26.81,
+        "profile_util": 0.5199,
+        "expected_realized_time_ns": 66.320446,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.5199,
+        "expected_power_w": 1325.22
+      },
+      "proj_o": {
+        "flops": 939524096,
+        "bytes": 469834752,
+        "compute_ns_ideal": 53.69,
+        "memory_ns": 21356.13,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30426.164825,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs1_seq8192",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 1,
+        "seq_len": 8192,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 8192
+      },
+      "qkv": {
+        "flops": 256770048,
+        "bytes": 128466496,
+        "compute_ns_ideal": 14.67,
+        "memory_ns": 5839.39,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8499.834326,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 4718592,
+        "compute_ns_ideal": 130.39,
+        "memory_ns": 214.48,
+        "profile_util": 0.839,
+        "expected_realized_time_ns": 328.772348,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.839,
+        "expected_power_w": 1899.6
+      },
+      "proj_o": {
+        "flops": 939524096,
+        "bytes": 469834752,
+        "compute_ns_ideal": 53.69,
+        "memory_ns": 21356.13,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30426.164825,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs1_seq65536",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 1,
+        "seq_len": 65536,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 65536
+      },
+      "qkv": {
+        "flops": 256770048,
+        "bytes": 128466496,
+        "compute_ns_ideal": 14.67,
+        "memory_ns": 5839.39,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8499.834326,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 37748736,
+        "compute_ns_ideal": 1043.06,
+        "memory_ns": 1715.85,
+        "profile_util": 0.9072,
+        "expected_realized_time_ns": 2432.440476,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.9072,
+        "expected_power_w": 2022.36
+      },
+      "proj_o": {
+        "flops": 939524096,
+        "bytes": 469834752,
+        "compute_ns_ideal": 53.69,
+        "memory_ns": 21356.13,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30426.164825,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs1_seq131072",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 1,
+        "seq_len": 131072,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 131072
+      },
+      "qkv": {
+        "flops": 256770048,
+        "bytes": 128466496,
+        "compute_ns_ideal": 14.67,
+        "memory_ns": 5839.39,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8499.834326,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 75497472,
+        "compute_ns_ideal": 2086.13,
+        "memory_ns": 3431.7,
+        "profile_util": 0.9169,
+        "expected_realized_time_ns": 4813.403861,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.9169,
+        "expected_power_w": 2039.82
+      },
+      "proj_o": {
+        "flops": 939524096,
+        "bytes": 469834752,
+        "compute_ns_ideal": 53.69,
+        "memory_ns": 21356.13,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30426.164825,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs4_seq1024",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 4,
+        "seq_len": 1024,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 1024
+      },
+      "qkv": {
+        "flops": 1027080192,
+        "bytes": 128710912,
+        "compute_ns_ideal": 58.69,
+        "memory_ns": 5850.5,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8516.005822,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 2359296,
+        "compute_ns_ideal": 65.19,
+        "memory_ns": 107.24,
+        "profile_util": 0.5199,
+        "expected_realized_time_ns": 265.281785,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.5199,
+        "expected_power_w": 1325.22
+      },
+      "proj_o": {
+        "flops": 3758096384,
+        "bytes": 470052864,
+        "compute_ns_ideal": 214.75,
+        "memory_ns": 21366.04,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30440.289604,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs4_seq8192",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 4,
+        "seq_len": 8192,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 8192
+      },
+      "qkv": {
+        "flops": 1027080192,
+        "bytes": 128710912,
+        "compute_ns_ideal": 58.69,
+        "memory_ns": 5850.5,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8516.005822,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 18874368,
+        "compute_ns_ideal": 521.54,
+        "memory_ns": 857.93,
+        "profile_util": 0.839,
+        "expected_realized_time_ns": 1315.077473,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.839,
+        "expected_power_w": 1899.6
+      },
+      "proj_o": {
+        "flops": 3758096384,
+        "bytes": 470052864,
+        "compute_ns_ideal": 214.75,
+        "memory_ns": 21366.04,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30440.289604,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs4_seq65536",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 4,
+        "seq_len": 65536,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 65536
+      },
+      "qkv": {
+        "flops": 1027080192,
+        "bytes": 128710912,
+        "compute_ns_ideal": 58.69,
+        "memory_ns": 5850.5,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8516.005822,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 150994944,
+        "compute_ns_ideal": 4172.25,
+        "memory_ns": 6863.41,
+        "profile_util": 0.9072,
+        "expected_realized_time_ns": 9729.739859,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.9072,
+        "expected_power_w": 2022.36
+      },
+      "proj_o": {
+        "flops": 3758096384,
+        "bytes": 470052864,
+        "compute_ns_ideal": 214.75,
+        "memory_ns": 21366.04,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30440.289604,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs4_seq131072",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 4,
+        "seq_len": 131072,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 131072
+      },
+      "qkv": {
+        "flops": 1027080192,
+        "bytes": 128710912,
+        "compute_ns_ideal": 58.69,
+        "memory_ns": 5850.5,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8516.005822,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 301989888,
+        "compute_ns_ideal": 8344.51,
+        "memory_ns": 13726.81,
+        "profile_util": 0.9169,
+        "expected_realized_time_ns": 19253.615443,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.9169,
+        "expected_power_w": 2039.82
+      },
+      "proj_o": {
+        "flops": 3758096384,
+        "bytes": 470052864,
+        "compute_ns_ideal": 214.75,
+        "memory_ns": 21366.04,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30440.289604,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs16_seq1024",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 16,
+        "seq_len": 1024,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 1024
+      },
+      "qkv": {
+        "flops": 4108320768,
+        "bytes": 129688576,
+        "compute_ns_ideal": 234.76,
+        "memory_ns": 5894.94,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8580.691809,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 9437184,
+        "compute_ns_ideal": 260.76,
+        "memory_ns": 428.96,
+        "profile_util": 0.5199,
+        "expected_realized_time_ns": 1061.12714,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.5199,
+        "expected_power_w": 1325.22
+      },
+      "proj_o": {
+        "flops": 15032385536,
+        "bytes": 470925312,
+        "compute_ns_ideal": 858.99,
+        "memory_ns": 21405.7,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30496.788716,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs16_seq8192",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 16,
+        "seq_len": 8192,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 8192
+      },
+      "qkv": {
+        "flops": 4108320768,
+        "bytes": 129688576,
+        "compute_ns_ideal": 234.76,
+        "memory_ns": 5894.94,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8580.691809,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 75497472,
+        "compute_ns_ideal": 2086.13,
+        "memory_ns": 3431.7,
+        "profile_util": 0.839,
+        "expected_realized_time_ns": 5260.321812,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.839,
+        "expected_power_w": 1899.6
+      },
+      "proj_o": {
+        "flops": 15032385536,
+        "bytes": 470925312,
+        "compute_ns_ideal": 858.99,
+        "memory_ns": 21405.7,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30496.788716,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs16_seq65536",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 16,
+        "seq_len": 65536,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 65536
+      },
+      "qkv": {
+        "flops": 4108320768,
+        "bytes": 129688576,
+        "compute_ns_ideal": 234.76,
+        "memory_ns": 5894.94,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8580.691809,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 603979776,
+        "compute_ns_ideal": 16689.01,
+        "memory_ns": 27453.63,
+        "profile_util": 0.9072,
+        "expected_realized_time_ns": 38918.959436,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.9072,
+        "expected_power_w": 2022.36
+      },
+      "proj_o": {
+        "flops": 15032385536,
+        "bytes": 470925312,
+        "compute_ns_ideal": 858.99,
+        "memory_ns": 21405.7,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30496.788716,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs16_seq131072",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 16,
+        "seq_len": 131072,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 131072
+      },
+      "qkv": {
+        "flops": 4108320768,
+        "bytes": 129688576,
+        "compute_ns_ideal": 234.76,
+        "memory_ns": 5894.94,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8580.691809,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 1207959552,
+        "compute_ns_ideal": 33378.03,
+        "memory_ns": 54907.25,
+        "profile_util": 0.9169,
+        "expected_realized_time_ns": 77014.461773,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.9169,
+        "expected_power_w": 2039.82
+      },
+      "proj_o": {
+        "flops": 15032385536,
+        "bytes": 470925312,
+        "compute_ns_ideal": 858.99,
+        "memory_ns": 21405.7,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30496.788716,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs32_seq1024",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 32,
+        "seq_len": 1024,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 1024
+      },
+      "qkv": {
+        "flops": 8216641536,
+        "bytes": 130992128,
+        "compute_ns_ideal": 469.52,
+        "memory_ns": 5954.19,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8666.939791,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 18874368,
+        "compute_ns_ideal": 521.54,
+        "memory_ns": 857.93,
+        "profile_util": 0.5199,
+        "expected_realized_time_ns": 2122.235045,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.5199,
+        "expected_power_w": 1325.22
+      },
+      "proj_o": {
+        "flops": 30064771072,
+        "bytes": 472088576,
+        "compute_ns_ideal": 1717.99,
+        "memory_ns": 21458.57,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30572.120867,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs32_seq8192",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 32,
+        "seq_len": 8192,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 8192
+      },
+      "qkv": {
+        "flops": 8216641536,
+        "bytes": 130992128,
+        "compute_ns_ideal": 469.52,
+        "memory_ns": 5954.19,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8666.939791,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 150994944,
+        "compute_ns_ideal": 4172.25,
+        "memory_ns": 6863.41,
+        "profile_util": 0.839,
+        "expected_realized_time_ns": 10520.643623,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.839,
+        "expected_power_w": 1899.6
+      },
+      "proj_o": {
+        "flops": 30064771072,
+        "bytes": 472088576,
+        "compute_ns_ideal": 1717.99,
+        "memory_ns": 21458.57,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30572.120867,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs32_seq65536",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 32,
+        "seq_len": 65536,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 65536
+      },
+      "qkv": {
+        "flops": 8216641536,
+        "bytes": 130992128,
+        "compute_ns_ideal": 469.52,
+        "memory_ns": 5954.19,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8666.939791,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 1207959552,
+        "compute_ns_ideal": 33378.03,
+        "memory_ns": 54907.25,
+        "profile_util": 0.9072,
+        "expected_realized_time_ns": 77837.918871,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.9072,
+        "expected_power_w": 2022.36
+      },
+      "proj_o": {
+        "flops": 30064771072,
+        "bytes": 472088576,
+        "compute_ns_ideal": 1717.99,
+        "memory_ns": 21458.57,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30572.120867,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    },
+    {
+      "id": "rubin_bs32_seq131072",
+      "inputs": {
+        "arch": "rubin",
+        "bs": 32,
+        "seq_len": 131072,
+        "TP": 1,
+        "peak_per_npu_tflops": 17500,
+        "bw_per_npu_tbs": 22,
+        "cache_seq": 131072
+      },
+      "qkv": {
+        "flops": 8216641536,
+        "bytes": 130992128,
+        "compute_ns_ideal": 469.52,
+        "memory_ns": 5954.19,
+        "profile_util": 0.687,
+        "expected_realized_time_ns": 8666.939791,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.687,
+        "expected_power_w": 1626.0
+      },
+      "attention": {
+        "kv_cache_elems": 2415919104,
+        "compute_ns_ideal": 66756.07,
+        "memory_ns": 109814.5,
+        "profile_util": 0.9169,
+        "expected_realized_time_ns": 154028.923547,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.9169,
+        "expected_power_w": 2039.82
+      },
+      "proj_o": {
+        "flops": 30064771072,
+        "bytes": 472088576,
+        "compute_ns_ideal": 1717.99,
+        "memory_ns": 21458.57,
+        "profile_util": 0.7019,
+        "expected_realized_time_ns": 30572.120867,
+        "expected_compute_util": 0.0,
+        "expected_memory_util": 0.7019,
+        "expected_power_w": 1652.82
+      }
+    }
+  ]
+}

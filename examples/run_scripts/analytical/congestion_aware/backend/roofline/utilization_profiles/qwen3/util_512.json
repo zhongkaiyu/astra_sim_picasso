@@ -1,0 +1,160 @@
+{
+  "proj_qkv": {
+    "1": 0.004799,
+    "2": 0.009597,
+    "4": 0.019194,
+    "8": 0.038389,
+    "16": 0.076777,
+    "32": 0.307109,
+    "64": 0.696109
+  },
+  "score": {
+    "16": {
+      "utilization": 0.000658,
+      "k_split": 2
+    },
+    "32": {
+      "utilization": 0.001316,
+      "k_split": 2
+    },
+    "64": {
+      "utilization": 0.002632,
+      "k_split": 2
+    },
+    "128": {
+      "utilization": 0.005263,
+      "k_split": 2
+    },
+    "256": {
+      "utilization": 0.010526,
+      "k_split": 2
+    },
+    "512": {
+      "utilization": 0.021053,
+      "k_split": 2
+    },
+    "1024": {
+      "utilization": 0.042105,
+      "k_split": 2
+    },
+    "2048": {
+      "utilization": 0.084211,
+      "k_split": 2
+    },
+    "4096": {
+      "utilization": 0.168421,
+      "k_split": 2
+    },
+    "8192": {
+      "utilization": 0.336842,
+      "k_split": 2
+    },
+    "16384": {
+      "utilization": 0.673684,
+      "k_split": 2
+    },
+    "32768": {
+      "utilization": 0.805031,
+      "k_split": 1
+    },
+    "65536": {
+      "utilization": 0.891986,
+      "k_split": 1
+    },
+    "131072": {
+      "utilization": 0.94291,
+      "k_split": 1
+    },
+    "262144": {
+      "utilization": 0.970616,
+      "k_split": 1
+    },
+    "524288": {
+      "utilization": 0.985089,
+      "k_split": 1
+    },
+    "1048576": {
+      "utilization": 0.992488,
+      "k_split": 1
+    }
+  },
+  "attention": {
+    "16": {
+      "utilization": 0.001786,
+      "k_split": 1
+    },
+    "32": {
+      "utilization": 0.003205,
+      "k_split": 1
+    },
+    "64": {
+      "utilization": 0.005319,
+      "k_split": 1
+    },
+    "128": {
+      "utilization": 0.007937,
+      "k_split": 1
+    },
+    "256": {
+      "utilization": 0.010526,
+      "k_split": 1
+    },
+    "512": {
+      "utilization": 0.021053,
+      "k_split": 2
+    },
+    "1024": {
+      "utilization": 0.042105,
+      "k_split": 4
+    },
+    "2048": {
+      "utilization": 0.084211,
+      "k_split": 8
+    },
+    "4096": {
+      "utilization": 0.168421,
+      "k_split": 16
+    },
+    "8192": {
+      "utilization": 0.201258,
+      "k_split": 16
+    },
+    "16384": {
+      "utilization": 0.644728,
+      "k_split": 60
+    },
+    "32768": {
+      "utilization": 0.764027,
+      "k_split": 60
+    },
+    "65536": {
+      "utilization": 0.841921,
+      "k_split": 60
+    },
+    "131072": {
+      "utilization": 0.887143,
+      "k_split": 60
+    },
+    "262144": {
+      "utilization": 0.911627,
+      "k_split": 60
+    },
+    "524288": {
+      "utilization": 0.924382,
+      "k_split": 60
+    },
+    "1048576": {
+      "utilization": 0.930895,
+      "k_split": 60
+    }
+  },
+  "proj_o": {
+    "1": 0.055749,
+    "2": 0.111498,
+    "4": 0.222997,
+    "8": 0.445993,
+    "16": 0.891986,
+    "32": 0.94291,
+    "64": 0.970616
+  }
+}

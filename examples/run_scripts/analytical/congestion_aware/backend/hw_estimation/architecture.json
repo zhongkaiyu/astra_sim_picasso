@@ -1,0 +1,150 @@
+{
+  "_description": "AMMA HMP_REO Per-Cube Microarchitecture — 4×4 16-Cube HBM4+PNM System",
+  "_source": "AMMA paper (Yu et al., 2026) — verified against Table 1 + Section 4.2",
+  "_target_process": "4nm logic die (paper: ≤5nm)",
+  "_cacti_process": "22nm (CACTI 7.0/HP min functional; results scaled to 4nm)",
+  "_scaling_22nm_to_4nm": {
+    "area": 0.129, "energy": 0.229, "leakage": 0.311, "delay": 0.436,
+    "see": "PLAN.md §4"
+  },
+
+  "system": {
+    "topology":          "Mesh2D",
+    "grid":              [4, 4],
+    "num_cubes":         16,
+    "routing":           "XY deterministic",
+    "total_compute_tflops_fp8": 1536,
+    "total_hbm_bw_tbs":  44.0,
+    "total_hbm_capacity_gb": 576,
+    "total_tdp_w":       1440,
+    "chip_logic_w":      240,
+    "chip_hbm_w":        1200
+  },
+
+  "per_cube": {
+    "compute": {
+      "peak_tflops_fp8": 96,
+      "num_cores":       12,
+      "num_sa_per_core": 8,
+      "num_sa_total":    96,
+      "sa_dim":          [16, 16],
+      "macs_per_sa":     256,
+      "macs_total":      24576,
+      "clock_ghz":       2.0,
+      "logic_power_w":   15.0,
+      "note":            "96 systolic arrays of 16×16 @ 2GHz = 96 TFLOPS FP8"
+    },
+
+    "hbm": {
+      "type":            "HBM4+PNM",
+      "capacity_gb":     36,
+      "bandwidth_tbs":   2.75,
+      "stack_phy_power_w": 75.0,
+      "logic_die_node":  "≤5nm (paper)",
+
+      "die_dimensions_mm": [11.0, 11.0],
+      "die_area_mm2":      121.0,
+      "num_dram_dies":     12,
+      "num_base_logic_dies": 1,
+      "total_dies_per_cube": 13,
+      "total_silicon_per_cube_mm2": 1573,
+      "package_footprint_mm2": 121,
+      "_stack_note": "12 DRAM dies + 1 base logic die, all 11×11 mm, 3D-stacked sharing XY footprint"
+    },
+
+    "base_logic_die": {
+      "_description": "The single base logic die per cube (sits below 12 DRAM dies). 121 mm² total. Contains HBM PHY + memctrl (standard region) + AMMA-added compute logic (PNM extension).",
+      "die_dimensions_mm":  [11.0, 11.0],
+      "die_area_mm2":       121.0,
+
+      "area_budget_mm2": {
+        "hbm_phy_memctrl":     25.0,
+        "amma_compute_A_to_F": 85.0,
+        "d2d_phy_G":            3.0,
+        "io_ring_decap_other":  8.0,
+        "_total":             121.0,
+        "_source": "Estimated breakdown — HBM PHY+memctrl from published HBM4 base-die specs (~20-25% of die); AMMA compute fills the rest"
+      },
+
+      "amma_compute_subbudget_mm2": {
+        "A_mac_arrays_96sa":    50.0,
+        "B_sram_3mb":            4.0,
+        "C_two_level_xbar":      8.0,
+        "D_d2d_mac_layer":       2.0,
+        "E_dma_instr_frontend": 12.0,
+        "F_vector_unit":         9.0,
+        "_total":               85.0,
+        "_source": "First-principles: 96 TFLOPS / 30 TFLOPS/mm² INT8 4nm density × 4-5× pipeline/control overhead"
+      }
+    },
+
+    "d2d": {
+      "protocol":        "UCIe 3.0",
+      "num_ports":       4,
+      "bandwidth_per_port_tbs": 1.5,
+      "latency_ns":      15,
+      "phy_breakdown_ns": {"adapter_tx_rx": 4, "phy_tx_rx": 10, "channel": 1},
+      "energy_pj_per_bit": 0.38
+    },
+
+    "noc": {
+      "topology":        "two-level crossbar",
+      "local_xbar":      {"dim": [8, 8], "count": 12, "scope": "intra-core (8 SAs)"},
+      "global_xbar":     {"dim": [12, 12], "count": 1, "scope": "inter-core + memctrl + 4 D2D"},
+      "flit_width_bits": 256
+    },
+
+    "sram_buffers": {
+      "_total_per_cube_kb": 3072,
+      "_total_per_chip_mb": 48,
+      "_partition_principle": "Aggregated across 96 SAs (per-SA 6.4KB cannot be modeled by CACTI ≥8KB rule)",
+
+      "input_buf_a_aggregated": {
+        "per_sa_kb": 12.8,
+        "num_sa":    96,
+        "total_kb":  1228.8,
+        "purpose":   "A-matrix rows (query); double-buffered; broadcast via local xbar"
+      },
+      "input_buf_b_aggregated": {
+        "per_sa_kb": 12.8,
+        "num_sa":    96,
+        "total_kb":  1228.8,
+        "purpose":   "B-matrix (KV slice); distributed per-SA; double-buffered"
+      },
+      "output_buf_aggregated": {
+        "per_sa_kb": 6.4,
+        "num_sa":    96,
+        "total_kb":  614.4,
+        "purpose":   "Partial sums; feeds vector unit (softmax/norm)"
+      }
+    },
+
+    "per_core": {
+      "components": [
+        "instruction front-end",
+        "DMA engine (HBM↔buffer streaming, 200ns hide via double-buffer)",
+        "Input Buf A (2 banks)",
+        "Distributed Input Buf B (partitioned across 8 SAs)",
+        "8 systolic arrays (16×16)",
+        "Output Buf",
+        "Vector unit (softmax, layer-norm)"
+      ],
+      "sram_per_core_kb": 256,
+      "sram_per_core_note": "32 KB per SA × 8 SA = 256 KB (per-cube headline 3 MB / 12 cores)"
+    }
+  },
+
+  "component_to_tool_map_see_PLAN_section_2": {
+    "A_mac_arrays":           "Yosys (sa_16x16.v × 96)",
+    "B_sram_buffers":         "CACTI (3 aggregated macros @ 22nm → scale to 4nm)",
+    "C_two_level_crossbar":   "Yosys (xbar_two_level.v)",
+    "D_d2d_mac_layer":        "Yosys (d2d_link_ctrl.v × 4)",
+    "E_dma_instr_frontend":   "Yosys (dma_engine.v + instr_frontend.v × 12)",
+    "F_vector_unit":          "Yosys (vector_unit.v × 12)",
+    "G_d2d_phy":              "Reference (AMMA: 0.38 pJ/bit, ~1.5 W/cube, ~3 mm²)",
+    "H_hbm_stack":            "Reference (AMMA: 75 W/cube, 12 DRAM dies × 121 mm²)",
+    "I_clock_distribution":   "Derived (12% of A+C+D+E+F dynamic)",
+    "J_leakage":              "Derived (sum of A–F leakage)",
+    "K_hbm_phy_memctrl":      "Reference NEW (~25 mm² on base logic die; power bundled in H 75W)"
+  }
+}

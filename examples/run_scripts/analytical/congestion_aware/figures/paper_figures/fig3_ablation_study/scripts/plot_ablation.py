@@ -22,7 +22,7 @@ DATA_PATH = BASE / "reports/qwen3-235B/hybrid/gqa_hybrid_merged_96T_split4_bw150
 
 # ── 策略定义 (顺序: TP16, HMP, RO_new) ──
 STRATEGIES = ["tp16", "hmp", "hmp_reo_new"]
-LABELS = {"hmp_reo_new": "RO_new", "hmp": "HMP", "tp16": "TP16"}
+LABELS = {"hmp_reo_new": "HP_RO", "hmp": "HP", "tp16": "TP16"}
 COLORS = {
     "tp16":        "#CDE2E8",
     "hmp":         "#C8D4E9",
@@ -89,14 +89,14 @@ def plot_speedup_chart(fig, ax, speedup_data, max_val, title):
         for j, (xp, _, txt) in enumerate(grp):
             ax.text(xp, y_positions[j] + 0.05,
                     txt, ha="center", va="bottom",
-                    fontsize=8, fontweight="bold", color="black",
+                    fontsize=15, fontweight="normal", color="black",
                     rotation=0)
 
     ax.set_xticks(x)
-    ax.set_xticklabels([seq_label(s) for s in SEQS], fontsize=16)  # 横轴刻度加大
-    ax.set_xlabel("Sequence Length", fontsize=18)                   # 横轴标题加大
+    ax.set_xticklabels([seq_label(s) for s in SEQS], fontsize=24)  # 横轴刻度加大
+    ax.set_xlabel("Sequence Length", fontsize=26, fontweight="normal") # 横轴标题加大加粗
     ax.grid(axis="y", ls="--", alpha=0.25)
-    ax.tick_params(axis="y", labelsize=15)                          # 纵轴刻度加大
+    ax.tick_params(axis="y", labelsize=24)                          # 纵轴刻度加大
 
 
 def main():
@@ -143,11 +143,11 @@ def main():
 
     # ── 组合图: 左 fig3a, 右 fig3b (断轴) ──
     BREAK_LO = 20
-    BREAK_HI_PAD = 1.20
+    BREAK_HI_PAD = 1.50
     upper_max = max_comm * BREAK_HI_PAD
 
     from matplotlib.gridspec import GridSpec
-    fig = plt.figure(figsize=(14, 2.8))
+    fig = plt.figure(figsize=(14, 3.3))
     # 左列: 1 个 axes 跨 4 行;  右列: 上段 1 行 + 下段 3 行
     gs = GridSpec(4, 2, figure=fig, hspace=0.08, wspace=0.38,
                   height_ratios=[1, 1, 1, 1])
@@ -159,7 +159,7 @@ def main():
     #  左: E2E Latency Speedup (fig3a)
     # ==================================================================
     plot_speedup_chart(fig, ax_a, wall_speedups, max_wall, "")
-    ax_a.set_ylabel("Latency Speedup", fontsize=18)  # 纵轴标题加大
+    ax_a.set_ylabel("Latency Speedup", fontsize=26, fontweight="normal")  # 纵轴标题加大加粗
 
     # ==================================================================
     #  右: Comm Speedup (fig3b, 断轴)
@@ -208,29 +208,37 @@ def main():
             target_ax = ax_r_top if raw_y > BREAK_LO else ax_r_bot
             target_ax.text(xp, y_positions[j] + 0.3,
                            txt, ha="center", va="bottom",
-                           fontsize=8, fontweight="bold", color="black",
+                           fontsize=15, fontweight="normal", color="black",
                            rotation=0)
 
     ax_r_bot.set_xticks(x)
-    ax_r_bot.set_xticklabels([seq_label(s) for s in SEQS], fontsize=16)  # 横轴刻度加大
-    ax_r_bot.set_xlabel("Sequence Length", fontsize=18)                   # 横轴标题加大
+    ax_r_bot.set_xticklabels([seq_label(s) for s in SEQS], fontsize=24)  # 横轴刻度加大
+    ax_r_bot.set_xlabel("Sequence Length", fontsize=26, fontweight="normal") # 横轴标题加大加粗
     ax_r_bot.grid(axis="y", ls="--", alpha=0.25)
     ax_r_top.grid(axis="y", ls="--", alpha=0.25)
-    ax_r_bot.tick_params(axis="y", labelsize=15)                          # 纵轴刻度加大
-    ax_r_top.tick_params(axis="y", labelsize=15)
+    ax_r_bot.set_yticks([10, 20])
+    ax_r_bot.tick_params(axis="y", labelsize=24)                          # 纵轴刻度加大
+    ax_r_top.set_yticks([70])
+    ax_r_top.tick_params(axis="y", labelsize=24)
 
     # 右侧 y 轴标签 — 与左侧对齐, 缩写 Communication → Comm
     ax_a.yaxis.set_label_coords(-0.12, 0.5)
-    ax_r_bot.set_ylabel("Comm Speedup", fontsize=18)                      # 纵轴标题加大
-    ax_r_bot.yaxis.set_label_coords(-0.12, 0.85)
+    ax_r_bot.set_ylabel("Comm Speedup", fontsize=26, fontweight="normal")    # 纵轴标题加大加粗
+    ax_r_bot.yaxis.set_label_coords(-0.12, 0.6)
 
     # ── 图例放在左侧图上方 ──
+    #handles = [plt.Rectangle((0, 0), 1, 1, fc=COLORS[sk]) for sk in STRATEGIES]
+    #legend_labels = [LABELS[sk] for sk in STRATEGIES]
+    #ax_a.legend(handles, legend_labels,
+    #            loc="upper center", ncol=len(STRATEGIES),
+    #            fontsize=12, frameon=True, fancybox=True,
+    #            bbox_to_anchor=(0.5, 1.15))
     handles = [plt.Rectangle((0, 0), 1, 1, fc=COLORS[sk]) for sk in STRATEGIES]
     legend_labels = [LABELS[sk] for sk in STRATEGIES]
-    ax_a.legend(handles, legend_labels,
-                loc="upper center", ncol=len(STRATEGIES),
-                fontsize=12, frameon=True, fancybox=True,
-                bbox_to_anchor=(0.5, 1.15))
+    fig.legend(handles, legend_labels,
+               loc="upper center", ncol=len(STRATEGIES),
+               fontsize=26, frameon=True, fancybox=True,
+               bbox_to_anchor=(0.5, 1.15))
 
     fname = OUT / "fig3_ablation.pdf"
     fig.savefig(fname, dpi=300, bbox_inches="tight")

@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "lpu_gen": "lpx",
+    "lpu": {
+      "sram_bw_TBs": 150.0,
+      "sram_cap_GB": 0.5,
+      "compute_TFLOPs": 1200.0,
+      "c2c_bw_GBs": 2500.0,
+      "c2c_num_ports": 96,
+      "hop_latency_ns": 300.0,
+      "bisection_bw_GBs": 2500.0,
+      "coll_knee_kib": [
+        32.0,
+        80.0
+      ],
+      "coll_knee_frac": [
+        0.5,
+        0.9
+      ],
+      "power_W": 388.0,
+      "w_bytes": 1,
+      "act_bytes": 1
+    },
+    "model": {
+      "name": "gpt-oss-120b",
+      "d_model": 2880,
+      "num_layers": 36,
+      "is_moe": true,
+      "gated": true,
+      "d_ff": 18432,
+      "n_experts": 128,
+      "top_k": 4,
+      "d_moe_inter": 2880,
+      "n_shared_experts": 0
+    },
+    "run": {
+      "TP": 16,
+      "PP": 1,
+      "batch": 1,
+      "tp_diameter_hops": 3,
+      "expert_mode": "per_token"
+    }
+  },
+  "per_layer": {
+    "stages": [
+      {
+        "name": "gating",
+        "flops": 737280.0,
+        "weight_bytes": 368640,
+        "act_bytes": 3008,
+        "t_compute_ns": 0.0384,
+        "t_mem_ns": 0.15485333333333334,
+        "t_ns": 0.15485333333333334,
+        "bound": "mem"
+      },
+      {
+        "name": "expert_gate",
+        "flops": 66355200.0,
+        "weight_bytes": 33177600,
+        "act_bytes": 23040,
+        "t_compute_ns": 3.456,
+        "t_mem_ns": 13.8336,
+        "t_ns": 13.8336,
+        "bound": "mem"
+      },
+      {
+        "name": "expert_up",
+        "flops": 66355200.0,
+        "weight_bytes": 33177600,
+        "act_bytes": 23040,
+        "t_compute_ns": 3.456,
+        "t_mem_ns": 13.8336,
+        "t_ns": 13.8336,
+        "bound": "mem"
+      },
+      {
+        "name": "expert_down",
+        "flops": 66355200.0,
+        "weight_bytes": 33177600,
+        "act_bytes": 23040,
+        "t_compute_ns": 3.456,
+        "t_mem_ns": 13.8336,
+        "t_ns": 13.8336,
+        "bound": "mem"
+      },
+      {
+        "name": "AllReduce",
+        "payload_bytes": 2880,
+        "hops": 3,
+        "eff_bw_GBs": 125.0,
+        "t_ns": 943.2
+      }
+    ],
+    "layer_total_ns": 984.8556533333334,
+    "bound_breakdown_ns": {
+      "compute": 0.0,
+      "mem": 41.65565333333333,
+      "comm": 943.2
+    }
+  },
+  "decode": {
+    "num_layers": 36,
+    "per_layer_ffn_ns": 984.8556533333334,
+    "ffn_tpot_ns": 35454.80352,
+    "ffn_tpot_us": 35.45480352,
+    "bound_breakdown_per_layer_ns": {
+      "compute": 0.0,
+      "mem": 41.65565333333333,
+      "comm": 943.2
+    }
+  }
+}

@@ -1,10 +1,10 @@
-% Report for Fig 2b: Token/J Power Efficiency Analysis
+% Report for Fig 2b/2d: Power Efficiency and Instantaneous Power Analysis
 % To include in LaTeX: \input{fig2b_power_efficiency.tex}
 
-Fig.~\ref{fig:power_efficiency} compares the power efficiency (Token/J) of our proposed architecture against Rubin, H100, and their TP2 variants across varying sequence lengths on Qwen3-235B and Llama4-Maverick.
-Our architecture achieves 2.5--4.1$\times$ higher energy efficiency than Rubin~TP2 across all evaluated configurations.
-At short context lengths (seq=4K), the advantage is most pronounced: our design reaches 305~Token/J on Qwen3-235B and 330~Token/J on Llama4, compared to 74 and 76~Token/J for Rubin~TP2 respectively, representing a 4.1--4.4$\times$ improvement.
-As sequence length increases to 1M, the gap narrows to 2.5$\times$ due to the growing dominance of attention computation, which scales linearly with context and is bounded by per-NPU HBM bandwidth.
-Compared to H100~TP2, our architecture delivers 6.5--8.0$\times$ higher Token/J, primarily because the aggregate HBM bandwidth of 16~NPUs (40~TB/s) is 11.9$\times$ that of a single H100 (3.35~TB/s), enabling proportionally faster completion of memory-bound decode operations.
-Notably, H100~TP2 shows marginally \emph{lower} efficiency than H100~TP1 at short sequences, as the NVLink communication overhead is not fully amortized when compute time is small.
-These results are consistent across both model architectures, confirming that the efficiency advantage is architecture-driven rather than model-specific.
+Fig.~\ref{fig:power_efficiency} shows that our architecture achieves 5.6--6.6$\times$ higher energy efficiency (Token/J) than H100 at BS=1, consistently across Qwen3-235B and Llama4-Maverick.
+This advantage holds across batch sizes (BS=1--32) and sequence lengths (4K--1M), driven by the 40\,TB/s aggregate HBM bandwidth of 16~NPUs versus 3.35\,TB/s on H100.
+Compared to Rubin, our design maintains a stable 2.6--3.1$\times$ Token/J advantage; against Rubin~TP2, the gap ranges from 2.8$\times$ (1M) to 4.8$\times$ (4K), as TP2's doubled static power and NVLink overhead erode its latency benefit at short sequences.
+
+As shown in Fig.~\ref{fig:power_breakdown}, although our architecture draws higher instantaneous power than H100 (e.g., 1\,316\,W vs.\ 603\,W at BS=4, seq=4K on Llama4), it completes each token 12--16$\times$ faster, resulting in 82--85\% lower energy per token.
+In contrast, NeuPIMs consumes even higher power (Ours $+$ 760\,W host GPU overhead) while running 2--3.6$\times$ slower due to serialized bank access, yielding 1.8--5.1$\times$ lower Token/J than our design.
+These results confirm that near-memory computing alone is insufficient without eliminating the host GPU power tax---our fully integrated 16-NPU architecture achieves both high bandwidth utilization (87--98\% HBM) and high energy efficiency without external GPU dependency.

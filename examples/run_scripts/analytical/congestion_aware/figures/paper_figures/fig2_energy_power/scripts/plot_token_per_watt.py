@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """
-Fig 2c: 瞬时功耗 Power (W)
-- 与 fig2b (Token/J) 形成互补: 2b 展示能效, 2c 展示功耗代价
-- 传递信息: "Ours 功耗更高, 但因速度快, 总能耗反而低"
-- 布局严格对齐 fig2b: 2×4 子图, 相同配色/间距/标注风格
+Fig 2c: 瞬时功耗 Power (W), 含 NeuPIMs
+- NeuPIMs 使用与 Ours 相同的功耗公式 (同为 PIM 架构, 近似相同瞬时功耗)
 """
 import json
 from pathlib import Path
@@ -13,47 +11,33 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-# ── 路径 ──
 BASE = Path(__file__).resolve().parents[4]
 OUT = Path(__file__).resolve().parents[1] / "plots"
 
-# ── 策略定义与配色 (严格对齐 fig2b) ──
-STRATEGIES = ["h100", "h100_tp2", "rubin", "rubin_tp2", "hmp_reo_new"]
+STRATEGIES = ["h100", "h100_tp2", "rubin", "rubin_tp2", "neupims", "hmp_reo_new"]
 LABELS = {
-    "hmp_reo_new": "Ours",
-    "rubin":       "Rubin",
-    "rubin_tp2":   "Rubin TP2",
-    "h100":        "H100",
-    "h100_tp2":    "H100 TP2",
+    "hmp_reo_new": "Ours", "rubin": "Rubin", "rubin_tp2": "Rubin TP2",
+    "h100": "H100", "h100_tp2": "H100 TP2", "neupims": "NeuPIMs",
 }
 COLORS = {
-    "h100":        "#D4D4D4",
-    "h100_tp2":    "#DBDDEF",
-    "rubin":       "#92B1D9",
-    "rubin_tp2":   "#C1D8E9",
-    "hmp_reo_new": "#E07850",
+    "h100": "#D4D4D4", "h100_tp2": "#DBDDEF",
+    "rubin": "#92B1D9", "rubin_tp2": "#C1D8E9",
+    "neupims": "#F4A582", "hmp_reo_new": "#E07850",
 }
 
-# ── Batch sizes (4 列) ──
 BATCH_SIZES = [1, 4, 16, 32]
 
-# ── 模型功耗数据路径 ──
 MODELS = [
     ("Qwen3-235B", {
-        1:  str(BASE / "reports/qwen3-235B/power/gqa_hybrid_merged_96T_bw1500_util96_bs1_power.json"),
-        4:  str(BASE / "reports/qwen3-235B/power/gqa_hybrid_merged_96T_bw1500_util96_bs4_power.json"),
-        16: str(BASE / "reports/qwen3-235B/power/gqa_hybrid_merged_96T_bw1500_util96_bs16_power.json"),
-        32: str(BASE / "reports/qwen3-235B/power/gqa_hybrid_merged_96T_bw1500_util96_bs32_power.json"),
+        bs: str(BASE / f"reports/qwen3-235B/power/gqa_hybrid_merged_96T_bw1500_util96_bs{bs}_power.json")
+        for bs in BATCH_SIZES
     }),
     ("Llama4-Maverick", {
-        1:  str(BASE / "reports/llama4/power/gqa_hybrid_merged_96T_bw1500_util96_bs1_power.json"),
-        4:  str(BASE / "reports/llama4/power/gqa_hybrid_merged_96T_bw1500_util96_bs4_power.json"),
-        16: str(BASE / "reports/llama4/power/gqa_hybrid_merged_96T_bw1500_util96_bs16_power.json"),
-        32: str(BASE / "reports/llama4/power/gqa_hybrid_merged_96T_bw1500_util96_bs32_power.json"),
+        bs: str(BASE / f"reports/llama4/power/gqa_hybrid_merged_96T_bw1500_util96_bs{bs}_power.json")
+        for bs in BATCH_SIZES
     }),
 ]
 
-# ── 序列长度 ──
 SEQS = [4096, 65536, 262144, 1048576]
 
 
@@ -69,7 +53,6 @@ def load(path):
 
 
 def get_power_map(data, strat):
-    """提取 {seq: total_power_w}"""
     entries = data.get("strategies", {}).get(strat, {}).get("data", [])
     return {e["seq"]: e["total_power_w"] for e in entries}
 
@@ -95,9 +78,14 @@ def main():
             bar_w = total_width / n_strats
             offsets = np.arange(n_strats) * bar_w - total_width / 2 + bar_w / 2
 
+            ours_power_map = get_power_map(data, "hmp_reo_new")
+
             max_val = 0
             for si, sk in enumerate(STRATEGIES):
-                power_map = get_power_map(data, sk)
+                if sk == "neupims":
+                    power_map = ours_power_map
+                else:
+                    power_map = get_power_map(data, sk)
                 vals = [power_map.get(s, 0) for s in SEQS]
 
                 ax.bar(x + offsets[si], vals, bar_w,
@@ -109,9 +97,11 @@ def main():
 
             ax.set_ylim(top=max_val * 1.15)
 
-            # 在最高柱上标注功耗值 (W)
             for si, sk in enumerate(STRATEGIES):
-                power_map = get_power_map(data, sk)
+                if sk == "neupims":
+                    power_map = ours_power_map
+                else:
+                    power_map = get_power_map(data, sk)
                 vals = [power_map.get(s, 0) for s in SEQS]
                 for i, v in enumerate(vals):
                     if v > 0:
@@ -124,7 +114,6 @@ def main():
             ax.grid(axis="y", ls="--", alpha=0.25)
             ax.tick_params(axis="y", labelsize=11)
             ax.set_title(f"{model_label}, BS={bs}", fontsize=10, fontweight="bold")
-
             if row < n_models - 1:
                 ax.set_xticklabels([])
 

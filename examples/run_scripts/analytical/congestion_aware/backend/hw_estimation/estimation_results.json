@@ -1,0 +1,488 @@
+{
+  "_description": "AMMA HMP_REO Per-Cube 4nm Estimation (A\u2013J components)",
+  "_methodology": "PLAN.md \u00a72 + \u00a74",
+  "_scaling_22nm_4nm": {
+    "area": 0.129,
+    "energy": 0.229,
+    "leakage": 0.311,
+    "delay": 0.436
+  },
+  "_yosys_4nm_constants": {
+    "ge_density_per_mm2": 5000000.0,
+    "dyn_uW_per_GE_per_MHz": 5e-05,
+    "lkg_uW_per_GE": 1e-05
+  },
+  "components": {
+    "A": {
+      "code": "A",
+      "name": "MAC arrays (96\u00d7 16\u00d716 systolic arrays @ 2 GHz)",
+      "tool": "yosys",
+      "instances_per_cube": 96,
+      "area_mm2_per_cube": 11.820395,
+      "dynamic_w_per_cube": 2.1679,
+      "leakage_w_per_cube": 0.0287,
+      "total_w_per_cube": 2.1966,
+      "budget_w_per_cube": 4.5,
+      "vs_budget_pct": 48.8,
+      "raw": {
+        "per_module": {
+          "sa_16x16.v": {
+            "cells": 151808,
+            "area_synth_um2_7nm": 16400.52,
+            "cap_total_ff": 231704.8,
+            "unmatched_types": 0
+          }
+        },
+        "area_source": "ASAP7 synth \u00f7util \u00d70.62 \u00d7rtl(3.7) \u00d7phys(1.8)",
+        "rtl_completeness_factor": 3.7,
+        "physical_overhead_factor": 1.8,
+        "area_synth_4nm_mm2": 1.774834,
+        "n_instances": 96,
+        "switching_activity": 0.045,
+        "layout_utilization": 0.55,
+        "clock_ghz": 2.0,
+        "vdd": 0.7,
+        "leakage_temp_factor": 8.0,
+        "area_synth_mm2_7nm": 1.57445,
+        "area_layout_mm2_7nm": 2.862636,
+        "area_4nm_mm2": 11.820395,
+        "p_dyn_7nm_w": 0.980946,
+        "p_leak_7nm_w_25C": 0.00137826,
+        "scaling": {
+          "area_logic": 0.62,
+          "area_sram": 0.74,
+          "area": 0.62,
+          "power": 0.68,
+          "leakage": 0.8,
+          "delay": 0.8
+        }
+      },
+      "error": null
+    },
+    "B": {
+      "code": "B",
+      "name": "SRAM buffers (3 MB/cube: InBufA + InBufB + OutBuf)",
+      "tool": "cacti",
+      "instances_per_cube": 1,
+      "area_mm2_per_cube": 10.009515,
+      "dynamic_w_per_cube": 3.9092,
+      "leakage_w_per_cube": 0.1382,
+      "total_w_per_cube": 4.0473,
+      "budget_w_per_cube": 3.75,
+      "vs_budget_pct": 107.9,
+      "raw": {
+        "per_macro": {
+          "inbufA_aggregated.cfg": {
+            "access_time_ns": 1.27769,
+            "cycle_time_ns": 1.52262,
+            "dyn_read_energy_nj": 0.127345,
+            "dyn_write_energy_nj": 0.13124,
+            "leakage_mw": 177.053,
+            "gate_leakage_mw": 0.660334,
+            "area_mm2": 1.45232838869
+          },
+          "inbufB_aggregated.cfg": {
+            "access_time_ns": 1.27769,
+            "cycle_time_ns": 1.52262,
+            "dyn_read_energy_nj": 0.127345,
+            "dyn_write_energy_nj": 0.13124,
+            "leakage_mw": 177.053,
+            "gate_leakage_mw": 0.660334,
+            "area_mm2": 1.45232838869
+          },
+          "outbuf_aggregated.cfg": {
+            "access_time_ns": 0.942566,
+            "cycle_time_ns": 1.52262,
+            "dyn_read_energy_nj": 0.0808801,
+            "dyn_write_energy_nj": 0.0847754,
+            "leakage_mw": 88.5264,
+            "gate_leakage_mw": 0.330167,
+            "area_mm2": 0.6995609414099999
+          }
+        },
+        "area_pre_padding_mm2": 0.46494408572391005,
+        "area_padding_factor": 2.0,
+        "area_cacti_mm2": 0.9298881714478201,
+        "area_source": "FF register-file (ASAP7 DFF \u00d7 bits \u00d7 overhead) \u00d7 7\u21924nm",
+        "register_file": {
+          "bits": 25165824,
+          "dff_area_um2": 0.32076,
+          "overhead": 2.0,
+          "area_um2_7nm": 16144379.41248,
+          "area_mm2_7nm": 16.14437941248,
+          "area_mm2_4nm": 10.0095
+        },
+        "area_22nm_mm2": 3.60421771879,
+        "leakage_22nm_mw": 444.283235,
+        "dyn_energy_22nm_nJ": 0.34141275000000004,
+        "access_rate_ghz": 100.0,
+        "utilization": 0.5,
+        "scaling": {
+          "area": 0.129,
+          "energy": 0.229,
+          "leakage": 0.311
+        }
+      },
+      "error": null
+    },
+    "C": {
+      "code": "C",
+      "name": "Two-level crossbar (12\u00d7 local 8\u00d78 + 1\u00d7 global 12\u00d712)",
+      "tool": "yosys",
+      "instances_per_cube": 1,
+      "area_mm2_per_cube": 2.002371,
+      "dynamic_w_per_cube": 0.0167,
+      "leakage_w_per_cube": 0.0001,
+      "total_w_per_cube": 0.0169,
+      "budget_w_per_cube": 1.5,
+      "vs_budget_pct": 1.1,
+      "raw": {
+        "per_module": {
+          "xbar_two_level.v": {
+            "cells": 267922,
+            "area_synth_um2_7nm": 22655.82,
+            "cap_total_ff": 418603.4,
+            "unmatched_types": 0
+          }
+        },
+        "wire_area_mm2": 1.9768,
+        "wire_model": {
+          "n_wires": 3072,
+          "span_mm": 11.0,
+          "pitch_nm": 130.0,
+          "fill": 0.45,
+          "area_mm2": 1.976832
+        },
+        "area_source": "ASAP7 synth \u00f7util \u00d70.62 \u00d7rtl(1.0) \u00d7phys(1.0) + wire(1.98)",
+        "rtl_completeness_factor": 1.0,
+        "physical_overhead_factor": 1.0,
+        "area_synth_4nm_mm2": 0.025539,
+        "n_instances": 1,
+        "switching_activity": 0.06,
+        "layout_utilization": 0.55,
+        "clock_ghz": 2.0,
+        "vdd": 0.7,
+        "leakage_temp_factor": 8.0,
+        "area_synth_mm2_7nm": 0.022656,
+        "area_layout_mm2_7nm": 0.041192,
+        "area_4nm_mm2": 2.002371,
+        "p_dyn_7nm_w": 0.024614,
+        "p_leak_7nm_w_25C": 1.772e-05,
+        "scaling": {
+          "area_logic": 0.62,
+          "area_sram": 0.74,
+          "area": 0.62,
+          "power": 0.68,
+          "leakage": 0.8,
+          "delay": 0.8
+        }
+      },
+      "error": null
+    },
+    "D": {
+      "code": "D",
+      "name": "D2D UCIe MAC-layer control (4 ports/cube)",
+      "tool": "yosys",
+      "instances_per_cube": 4,
+      "area_mm2_per_cube": 0.002114,
+      "dynamic_w_per_cube": 0.0006,
+      "leakage_w_per_cube": 0.0,
+      "total_w_per_cube": 0.0006,
+      "budget_w_per_cube": 0.45,
+      "vs_budget_pct": 0.1,
+      "raw": {
+        "per_module": {
+          "d2d_link_ctrl.v": {
+            "cells": 3804,
+            "area_synth_um2_7nm": 511.36,
+            "cap_total_ff": 5985.2,
+            "unmatched_types": 0
+          }
+        },
+        "area_source": "ASAP7 synth \u00f7util \u00d70.62 \u00d7rtl(1.0) \u00d7phys(1.0)",
+        "rtl_completeness_factor": 1.0,
+        "physical_overhead_factor": 1.0,
+        "area_synth_4nm_mm2": 0.002114,
+        "n_instances": 4,
+        "switching_activity": 0.0375,
+        "layout_utilization": 0.6,
+        "clock_ghz": 2.0,
+        "vdd": 0.7,
+        "leakage_temp_factor": 8.0,
+        "area_synth_mm2_7nm": 0.002045,
+        "area_layout_mm2_7nm": 0.003409,
+        "area_4nm_mm2": 0.002114,
+        "p_dyn_7nm_w": 0.00088,
+        "p_leak_7nm_w_25C": 1.76e-06,
+        "scaling": {
+          "area_logic": 0.62,
+          "area_sram": 0.74,
+          "area": 0.62,
+          "power": 0.68,
+          "leakage": 0.8,
+          "delay": 0.8
+        }
+      },
+      "error": null
+    },
+    "E": {
+      "code": "E",
+      "name": "DMA engine + instruction frontend (per core)",
+      "tool": "yosys",
+      "instances_per_cube": 12,
+      "area_mm2_per_cube": 0.033722,
+      "dynamic_w_per_cube": 0.0146,
+      "leakage_w_per_cube": 0.0001,
+      "total_w_per_cube": 0.0148,
+      "budget_w_per_cube": 1.2,
+      "vs_budget_pct": 1.2,
+      "raw": {
+        "per_module": {
+          "dma_engine.v": {
+            "cells": 6610,
+            "area_synth_um2_7nm": 642.23,
+            "cap_total_ff": 6912.9,
+            "unmatched_types": 0
+          },
+          "instr_frontend.v": {
+            "cells": 15214,
+            "area_synth_um2_7nm": 1850.65,
+            "cap_total_ff": 17499.6,
+            "unmatched_types": 0
+          }
+        },
+        "area_source": "ASAP7 synth \u00f7util \u00d70.62 \u00d7rtl(1.0) \u00d7phys(1.0)",
+        "rtl_completeness_factor": 1.0,
+        "physical_overhead_factor": 1.0,
+        "area_synth_4nm_mm2": 0.033722,
+        "n_instances": 12,
+        "switching_activity": 0.075,
+        "layout_utilization": 0.55,
+        "clock_ghz": 2.0,
+        "vdd": 0.7,
+        "leakage_temp_factor": 8.0,
+        "area_synth_mm2_7nm": 0.029915,
+        "area_layout_mm2_7nm": 0.05439,
+        "area_4nm_mm2": 0.033722,
+        "p_dyn_7nm_w": 0.021532,
+        "p_leak_7nm_w_25C": 2.257e-05,
+        "scaling": {
+          "area_logic": 0.62,
+          "area_sram": 0.74,
+          "area": 0.62,
+          "power": 0.68,
+          "leakage": 0.8,
+          "delay": 0.8
+        }
+      },
+      "error": null
+    },
+    "F": {
+      "code": "F",
+      "name": "Vector unit (softmax / layer-norm, per core)",
+      "tool": "yosys",
+      "instances_per_cube": 12,
+      "area_mm2_per_cube": 0.027354,
+      "dynamic_w_per_cube": 0.008,
+      "leakage_w_per_cube": 0.0002,
+      "total_w_per_cube": 0.0082,
+      "budget_w_per_cube": 0.75,
+      "vs_budget_pct": 1.1,
+      "raw": {
+        "per_module": {
+          "vector_unit.v": {
+            "cells": 21494,
+            "area_synth_um2_7nm": 2205.97,
+            "cap_total_ff": 33432.2,
+            "unmatched_types": 0
+          }
+        },
+        "area_source": "ASAP7 synth \u00f7util \u00d70.62 \u00d7rtl(1.0) \u00d7phys(1.0)",
+        "rtl_completeness_factor": 1.0,
+        "physical_overhead_factor": 1.0,
+        "area_synth_4nm_mm2": 0.027354,
+        "n_instances": 12,
+        "switching_activity": 0.03,
+        "layout_utilization": 0.6,
+        "clock_ghz": 2.0,
+        "vdd": 0.7,
+        "leakage_temp_factor": 8.0,
+        "area_synth_mm2_7nm": 0.026472,
+        "area_layout_mm2_7nm": 0.044119,
+        "area_4nm_mm2": 0.027354,
+        "p_dyn_7nm_w": 0.011795,
+        "p_leak_7nm_w_25C": 2.447e-05,
+        "scaling": {
+          "area_logic": 0.62,
+          "area_sram": 0.74,
+          "area": 0.62,
+          "power": 0.68,
+          "leakage": 0.8,
+          "delay": 0.8
+        }
+      },
+      "error": null
+    },
+    "G": {
+      "code": "G",
+      "name": "D2D PHY (UCIe SerDes, 4 ports \u00d7 1.5 TB/s)",
+      "tool": "reference",
+      "instances_per_cube": 1,
+      "area_mm2_per_cube": 3.0,
+      "dynamic_w_per_cube": 1.5,
+      "leakage_w_per_cube": 0.0,
+      "total_w_per_cube": 1.5,
+      "budget_w_per_cube": 1.5,
+      "vs_budget_pct": 100.0,
+      "raw": {
+        "power_w_per_cube": 1.5,
+        "energy_pj_per_bit": 0.38,
+        "area_mm2_per_cube": 3.0,
+        "rationale": "AMMA: 0.38 pJ/bit; UCIe-Std PHY density ~0.5 mm\u00b2/Tbps \u00d7 6 TB/s = 3 mm\u00b2"
+      },
+      "error": null
+    },
+    "H": {
+      "code": "H",
+      "name": "HBM4 stack + PHY",
+      "tool": "reference",
+      "instances_per_cube": 1,
+      "area_mm2_per_cube": 121.0,
+      "dynamic_w_per_cube": 75.0,
+      "leakage_w_per_cube": 0.0,
+      "total_w_per_cube": 75.0,
+      "budget_w_per_cube": 75.0,
+      "vs_budget_pct": 100.0,
+      "raw": {
+        "power_w_per_cube": 75.0,
+        "capacity_gb": 36,
+        "bandwidth_tbs": 2.75,
+        "area_mm2_per_cube": 121.0,
+        "area_breakdown_mm2": {
+          "single_die_dimensions": "11 mm \u00d7 11 mm",
+          "single_die_area": 121.0,
+          "stack_height": "12-Hi (12 DRAM dies + 1 base logic die, all 11\u00d711)",
+          "package_footprint": 121.0,
+          "total_silicon_per_cube_mm2": 1573.0
+        },
+        "rationale": "Power from AMMA Table 1 (75 W/cube). Die size 11\u00d711 mm user-specified."
+      },
+      "error": null
+    },
+    "K": {
+      "code": "K",
+      "name": "HBM PHY + memory controller (base logic die)",
+      "tool": "reference",
+      "instances_per_cube": 1,
+      "area_mm2_per_cube": 25.0,
+      "dynamic_w_per_cube": 0.0,
+      "leakage_w_per_cube": 0.0,
+      "total_w_per_cube": 0.0,
+      "budget_w_per_cube": 0.0,
+      "vs_budget_pct": null,
+      "raw": {
+        "area_mm2_per_cube": 25.0,
+        "power_w_per_cube": 0.0,
+        "rationale": "Standard HBM4 base-die logic region (~20% of 121 mm\u00b2 die). Power bundled in H (75 W/cube) to avoid double-count. Area from architecture.json::base_logic_die.area_budget_mm2."
+      },
+      "error": null
+    },
+    "I": {
+      "code": "I",
+      "name": "Clock distribution network",
+      "tool": "derived",
+      "instances_per_cube": 1,
+      "area_mm2_per_cube": 0.0,
+      "dynamic_w_per_cube": 0.2649,
+      "leakage_w_per_cube": 0.0,
+      "total_w_per_cube": 0.2649,
+      "budget_w_per_cube": 1.8,
+      "vs_budget_pct": 14.7,
+      "raw": {
+        "fraction": 0.12,
+        "base_dynamic_w": 2.2077999999999998,
+        "deps": [
+          "A",
+          "C",
+          "D",
+          "E",
+          "F"
+        ]
+      },
+      "error": null
+    },
+    "J": {
+      "code": "J",
+      "name": "Total leakage (logic + SRAM)",
+      "tool": "derived",
+      "instances_per_cube": 1,
+      "area_mm2_per_cube": 0.0,
+      "dynamic_w_per_cube": 0.0,
+      "leakage_w_per_cube": 0.1673,
+      "total_w_per_cube": 0.1673,
+      "budget_w_per_cube": 1.0,
+      "vs_budget_pct": 16.7,
+      "raw": {
+        "summed_from": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ]
+      },
+      "error": null
+    },
+    "L": {
+      "code": "L",
+      "name": "Die-level overhead (IO ring + decap + clock physical)",
+      "tool": "derived",
+      "instances_per_cube": 1,
+      "area_mm2_per_cube": 3.632683,
+      "dynamic_w_per_cube": 0.0,
+      "leakage_w_per_cube": 0.0,
+      "total_w_per_cube": 0.0,
+      "budget_w_per_cube": 0.0,
+      "vs_budget_pct": null,
+      "raw": {
+        "fraction": 0.07,
+        "base_area_mm2": 51.895471,
+        "deps": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F",
+          "G",
+          "K"
+        ]
+      },
+      "error": null
+    }
+  },
+  "summary": {
+    "power": {
+      "per_cube_logic_w": 6.549,
+      "per_cube_phy_w": 76.5,
+      "per_cube_total_w": 83.049,
+      "per_chip_total_w": 1328.8
+    },
+    "area_mm2": {
+      "per_cube_logic_die": 55.5282,
+      "per_cube_hbm_footprint": 121.0,
+      "per_cube_package": 121.0,
+      "per_chip_logic_die_sum": 888.45,
+      "per_chip_hbm_sum": 1936.0,
+      "per_chip_package": 1936.0,
+      "_note": "Logic-die area sums A+B+C+D+E+F+G. HBM (H) is 3D-stacked, so per-cube footprint = max(logic die, HBM die). Chip package area = 16 \u00d7 cube footprint (side-by-side)."
+    },
+    "paper_targets": {
+      "cube_logic_w": 15,
+      "cube_total_w": 91.5,
+      "chip_tdp_w": 1440,
+      "chip_sram_mb": 48
+    }
+  }
+}

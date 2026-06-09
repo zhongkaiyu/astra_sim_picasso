@@ -39,6 +39,12 @@ runs
 symbolic_tensor_graph_picasso/
 output_qwen/
 output/
+output_llama4/
+ncu_test/
+
+# Large generated artifacts (regenerable, kept out of git)
+examples/run_scripts/analytical/congestion_aware/backend/hw_estimation/yosys/
+examples/run_scripts/analytical/congestion_aware/figures/rebuttal_figures/
 
 # Python bytecode
 __pycache__/

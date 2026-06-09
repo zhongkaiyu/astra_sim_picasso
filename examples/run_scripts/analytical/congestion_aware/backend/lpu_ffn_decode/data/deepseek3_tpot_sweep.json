@@ -1,0 +1,208 @@
+{
+  "meta": {
+    "model": {
+      "name": "deepseek3",
+      "d_model": 7168,
+      "num_layers": 61,
+      "is_moe": true,
+      "gated": true,
+      "d_ff": 18432,
+      "n_experts": 256,
+      "top_k": 8,
+      "d_moe_inter": 2048,
+      "n_shared_experts": 1
+    },
+    "attn_hw": "AMMA(hbm4_npu, hmp/ours)",
+    "ffn_hw": "LPU(lpx)",
+    "lpu": {
+      "sram_bw_TBs": 150.0,
+      "sram_cap_GB": 0.5,
+      "compute_TFLOPs": 1200.0,
+      "c2c_bw_GBs": 2500.0,
+      "c2c_num_ports": 96,
+      "hop_latency_ns": 300.0,
+      "bisection_bw_GBs": 2500.0,
+      "coll_knee_kib": [
+        32.0,
+        80.0
+      ],
+      "coll_knee_frac": [
+        0.5,
+        0.9
+      ],
+      "power_W": 388.0,
+      "w_bytes": 1,
+      "act_bytes": 1
+    },
+    "run": {
+      "TP": 16,
+      "PP": 1,
+      "batch": 1,
+      "tp_diameter_hops": 3,
+      "expert_mode": "per_token"
+    },
+    "link": {
+      "interpool_bw_GBs": 64.0,
+      "interpool_latency_ns": 1000.0,
+      "name": "pcie5_x16"
+    },
+    "tp_attn": {
+      "tp_h": 4,
+      "tp_hd": 4
+    }
+  },
+  "sweep": [
+    {
+      "per_layer": {
+        "t_attn_ns": 2184.9984,
+        "attn_parts": {
+          "qkv": 1101.0048,
+          "attn": 262.656,
+          "output": 367.0016,
+          "comm": 454.336
+        },
+        "attn_approx": "MLA-as-GQA",
+        "t_xfer_a2f_ns": 1112.0,
+        "t_ffn_ns": 1115.1740800000002,
+        "ffn_bound_breakdown_ns": {
+          "compute": 0.0,
+          "mem": 166.02208,
+          "comm": 949.1520000000002
+        },
+        "t_xfer_f2a_ns": 1112.0,
+        "layer_total_ns": 5524.17248
+      },
+      "decode": {
+        "context_length": 2048,
+        "num_layers": 61,
+        "tpot_ns": 336974.52128,
+        "tpot_us": 336.97452128,
+        "throughput_tok_s": 2967.583413136083,
+        "breakdown_ns": {
+          "attn": 133284.9024,
+          "ffn": 68025.61888000001,
+          "xfer": 135664.0
+        },
+        "breakdown_frac": {
+          "attn": 0.3955340655837017,
+          "ffn": 0.2018716982566048,
+          "xfer": 0.4025942361596936
+        }
+      }
+    },
+    {
+      "per_layer": {
+        "t_attn_ns": 2971.4304,
+        "attn_parts": {
+          "qkv": 1101.0048,
+          "attn": 1049.0880000000002,
+          "output": 367.0016,
+          "comm": 454.336
+        },
+        "attn_approx": "MLA-as-GQA",
+        "t_xfer_a2f_ns": 1112.0,
+        "t_ffn_ns": 1115.1740800000002,
+        "ffn_bound_breakdown_ns": {
+          "compute": 0.0,
+          "mem": 166.02208,
+          "comm": 949.1520000000002
+        },
+        "t_xfer_f2a_ns": 1112.0,
+        "layer_total_ns": 6310.60448
+      },
+      "decode": {
+        "context_length": 8192,
+        "num_layers": 61,
+        "tpot_ns": 384946.87328,
+        "tpot_us": 384.94687328,
+        "throughput_tok_s": 2597.761066298172,
+        "breakdown_ns": {
+          "attn": 181257.2544,
+          "ffn": 68025.61888000001,
+          "xfer": 135664.0
+        },
+        "breakdown_frac": {
+          "attn": 0.470863038464423,
+          "ffn": 0.17671430423730186,
+          "xfer": 0.35242265729827515
+        }
+      }
+    },
+    {
+      "per_layer": {
+        "t_attn_ns": 6117.158399999999,
+        "attn_parts": {
+          "qkv": 1101.0048,
+          "attn": 4194.816,
+          "output": 367.0016,
+          "comm": 454.336
+        },
+        "attn_approx": "MLA-as-GQA",
+        "t_xfer_a2f_ns": 1112.0,
+        "t_ffn_ns": 1115.1740800000002,
+        "ffn_bound_breakdown_ns": {
+          "compute": 0.0,
+          "mem": 166.02208,
+          "comm": 949.1520000000002
+        },
+        "t_xfer_f2a_ns": 1112.0,
+        "layer_total_ns": 9456.33248
+      },
+      "decode": {
+        "context_length": 32768,
+        "num_layers": 61,
+        "tpot_ns": 576836.28128,
+        "tpot_us": 576.83628128,
+        "throughput_tok_s": 1733.5941452590316,
+        "breakdown_ns": {
+          "attn": 373146.6624,
+          "ffn": 68025.61888000001,
+          "xfer": 135664.0
+        },
+        "breakdown_frac": {
+          "attn": 0.6468848692595884,
+          "ffn": 0.11792881461799026,
+          "xfer": 0.23518631612242127
+        }
+      }
+    },
+    {
+      "per_layer": {
+        "t_attn_ns": 18700.070399999997,
+        "attn_parts": {
+          "qkv": 1101.0048,
+          "attn": 16777.728,
+          "output": 367.0016,
+          "comm": 454.336
+        },
+        "attn_approx": "MLA-as-GQA",
+        "t_xfer_a2f_ns": 1112.0,
+        "t_ffn_ns": 1115.1740800000002,
+        "ffn_bound_breakdown_ns": {
+          "compute": 0.0,
+          "mem": 166.02208,
+          "comm": 949.1520000000002
+        },
+        "t_xfer_f2a_ns": 1112.0,
+        "layer_total_ns": 22039.244479999998
+      },
+      "decode": {
+        "context_length": 131072,
+        "num_layers": 61,
+        "tpot_ns": 1344393.9132799997,
+        "tpot_us": 1344.3939132799997,
+        "throughput_tok_s": 743.8296098501659,
+        "breakdown_ns": {
+          "attn": 1140704.2943999998,
+          "ffn": 68025.61888000001,
+          "xfer": 135664.0
+        },
+        "breakdown_frac": {
+          "attn": 0.8484896302579606,
+          "ffn": 0.050599469551326486,
+          "xfer": 0.10091090019071292
+        }
+      }
+    }
+  ]
+}

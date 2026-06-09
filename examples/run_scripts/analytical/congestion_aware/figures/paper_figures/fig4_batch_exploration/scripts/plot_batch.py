@@ -13,12 +13,12 @@ from scipy.interpolate import PchipInterpolator
 BASE = Path(__file__).resolve().parents[4]
 OUT = Path(__file__).resolve().parents[1] / "plots"
 
-STRATEGIES = ["hmp_reo_new", "rubin", "rubin_tp2", "h100", "h100_tp2"]
-LABELS = {"hmp_reo_new": "Ours (RO_new)", "rubin": "Rubin", "rubin_tp2": "Rubin TP2",
-          "h100": "H100", "h100_tp2": "H100 TP2"}
-COLORS = {"hmp_reo_new": "#4a7dba", "rubin": "#8fc7de", "rubin_tp2": "#ffd680",
-          "h100": "#fa874f", "h100_tp2": "#d93026"}
-MARKERS = {"hmp_reo_new": "P", "rubin": "o", "rubin_tp2": "v", "h100": "X", "h100_tp2": "p"}
+STRATEGIES = ["rubin", "rubin_tp2", "h100", "h100_tp2", "hmp_reo_new"]
+LABELS = {"rubin": "Rubin", "rubin_tp2": "Rubin TP2",
+          "h100": "H100", "h100_tp2": "H100 TP2", "hmp_reo_new": "Ours"}
+COLORS = {"rubin": "#8fc7de", "rubin_tp2": "#ffd680",
+          "h100": "#fa874f", "h100_tp2": "#d93026", "hmp_reo_new": "#4a7dba"}
+MARKERS = {"rubin": "o", "rubin_tp2": "v", "h100": "X", "h100_tp2": "p", "hmp_reo_new": "P"}
 
 BS_LIST = [1, 2, 4, 8, 16, 32, 64]
 SEQS = [1024, 16384, 65536, 262144]
@@ -53,10 +53,15 @@ def main():
     seq = 65536
 
     # ── Combined 1×3 figure: Throughput | e2e Latency | Pareto ──
-    fig, axes = plt.subplots(1, 3, figsize=(14, 3.6))
+    # 字号配置 (增大并加粗)
+    AXIS_LABEL = 28
+    TICK_SIZE = 26
+    PANEL_LABEL = 28   # (a) (b) (c) 子图标签字号
+    LEGEND_SIZE = 28
+
+    fig, axes = plt.subplots(1, 3, figsize=(15.54, 6.5),
+                             gridspec_kw={'width_ratios': [1.2, 1.2, 1.5]})
     colors = PARETO_COLORS  # unified color scheme for all panels
-    AXIS_LABEL = 16
-    TICK_SIZE = 13
 
     # (a) Throughput
     ax = axes[0]
@@ -70,17 +75,18 @@ def main():
                 ys.append(bs / (w / 1e3))  # tokens per us
         if xs:
             ax.plot(xs, ys, marker=MARKERS[sk], label=LABELS[sk],
-                    color=colors[sk], linewidth=2, markersize=6,
+                    color=colors[sk], linewidth=3.5, markersize=8,
                     linestyle="--" if "tp2" in sk else "-")
 
     ax.set_xscale("log", base=2)
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: str(int(x))))
-    ax.set_xlabel("Batch Size", fontsize=AXIS_LABEL)
-    ax.set_ylabel("Throughput (tokens/μs)", fontsize=AXIS_LABEL)
-    ax.legend(fontsize=8, loc="upper left")
+    ax.set_xlabel("Batch Size", fontsize=AXIS_LABEL, fontweight="normal")
+    ax.set_ylabel("Tput(tok/μs)", fontsize=AXIS_LABEL, fontweight="normal")
     ax.grid(True, which="both", ls="--", alpha=0.3)
     ax.tick_params(labelsize=TICK_SIZE)
-    ax.set_title("(a)", fontsize=AXIS_LABEL, fontweight="bold")
+    # 子图标签放在下方 (使用 text + 相对坐标)
+    ax.text(0.5, -0.32, "(a)", transform=ax.transAxes,
+            fontsize=PANEL_LABEL, fontweight="normal", ha="center", va="top")
 
     # (b) e2e Latency
     ax = axes[1]
@@ -94,18 +100,18 @@ def main():
                 ys.append(w)  # e2e latency in ns
         if xs:
             ax.plot(xs, ys, marker=MARKERS[sk], label=LABELS[sk],
-                    color=colors[sk], linewidth=2, markersize=6,
+                    color=colors[sk], linewidth=3.5, markersize=8,
                     linestyle="--" if "tp2" in sk else "-")
 
     ax.set_xscale("log", base=2)
     ax.set_yscale("log")
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: str(int(x))))
-    ax.set_xlabel("Batch Size", fontsize=AXIS_LABEL)
-    ax.set_ylabel("e2e Latency (ns)", fontsize=AXIS_LABEL)
-    ax.legend(fontsize=8, loc="upper left")
+    ax.set_xlabel("Batch Size", fontsize=AXIS_LABEL, fontweight="normal")
+    ax.set_ylabel("Latency (ns)", fontsize=AXIS_LABEL, fontweight="normal")
     ax.grid(True, which="both", ls="--", alpha=0.3)
     ax.tick_params(labelsize=TICK_SIZE)
-    ax.set_title("(b)", fontsize=AXIS_LABEL, fontweight="bold")
+    ax.text(0.5, -0.32, "(b)", transform=ax.transAxes,
+            fontsize=PANEL_LABEL, fontweight="normal", ha="center", va="top")
 
     # (c) Pareto curve
     ax = axes[2]
@@ -132,39 +138,61 @@ def main():
         bs_labels = [bs_labels[i] for i in order]
 
         ax.scatter(tps_user, tputs, marker=MARKERS[sk], color=colors[sk],
-                   s=50, zorder=5, edgecolors="white", linewidths=0.5)
+                   s=70, zorder=5, edgecolors="white", linewidths=0.5)
 
         if len(tps_user) >= 4:
             spl = PchipInterpolator(tps_user, tputs)
             x_smooth = np.linspace(tps_user.min(), tps_user.max(), 200)
             y_smooth = spl(x_smooth)
             ax.plot(x_smooth, y_smooth, label=LABELS[sk],
-                    color=colors[sk], linewidth=2.5,
+                    color=colors[sk], linewidth=3.5,
                     linestyle="--" if "tp2" in sk else "-")
         elif len(tps_user) >= 2:
             ax.plot(tps_user, tputs, label=LABELS[sk],
-                    color=colors[sk], linewidth=2.5,
+                    color=colors[sk], linewidth=3.5,
                     linestyle="--" if "tp2" in sk else "-")
         else:
             ax.plot(tps_user, tputs, label=LABELS[sk],
-                    color=colors[sk], linewidth=2.5, marker=MARKERS[sk])
-
-        for i, bs in enumerate(bs_labels):
-            if bs == bs_labels[0] or bs == bs_labels[-1]:
-                ax.annotate(f"bs={bs}", (tps_user[i], tputs[i]),
-                            textcoords="offset points", xytext=(6, -4),
-                            fontsize=7, color=colors[sk])
-
-    ax.set_xlabel("TPS/User (1/s)", fontsize=AXIS_LABEL)
-    ax.set_ylabel("Throughput (tokens/s)", fontsize=AXIS_LABEL)
+                    color=colors[sk], linewidth=3.5, marker=MARKERS[sk])
+        if sk in ("hmp_reo_new", "rubin_tp2"):
+            for i, bs in enumerate(bs_labels):
+                if bs == bs_labels[0] or bs == bs_labels[-1]:
+                    is_last = (bs == bs_labels[-1])  # rightmost point
+                    if sk == "rubin_tp2":
+                        ofs = (-60, -18) if is_last else (6, -18)
+                    else:
+                        ofs = (-60, -4) if is_last else (6, -4)
+                    ax.annotate(
+                        f"BS={bs}",
+                        (tps_user[i], tputs[i]),
+                        textcoords="offset points",
+                        xytext=ofs,
+                        fontsize=20,
+                        color=colors[sk]
+                    )
+    ax.set_xlabel("TPS/User (1/s)", fontsize=AXIS_LABEL, fontweight="normal")
+    ax.set_ylabel("Tput(tok/s)", fontsize=AXIS_LABEL, fontweight="normal")
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(_fmt_k))
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(_fmt_k))
-    ax.legend(fontsize=8, loc="upper left")
     ax.grid(True, ls="--", alpha=0.3)
     ax.tick_params(labelsize=TICK_SIZE)
-    ax.set_title("(c)", fontsize=AXIS_LABEL, fontweight="bold")
+    ax.yaxis.set_major_locator(ticker.FixedLocator([0, 200_000, 400_000]))
+    plt.setp(ax.get_yticklabels(), rotation=90, va='center')
+    ax.text(0.5, -0.32, "(c)", transform=ax.transAxes,
+            fontsize=PANEL_LABEL, fontweight="normal", ha="center", va="top")
 
-    fig.tight_layout()
+    # ── 共享图例 (横铺在顶部) ──
+    handles = []
+    for sk in STRATEGIES:
+        handles.append(plt.Line2D([0], [0], marker=MARKERS[sk], color=colors[sk],
+                                   linewidth=3.5, markersize=8,
+                                   linestyle="--" if "tp2" in sk else "-",
+                                   label=LABELS[sk]))
+    fig.legend(handles=handles, loc="upper center", ncol=len(STRATEGIES),
+               fontsize=LEGEND_SIZE, frameon=True, fancybox=True,
+               bbox_to_anchor=(0.5, 1.08))
+
+    fig.tight_layout(rect=[0, 0.05, 1, 0.93], w_pad=0.5)
     fname = OUT / "fig4_combined.pdf"
     fig.savefig(fname, dpi=300, bbox_inches="tight")
     fig.savefig(fname.with_suffix(".png"), dpi=200, bbox_inches="tight")
@@ -235,22 +263,22 @@ def plot_pareto(data, bs_list, seq, out_dir):
             x_smooth = np.linspace(tps_user.min(), tps_user.max(), 200)
             y_smooth = spl(x_smooth)
             ax.plot(x_smooth, y_smooth, label=LABELS[sk],
-                    color=colors[sk], linewidth=2.5,
+                    color=colors[sk], linewidth=3.5,
                     linestyle="--" if "tp2" in sk else "-")
         elif len(tps_user) >= 2:
             ax.plot(tps_user, tputs, label=LABELS[sk],
-                    color=colors[sk], linewidth=2.5,
+                    color=colors[sk], linewidth=3.5,
                     linestyle="--" if "tp2" in sk else "-")
         else:
             ax.plot(tps_user, tputs, label=LABELS[sk],
-                    color=colors[sk], linewidth=2.5, marker=MARKERS[sk])
+                    color=colors[sk], linewidth=3.5, marker=MARKERS[sk])
 
         # 标注 bs 值 (首尾)
         for i, bs in enumerate(bs_labels):
             if bs == bs_labels[0] or bs == bs_labels[-1]:
-                ax.annotate(f"bs={bs}", (tps_user[i], tputs[i]),
+                ax.annotate(f"BS={bs}", (tps_user[i], tputs[i]),
                             textcoords="offset points", xytext=(8, -5),
-                            fontsize=8, color=colors[sk])
+                            fontsize=20, color=colors[sk])
 
     ax.set_xlabel("TPS/User (1/s)", fontsize=16)
     ax.set_ylabel("Throughput (1/s)", fontsize=16)

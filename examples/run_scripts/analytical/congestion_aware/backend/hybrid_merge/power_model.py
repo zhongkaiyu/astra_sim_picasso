@@ -5,7 +5,7 @@ from hybrid merged report data.
 Power formulas (total system power):
     H100:  P = 17.7% × 700  + 829  × U_cmpt + 580  × U_mem
     Rubin: P = 17.7% × 2200 + 2631 × U_cmpt + 1800 × U_mem
-    Ours:  P = 17.7% × 1440 + 394  × U_cmpt + 1120 × U_mem  [+ D2D]
+    Ours:  P = 17.7% × 1440 + 260  × U_cmpt + 1021 × U_mem  [+ D2D]
 
 Utilization:
     U_mem:  (hbm_bytes / time) / peak_hbm_bw   (per cube / per die)
@@ -30,9 +30,9 @@ POWER_COEFFS = {
     "ours": {
         "static_ratio": 0.177,
         "tdp_w": 1440,
-        "cmpt_coeff": 394,       # W at full compute utilization
-        "mem_coeff": 1120,        # W at full memory utilization
-        "formula": "P = 17.7%×1440 + 394×U_cmpt + 1120×U_mem + D2D",
+        "cmpt_coeff": 260,       # W at full compute utilization
+        "mem_coeff": 1021,        # W at full memory utilization
+        "formula": "P = 17.7%×1440 + 260×U_cmpt + 1021×U_mem + D2D",
     },
     "rubin": {
         "static_ratio": 0.177,
