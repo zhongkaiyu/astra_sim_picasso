@@ -14,6 +14,7 @@ Fig 6: 设计空间探索 — Compute Power × D2D BW × Batch Size (含 utiliza
   - Fig 6d: Raw Roofline vs Util-Adjusted 对比
 """
 import json
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -23,9 +24,15 @@ import matplotlib.colors as mcolors
 import numpy as np
 
 # ── 路径 ──
+BASE = Path(__file__).resolve().parents[4]  # congestion_aware/
 DATA_UTIL = Path(__file__).resolve().parents[1] / "data" / "sweep_with_util.json"
 DATA_RAW  = Path(__file__).resolve().parents[1] / "data" / "sweep_compute_bw_batch.json"
 OUT = Path(__file__).resolve().parents[1] / "plots"
+
+# ── fig6d: D2D 固定延时扫描所需的 roofline 后端 ──
+sys.path.insert(0, str(BASE / "backend" / "roofline"))
+from roofline_gqa_calc import calc_strategy
+from attention import MODEL_CONFIGS
 
 
 def main():
@@ -47,23 +54,23 @@ def main():
     colors_bs = {1: "#1B4F72", 4: "#2E86C1", 16: "#85C1E9", 32: "#D4E6F1"}
 
     # ==================================================================
-    #  Fig 6a: 热力图 (4 batch)
+    #  Fig 6a: 热力图 (只保留 BS=1, BS=16)
     #
-    #  布局: 2×2 子图, 每个子图对应一个 batch size。
+    #  布局: 1×2 横向子图, 每个子图对应一个 batch size。
     #  - 横轴: D2D Link BW (TB/s)      — lbw_vals
     #  - 纵轴: Compute Power (TFLOPS)   — sa_vals
     #  - 色彩: 绿(低延迟/快) → 黄(中) → 红(高延迟/慢), 对数归一化
     #  - 格内数字: 延迟值 (μs), ≥10 取整, <10 保留一位小数
-    #  - colorbar: 4 个子图共用同一个, 放在图的最右侧
-    #  - 热力图: aspect="equal" 确保每个格子是严格正方形
+    #  - colorbar: 2 个子图共用同一个, 放在图的最右侧
     # ==================================================================
-    n_bs = len(bs_vals)
+    bs_show = [bs for bs in (1, 16) if bs in bs_vals]
+    n_bs = len(bs_show)
 
-    # ── 第一遍: 遍历所有 batch, 构建网格并收集全局 min/max ──
-    #    用于建立统一的 LogNorm, 使 4 个子图共享同一色彩范围
+    # ── 第一遍: 遍历待显示 batch, 构建网格并收集全局 min/max ──
+    #    用于建立统一的 LogNorm, 使 2 个子图共享同一色彩范围
     grids = {}
     global_min, global_max = np.inf, -np.inf
-    for bs in bs_vals:
+    for bs in bs_show:
         grid = np.zeros((len(sa_vals), len(lbw_vals)))
         for ci, pp in enumerate(sa_vals):
             for li, lbw in enumerate(lbw_vals):
@@ -86,10 +93,11 @@ def main():
     shared_norm = mcolors.LogNorm(vmin=max(global_min, 1), vmax=global_max)
 
     # ── 创建 figure, 预留右侧空间给共享 colorbar ──
-    fig, axes = plt.subplots(2, 2, figsize=(11, 10))
+    fig, axes = plt.subplots(1, n_bs, figsize=(5.5 * n_bs, 5.6))
+    axes = np.atleast_1d(axes)
 
-    for bi, bs in enumerate(bs_vals):
-        ax = axes[bi // 2, bi % 2]
+    for bi, bs in enumerate(bs_show):
+        ax = axes[bi]
         grid = grids[bs]
 
         # ── 绘制热力图 ──
@@ -118,43 +126,106 @@ def main():
                             color="white" if ratio > 0.65 or ratio < 0.25 else "black")
 
         # ── 坐标轴刻度与标签 ──
-        row, col = bi // 2, bi % 2
+        #    1×2 单行布局: 两个子图都显示 x 刻度; 仅首列显示 y 刻度
+        col = bi
 
         ax.set_xticks(range(len(lbw_vals)))
         ax.set_yticks(range(len(sa_vals)))
 
-        # 第一行: 隐藏 x 轴刻度标签和标题, 节省纵向空间
-        if row == 0:
-            ax.set_xticklabels([])
-            ax.set_xlabel("")
-        else:
-            ax.set_xticklabels([f"{v}" for v in lbw_vals], fontsize=24, fontweight="normal")
-            ax.set_xlabel("")
+        ax.set_xticklabels([f"{v}" for v in lbw_vals], fontsize=24, fontweight="normal")
+        ax.set_xlabel("")
 
-        # 第二列: 隐藏 y 轴刻度标签和标题, 节省横向空间
-        if col == 1:
+        if col == 0:
+            ax.set_yticklabels([f"{v}T" for v in sa_vals], fontsize=24, fontweight="normal")
+        else:
             ax.set_yticklabels([])
             ax.set_ylabel("")
-        else:
-            ax.set_yticklabels([f"{v}T" for v in sa_vals], fontsize=24, fontweight="normal")
 
         ax.set_title(f"BS={bs}", fontsize=26, fontweight="normal")
 
-    # ── 共享轴标题: 各放一个, 居中于两行/两列之间 ──
-    fig.tight_layout(rect=[0.06, 0.06, 0.92, 1])
-    fig.text(0.05, 0.5, "Compute Power (TFLOPS/NPU)", fontsize=26,
+    # ── 共享轴标题 ──
+    fig.tight_layout(rect=[0.06, 0.08, 0.90, 1])
+    fig.text(0.045, 0.54, "Compute Power (TFLOPS/NPU)", fontsize=24,
              ha="center", va="center", rotation=90)
-    fig.text(0.48, 0.04, "D2D Link BW (TB/s)", fontsize=26,
+    fig.text(0.46, 0.045, "D2D Link BW (TB/s)", fontsize=24,
              ha="center", va="center")
     # cbar_ax 位置: 与子图上下边界对齐
-    pos_top = axes[0, 1].get_position()
-    pos_bot = axes[1, 1].get_position()
-    cbar_ax = fig.add_axes([0.90, pos_bot.y0, 0.025, pos_top.y1 - pos_bot.y0])
+    pos = axes[-1].get_position()
+    cbar_ax = fig.add_axes([0.915, pos.y0, 0.022, pos.y1 - pos.y0])
     cbar = fig.colorbar(im, cax=cbar_ax)
     cbar.set_label("Latency (μs)", fontsize=26, fontweight="normal")
     cbar.ax.tick_params(labelsize=24)
 
     fname = OUT / "fig6a_heatmap_wall.pdf"
+    fig.savefig(fname, dpi=300, bbox_inches="tight")
+    fig.savefig(fname.with_suffix(".png"), dpi=200, bbox_inches="tight")
+    print(f"Saved: {fname}")
+    plt.close(fig)
+
+    # ==================================================================
+    #  Fig 6d: 延时 vs D2D Link 固定延时 (hop latency), D2D 带宽固定
+    #
+    #  参数与 fig1_speedup_4panel.pdf 一致:
+    #    - 模型: Qwen3-235B, 策略 Ours (hmp_reo_new)
+    #    - 算力 96 TFLOPS/NPU, HBM 2.5TB/s, util96, D2D BW = 1.5 TB/s (固定)
+    #    - util 调整后的 compute (hybrid_gpu_ns) 取自 fig1 的 hybrid report
+    #  扫描: D2D Link 固定延时 (per-hop latency) 15→1000 ns
+    #    wall(hop) = hybrid_gpu_ns(seq) + comm_total_ns(hop)
+    #    comm 由 roofline_gqa_calc.calc_strategy 解析计算 (D2D BW=1.5 固定)
+    #  布局: 1×2, 对应 BS=1 / BS=16, 每条折线为一个 sequence length
+    # ==================================================================
+    LINK_BW_FIXED = 1.5          # D2D 带宽固定 (TB/s), 与 fig1 一致
+    HOP_VALS = [15, 100, 200, 400, 600, 800, 1000]   # D2D Link 固定延时 (ns)
+    SEQS_D2D = [4096, 65536, 262144, 1048576]
+    SEQ_LABELS = {4096: "4K", 65536: "64K", 262144: "256K", 1048576: "1M"}
+    colors_seq = {4096: "#1B4F72", 65536: "#2E86C1",
+                  262144: "#E07850", 1048576: "#C04020"}
+    mc = MODEL_CONFIGS["qwen3"]
+    hw96 = {"compute": 96, "Bandwidth": 2.5}
+
+    def report_gpu_map(bs):
+        path = (BASE / "reports" / "qwen3-235B" / "hybrid"
+                / f"gqa_hybrid_merged_96T_bw1500_util96_bs{bs}.json")
+        with open(path) as f:
+            rep = json.load(f)
+        return {e["seq"]: e["hybrid_gpu_ns"]
+                for e in rep["strategies"]["hmp_reo_new"]["data"]}
+
+    def comm_at_hop(bs, hop):
+        r = calc_strategy("hmp_reo_new", hw96, bs, [SEQS_D2D[0]],
+                          link_bw=LINK_BW_FIXED, hop_latency_ns=hop,
+                          endpoint_delay_ns=10, model_config=mc)
+        return r["comm"]["total_comm_ns"]  # comm 与 seq 无关
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5.6), sharey=False)
+    legend_handles = None
+    for col, bs in enumerate([1, 16]):
+        ax = axes[col]
+        gpu_map = report_gpu_map(bs)
+        comm_by_hop = {h: comm_at_hop(bs, h) for h in HOP_VALS}
+        for seq in SEQS_D2D:
+            gpu = gpu_map[seq]
+            walls = [(gpu + comm_by_hop[h]) / 1e3 for h in HOP_VALS]  # μs
+            ax.plot(HOP_VALS, walls, marker="o", linewidth=2.4, markersize=8,
+                    color=colors_seq[seq], label=f"seq={SEQ_LABELS[seq]}")
+
+        ax.set_yscale("log")
+        ax.axvline(15, color="#7F8C8D", ls="--", lw=1.2, alpha=0.7)
+        ax.set_xlabel("D2D Link Latency (ns)", fontsize=26)
+        if col == 0:
+            ax.set_ylabel("Latency (μs)", fontsize=26)
+        ax.set_title(f"BS={bs}", fontsize=24, fontweight="normal", pad=8)
+        ax.grid(True, which="both", ls="--", alpha=0.3)
+        ax.tick_params(axis="both", labelsize=24)
+        if legend_handles is None:
+            legend_handles, legend_labels = ax.get_legend_handles_labels()
+
+    # ── 单一图例: 横置于两个 BS 子图标题之上 ──
+    fig.legend(legend_handles, legend_labels, loc="upper center",
+               ncol=len(SEQS_D2D), fontsize=26, frameon=True,
+               bbox_to_anchor=(0.5, 1.06))
+    fig.tight_layout(rect=[0, 0, 1, 0.91])
+    fname = OUT / "fig6d_d2d_latency_scaling.pdf"
     fig.savefig(fname, dpi=300, bbox_inches="tight")
     fig.savefig(fname.with_suffix(".png"), dpi=200, bbox_inches="tight")
     print(f"Saved: {fname}")

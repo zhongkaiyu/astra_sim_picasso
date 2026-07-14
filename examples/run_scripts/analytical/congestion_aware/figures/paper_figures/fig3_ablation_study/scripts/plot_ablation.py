@@ -20,15 +20,20 @@ OUT = Path(__file__).resolve().parents[1] / "plots"
 # ── 数据源 ──
 DATA_PATH = BASE / "reports/qwen3-235B/hybrid/gqa_hybrid_merged_96T_split4_bw1500_util96.json"
 
-# ── 策略定义 (顺序: TP16, HMP, RO_new) ──
-STRATEGIES = ["tp16", "hmp", "hmp_reo_new"]
-LABELS = {"hmp_reo_new": "HP_RO", "hmp": "HP", "tp16": "TP16"}
+# ── 策略定义 (顺序: TP16, HMP, RO_new, GPU-like) ──
+STRATEGIES = ["tp16", "hmp", "hmp_reo_new", "gpu_like"]
+LABELS = {"hmp_reo_new": "HP_RO", "hmp": "HP", "tp16": "TP16", "gpu_like": "GPU-like"}
 COLORS = {
     "tp16":        "#CDE2E8",
     "hmp":         "#C8D4E9",
     "hmp_reo_new": "#F59790",
+    "gpu_like":    "#C5E0B4",
 }
 BASELINE = "tp16"
+
+# ── GPU-like: HP_RO 去掉 40% 算力 (compute 吞吐降为 60%), 其余不变 ──
+GPU_LIKE_SRC = "hmp_reo_new"
+GPU_LIKE_COMPUTE_FACTOR = 0.6  # 保留 60% 算力 => compute 时间 / 0.6
 
 # ── 序列长度 ──
 SEQS = [8192, 262144, 1048576]
@@ -99,9 +104,24 @@ def plot_speedup_chart(fig, ax, speedup_data, max_val, title):
     ax.tick_params(axis="y", labelsize=24)                          # 纵轴刻度加大
 
 
+def inject_gpu_like(data):
+    """构造 GPU-like 策略: 复制 HP_RO, 把 compute 时间 /0.6 (去掉 40% 算力), comm 不变。"""
+    src = data.get("strategies", {}).get(GPU_LIKE_SRC, {}).get("data", [])
+    new_entries = []
+    for e in src:
+        gpu = e["hybrid_gpu_ns"] / GPU_LIKE_COMPUTE_FACTOR
+        comm = e["comm_total_ns"]
+        ne = dict(e)
+        ne["hybrid_gpu_ns"] = gpu
+        ne["hybrid_wall_ns"] = gpu + comm  # comm 保持一致
+        new_entries.append(ne)
+    data.setdefault("strategies", {})["gpu_like"] = {"data": new_entries}
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     data = load(DATA_PATH)
+    inject_gpu_like(data)
 
     n_strats = len(STRATEGIES)
     n_seqs = len(SEQS)
@@ -197,7 +217,7 @@ def main():
 
     min_gap_bot = BREAK_LO * 0.08
     min_gap_top = (upper_max - BREAK_LO) * 0.12
-    for grp in labels_by_group.values():
+    for gi, grp in labels_by_group.items():
         grp.sort(key=lambda t: t[1])
         y_positions = [item[1] for item in grp]
         for j in range(1, len(y_positions)):
@@ -206,10 +226,23 @@ def main():
                 y_positions[j] = y_positions[j - 1] + gap
         for j, (xp, raw_y, txt) in enumerate(grp):
             target_ax = ax_r_top if raw_y > BREAK_LO else ax_r_bot
-            target_ax.text(xp, y_positions[j] + 0.3,
-                           txt, ha="center", va="bottom",
-                           fontsize=15, fontweight="normal", color="black",
-                           rotation=0)
+
+            # 默认向上放一点
+            y_text = y_positions[j] + 0.3
+            va = "bottom"
+
+            # 最右侧 sequence length 那一组，且在上断轴区域时，单独下调
+            if gi == n_seqs - 1 and target_ax is ax_r_top:
+                y_text = y_positions[j] - 1.2
+                va = "top"
+
+            target_ax.text(
+                xp, y_text,
+                txt,
+                ha="center", va=va,
+                fontsize=15, fontweight="normal", color="black",
+                rotation=0
+            )
 
     ax_r_bot.set_xticks(x)
     ax_r_bot.set_xticklabels([seq_label(s) for s in SEQS], fontsize=24)  # 横轴刻度加大

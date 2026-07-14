@@ -43,9 +43,27 @@ peak-derived（机架 40PB/s÷256），取 100% 本就乐观（LPUv1 18.4 TB/s �
 """
 
 from __future__ import annotations
+import json
+import os
 from typing import Dict, Any, List
 
 from lpu_config import LPUSpec, FFNModelSpec, RunSpec
+
+# trace 测得的真实 distinct 激活专家数曲线（见 rubin_ffn_decode._trace_weight_reads）。
+_EXPERT_ACT = None
+def _trace_weight_reads(model_name: str, B: int, n_experts: int, top_k: int) -> float:
+    global _EXPERT_ACT
+    if _EXPERT_ACT is None:
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         "contbatch", "data", "expert_activation.json")
+        try:
+            _EXPERT_ACT = json.load(open(p)).get("distinct_experts", {})
+        except Exception:
+            _EXPERT_ACT = {}
+    curve = _EXPERT_ACT.get(model_name, {})
+    if str(B) in curve:
+        return float(curve[str(B)])
+    return float(min(B * top_k, n_experts))
 
 
 # ---------------------------------------------------------------------------
@@ -200,9 +218,14 @@ def moe_ffn_stages(model: FFNModelSpec, lpu: LPUSpec,
         # 每 token 各读自己的 top_k expert 一次 → OI=1
         weight_reads = B * top_k
         compute_tokens = B * top_k
-    elif run.expert_mode == "batched":
+    elif run.expert_mode in ("batched", "batched_membound"):
         # batch 内复用：权重按「被激活的 distinct expert 数」上界 = min(B*top_k, n_experts) 读一次
+        # batched_membound 额外在 decode 区强制 expert/shared 走 memory-bound（见函数末尾）
         weight_reads = min(B * top_k, model.n_experts)
+        compute_tokens = B * top_k
+    elif run.expert_mode == "trace":
+        # 真实 distinct 激活专家数（trace 标定），FLOPs 仍按 B·top_k 个 token-expert 对
+        weight_reads = _trace_weight_reads(model.name, B, model.n_experts, top_k)
         compute_tokens = B * top_k
     else:
         raise ValueError(f"未知 expert_mode: {run.expert_mode}")
@@ -237,6 +260,13 @@ def moe_ffn_stages(model: FFNModelSpec, lpu: LPUSpec,
 
     # --- 5) TP AllReduce：payload = 输出激活 (B × d) ---
     stages.append(_allreduce_c2c(B * d * a, lpu, run))
+
+    # batched_membound / trace: decode 区 MoE expert/shared 强制 memory-bound（权重读为瓶颈）
+    if run.expert_mode in ("batched_membound", "trace"):
+        for s in stages:
+            if s["name"].startswith(("expert_", "shared_")):
+                s["t_ns"] = s["t_mem_ns"]
+                s["bound"] = "mem"
     return stages
 
 

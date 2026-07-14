@@ -69,9 +69,26 @@ def _interp_seq(profile: dict, seq: int) -> float:
 
 def _noc_allreduce_ns(model, batch, run, spec) -> float:
     """attention-output 的片内 NoC AllReduce（payload = B×d_model×act_bytes）。
-    复用 ffn_decode._allreduce_c2c：diameter×hop_lat + 2(TP-1)/TP × payload/eff_bw。"""
+    复用 ffn_decode._allreduce_c2c：diameter×hop_lat + 2(TP-1)/TP × payload/eff_bw。
+    注意：run.TP 已是 tp_lat（node 内），故这是 node 内 NVLink-class collective。"""
     payload = batch * model.d_model * spec.act_bytes
     return _ffn._allreduce_c2c(payload, spec, run)["t_ns"]
+
+
+def _ep_crossnode_ns(model, batch, defaults, spec) -> float:
+    """跨 node 的 MoE expert-parallel all-to-all（>8 卡后才出现）。
+    单 token decode 每层需 **2 次跨 node all-to-all-v**：dispatch（token→远端 expert node）+
+    combine（结果→home node）。每次 all-to-all-v 一个 node 要与 (nn-1) 个对端交换，小包 latency-bound
+    → 关键路径 ≈ (nn-1) × 单跳 NIC 延迟（保守上界：交换串行）；带宽项 (nn-1)/nn × payload/nic_bw。
+    NIC 延迟用 exp1 同口径实测量级（Duplex/Helios 2µs IB/RDMA、Stratum 0.7µs cross-chip）。
+    仅 MoE 且 num_nodes>1 时计。这是 NMP 在 >8 卡上的 **主要隐藏延时**（用户 #4 指正）。"""
+    if not getattr(model, "is_moe", False) or defaults.num_nodes <= 1:
+        return 0.0
+    nn = defaults.num_nodes
+    per_phase_payload = batch * model.d_model * spec.act_bytes      # 单次 all-to-all 的激活
+    lat = (nn - 1) * defaults.nic_hop_ns                            # 单次 all-to-all-v 关键路径（ns）
+    bw = ((nn - 1) / nn) * per_phase_payload / (defaults.nic_bw_GBs * 1e9) * 1e9
+    return 2.0 * (lat + bw)                                         # ×2：dispatch + combine
 
 
 def attention_layer_ns_nmp(model, batch, seq, hw, run, spec, defaults,
@@ -121,15 +138,17 @@ def compose_layer(baseline, model, hw, run, spec, defaults, batch, seq,
                   use_attn_util=True) -> dict:
     """单层：attention(NMP) + FFN(NMP)，无跨池 xfer。"""
     attn = attention_layer_ns_nmp(model, batch, seq, hw, run, spec, defaults, use_attn_util)
-    ffn = _ffn.simulate_layer(model, spec, run)           # exp1 路径，100% roofline
+    ffn = _ffn.simulate_layer(model, spec, run)           # exp1 路径，100% roofline（run.TP=tp_lat）
     t_ffn = ffn["layer_total_ns"]
-    t_layer = attn["t_ns"] + t_ffn
+    t_ep = _ep_crossnode_ns(model, batch, defaults, spec)  # >8 卡跨 node EP all-to-all（NIC）
+    t_layer = attn["t_ns"] + t_ffn + t_ep
     return {
         "baseline": baseline,
         "t_attn_ns": attn["t_ns"],
         "attn_parts": attn["parts"],
         "attn_source": attn["source"],
         "t_ffn_ns": t_ffn,
+        "t_ep_ns": t_ep,
         "ffn_bound_breakdown_ns": ffn["bound_breakdown_ns"],
         "layer_total_ns": t_layer,
     }
@@ -142,8 +161,10 @@ def compose_decode(baseline, model, hw, run, spec, defaults, batch, seq,
     tpot_ns = layer["layer_total_ns"] * n
     attn_total = layer["t_attn_ns"] * n
     ffn_total = layer["t_ffn_ns"] * n
-    # noc 分量：attention comm + FFN comm（都在片内）
-    noc_total = (layer["attn_parts"]["comm"] + layer["ffn_bound_breakdown_ns"].get("comm", 0.0)) * n
+    ep_total = layer.get("t_ep_ns", 0.0) * n
+    # noc 分量：attention comm（node 内）+ FFN comm（node 内）+ EP all-to-all（跨 node NIC）
+    noc_total = (layer["attn_parts"]["comm"] + layer["ffn_bound_breakdown_ns"].get("comm", 0.0)
+                 + layer.get("t_ep_ns", 0.0)) * n
     return {
         "per_layer": layer,
         "decode": {
@@ -153,7 +174,8 @@ def compose_decode(baseline, model, hw, run, spec, defaults, batch, seq,
             "tpot_ns": tpot_ns,
             "tpot_us": tpot_ns / 1e3,
             "throughput_tok_s": 1e9 / tpot_ns if tpot_ns > 0 else 0.0,
-            "breakdown_ns": {"attn": attn_total, "ffn": ffn_total, "noc": noc_total},
+            "breakdown_ns": {"attn": attn_total, "ffn": ffn_total, "noc": noc_total,
+                             "ep_noc": ep_total},
             "breakdown_frac": {
                 "attn": attn_total / tpot_ns if tpot_ns else 0,
                 "ffn": ffn_total / tpot_ns if tpot_ns else 0,
@@ -187,8 +209,8 @@ def main():
     spec = (get_nmp(args.baseline, p_hot=args.p_hot) if (args.baseline == "stratum" and args.p_hot is not None)
             else get_nmp(args.baseline))
     hw = get_attn_hw(args.baseline)
-    run = RunSpec(TP=defaults.tp, batch=args.batch, expert_mode=args.expert_mode,
-                  tp_diameter_hops=defaults.diameter_hops)
+    run = RunSpec(TP=defaults.tp_lat, batch=args.batch, expert_mode=args.expert_mode,
+                  tp_diameter_hops=defaults.diameter_hops)   # roofline 用 tp_lat（node 封顶）
     cls = ([int(x) for x in args.cl_sweep.split(",")] if args.cl_sweep else [args.cl])
 
     meta = {

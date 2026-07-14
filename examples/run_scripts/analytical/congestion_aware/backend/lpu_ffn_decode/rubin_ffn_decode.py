@@ -40,6 +40,24 @@ from typing import Dict, Any, List, Tuple
 
 from lpu_config import FFNModelSpec, RunSpec   # reuse the model library + RunSpec
 
+# trace 测得的「真实 distinct 激活专家数」曲线（exp5 用；由 expert-selection trace
+# 蒙特卡洛采样得到，见 contbatch/data/expert_activation.json）。比解析上界
+# min(B·top_k, n_experts) 低很多（专家选择有重合/偏斜）。
+_EXPERT_ACT = None
+def _trace_weight_reads(model_name: str, B: int, n_experts: int, top_k: int) -> float:
+    global _EXPERT_ACT
+    if _EXPERT_ACT is None:
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         "contbatch", "data", "expert_activation.json")
+        try:
+            _EXPERT_ACT = json.load(open(p)).get("distinct_experts", {})
+        except Exception:
+            _EXPERT_ACT = {}
+    curve = _EXPERT_ACT.get(model_name, {})
+    if str(B) in curve:
+        return float(curve[str(B)])
+    return float(min(B * top_k, n_experts))   # 回退：解析上界
+
 
 # ---------------------------------------------------------------------------
 # Rubin GPU hardware spec (mirrors roofline/hardware_config.py:rubin_single_layer)
@@ -199,11 +217,19 @@ def moe_ffn_stages(model: FFNModelSpec, gpu: GPUSpec, run: RunSpec,
     stages.append(_roofline_stage("gating", flops, wbytes, act, gpu, run.TP, mu, cu))
 
     # 2) weight-reuse factor (OI=1 per_token vs batched upper bound)
+    #   batched_membound: 同 batched 的权重封顶(min(B·top_k, n_experts))，并在 decode 区
+    #   强制 expert/shared 走 memory-bound(见函数末尾)。主流观测：MoE decode 全程
+    #   weight-load 主导，compute-bound 需 ~万级 token；本模型的 GEMV-util compute 项会在
+    #   B~数十就假性 compute-bound，故在该模式下剔除。
     if run.expert_mode == "per_token":
         weight_reads = B * top_k
         compute_tokens = B * top_k
-    elif run.expert_mode == "batched":
+    elif run.expert_mode in ("batched", "batched_membound"):
         weight_reads = min(B * top_k, model.n_experts)
+        compute_tokens = B * top_k
+    elif run.expert_mode == "trace":
+        # 真实 distinct 激活专家数（trace 标定）；FLOPs 仍按 B·top_k 个 token-expert 对
+        weight_reads = _trace_weight_reads(model.name, B, model.n_experts, top_k)
         compute_tokens = B * top_k
     else:
         raise ValueError(f"unknown expert_mode: {run.expert_mode}")
@@ -241,6 +267,13 @@ def moe_ffn_stages(model: FFNModelSpec, gpu: GPUSpec, run: RunSpec,
 
     # 5) TP AllReduce
     stages.append(_allreduce_nvlink(B * d * a, gpu, run))
+
+    # batched_membound / trace: decode 区 MoE expert/shared 强制 memory-bound(权重读为瓶颈)
+    if run.expert_mode in ("batched_membound", "trace"):
+        for s in stages:
+            if s["name"].startswith(("expert_", "shared_")):
+                s["t_ns"] = s["t_mem_ns"]
+                s["bound"] = "mem"
     return stages
 
 

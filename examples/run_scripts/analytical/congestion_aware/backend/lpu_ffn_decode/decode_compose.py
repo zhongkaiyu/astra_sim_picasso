@@ -63,10 +63,11 @@ ATTN_BACKEND = {
 
 
 def attention_layer_ns(model_key: str, batch: int, seq: int,
-                       tp_h: int, tp_hd: int) -> dict:
+                       tp_h: int, tp_hd: int, npu_compute: float = 96.0) -> dict:
     """
     AMMA(ours) 单层 attention decode 延时，全部来自 backend roofline 模型。
     返回 {t_ns, parts:{qkv,attn,output,comm}, source}。CL 通过 seq 传入。
+    npu_compute: 每 NPU 算力 (TFLOPS)。96 = "Ours"；384 = "Ours_EC"(Enhanced-Compute, ×4)。
     """
     kind = ATTN_BACKEND.get(model_key)
     if kind is None:
@@ -74,9 +75,9 @@ def attention_layer_ns(model_key: str, batch: int, seq: int,
                        f"仅支持 {list(ATTN_BACKEND)}（不编造维度）")
     # AMMA per-NPU 硬件。compute 用 fig1 验证过的 "Ours" 规格 96 TFLOPS（hbm4_npu.json
     # 里的 40 是更老的 onering16 配置 → 会让 GQA attention 错误地 compute-bound）。
-    # 与 fig1_methodology §6 硬件表一致。
+    # 与 fig1_methodology §6 硬件表一致。EC 版把算力 ×4 → 384 TFLOPS。
     hw = dict(_hwc.hbm4_npu_config)
-    hw["compute"] = 96.0                            # fig1 "Ours (per NPU)" = 96 TFLOPS FP8
+    hw["compute"] = float(npu_compute)              # 96 = Ours; 384 = Ours_EC
 
     if kind == "gqa":
         # GQA：roofline/attention.py 的 qwen3 配置 + hmp 策略
@@ -123,14 +124,14 @@ def attention_layer_ns(model_key: str, batch: int, seq: int,
 
 
 def compose_layer(model, lpu, run, link, batch, seq, tp_h, tp_hd,
-                  t_attn_override_ns=None) -> dict:
+                  t_attn_override_ns=None, npu_compute=96.0) -> dict:
     """组装单层的 4 个串行项，返回逐项明细 + layer_total_ns。"""
     # 1) attention（AMMA）
     if t_attn_override_ns is not None:
         attn = {"t_ns": float(t_attn_override_ns), "parts": {},
                 "approx": "user-override", "source": "user-override"}
     else:
-        attn = attention_layer_ns(model.name, batch, seq, tp_h, tp_hd)
+        attn = attention_layer_ns(model.name, batch, seq, tp_h, tp_hd, npu_compute)
 
     # 2) FFN（LPU）—— 与 CL 无关
     ffn = simulate_layer(model, lpu, run)
@@ -156,10 +157,10 @@ def compose_layer(model, lpu, run, link, batch, seq, tp_h, tp_hd,
 
 
 def compose_decode(model, lpu, run, link, batch, seq, tp_h, tp_hd,
-                   t_attn_override_ns=None) -> dict:
-    """整模 TPOT = num_layers × 单层串行和。"""
+                   t_attn_override_ns=None, npu_compute=96.0) -> dict:
+    """整模 TPOT = num_layers × 单层串行和。npu_compute: 96=Ours, 384=Ours_EC。"""
     layer = compose_layer(model, lpu, run, link, batch, seq, tp_h, tp_hd,
-                          t_attn_override_ns)
+                          t_attn_override_ns, npu_compute=npu_compute)
     n = model.num_layers
     tpot_ns = layer["layer_total_ns"] * n
 

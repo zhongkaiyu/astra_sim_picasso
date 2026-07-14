@@ -52,6 +52,10 @@ LINK_LIBRARY: Dict[str, "LinkSpec"] = {
     #   而跨池传输每层往返 2 次、再 ×num_layers 放大，故对 disaggregated decode 影响巨大。
     "nic_cx7":  LinkSpec(interpool_bw_GBs=50.0,  interpool_latency_ns=2000.0, name="nic_cx7"),   # ConnectX-7 NDR 400Gb/s, GPUDirect RDMA 小包 ~2µs
     "nic_cx8":  LinkSpec(interpool_bw_GBs=100.0, interpool_latency_ns=1800.0, name="nic_cx8"),   # ConnectX-8 XDR 800Gb/s, ~1.8µs
+    # 理想化跨池链路（AMMA+LPU ideal）：固定延迟 300ns、带宽 235 GB/s。
+    #   代表 AMMA 与 LPU 紧耦合/近封装（如片间 die-to-die over advanced packaging）时的乐观上界，
+    #   延迟远低于 RDMA NIC(2µs)，用于展示 disaggregation 的 xfer 开销在理想互联下被压到多小。
+    "nic_ideal": LinkSpec(interpool_bw_GBs=235.0, interpool_latency_ns=300.0, name="nic_ideal"),
 }
 
 

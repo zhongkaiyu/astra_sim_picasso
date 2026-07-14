@@ -114,15 +114,19 @@ def roofline_v4_qkv(peak_perf, bw, cfg, bs):
     # per-head 权重按 n_h_total/n_npus 摊 (== Hq//tp_s)；不要再用 Hq//n_npus（多除一次 tp_h）。
     heads_per_npu = max(1, cfg["n_h_total"] // n_npus)
 
-    down_weight = (c + c + d_c_prime) * d          # W_KV + W_Z + W_DQ
-    down_mac = bs * (c + c + d_c_prime) * d
+    # down/compress 投影 (W_KV+W_Z+W_DQ) 是 shared latent 权重。旧模型让每个 NPU 各读
+    # 整份 (replicated)，在多个小 NPU 上按单卡带宽重复读取——这是 V4 decode 的主导项,
+    # 使 Ours 的 QKV 在低单卡带宽下严重吃亏。改为沿 N_NPUS 张量并行切分: 每 NPU 只读
+    # 1/N 的 down 权重, 计算后做一次 latent AllReduce 重建 (comm 在 calc_v4_strategy 里计)。
+    down_weight = ((c + c + d_c_prime) * d) // n_npus      # W_KV + W_Z + W_DQ, 切到 N_NPUS
+    down_mac = (bs * (c + c + d_c_prime) * d) // n_npus
     abs_weight = heads_per_npu * c * d_c_prime      # W_UQ per head（按 NPU 切）
     abs_mac = bs * heads_per_npu * c * d_c_prime
 
     weight_elems = down_weight + abs_weight
     total_mac = down_mac + abs_mac
     act_in = bs * d
-    act_out = bs * (c + c + d_c_prime + heads_per_npu * c)
+    act_out = bs * ((c + c + d_c_prime) + heads_per_npu * c)
     total_mem = (weight_elems + act_in + act_out) * _BPE_FP8
 
     flops = 2 * total_mac
@@ -262,6 +266,10 @@ def calc_v4_strategy(variant, hw_cfg, bs, seq_list, link_bw=1.5,
     qkv_ag_chunk = bs * heads_per_npu_weight * c
     qkv_ag_steps = n_npus - 1
     qkv_ag_ns = qkv_ag_steps * (fixed_per_step + qkv_ag_chunk / (link_bw * 1e3))
+    # (0b) down-proj AllReduce：down/compress 投影按 N_NPUS 张量并行切分后, 重建完整 latent
+    downproj_ar_msg = bs * (2 * c + cfg["d_c_prime"])
+    downproj_ar_steps = 2 * int(math.log2(n_npus)) if n_npus > 1 else 0
+    downproj_ar_ns = downproj_ar_steps * (fixed_per_step + downproj_ar_msg / (link_bw * 1e3))
     # (1) score/lse AllReduce within tp_s
     score_ar_msg = bs * Hq * 2 * 4
     score_ar_steps = 2 * int(math.log2(tp_s)) if tp_s > 1 else 0
@@ -275,7 +283,7 @@ def calc_v4_strategy(variant, hw_cfg, bs, seq_list, link_bw=1.5,
     proj_o_red_steps = int(math.log2(n_npus)) if n_npus > 1 else 0
     proj_o_red_ns = proj_o_red_steps * (fixed_per_step + proj_o_red_msg / (link_bw * 1e3))
 
-    comm_total_ns = qkv_ag_ns + score_ar_ns + ocomp_ar_ns + proj_o_red_ns
+    comm_total_ns = qkv_ag_ns + downproj_ar_ns + score_ar_ns + ocomp_ar_ns + proj_o_red_ns
 
     results = []
     for seq in seq_list:
@@ -299,9 +307,9 @@ def calc_v4_strategy(variant, hw_cfg, bs, seq_list, link_bw=1.5,
         "config": cfg,
         "hardware": {"peak_perf_tflops": pp, "bandwidth_tb_s": bw,
                      "roofline_crossover_oi": round(crossover, 2), "link_bw_tb_s": link_bw},
-        "comm": {"qkv_ag_ns": round(qkv_ag_ns, 2), "score_ar_ns": round(score_ar_ns, 2),
-                 "ocomp_ar_ns": round(ocomp_ar_ns, 2), "proj_o_reduce_ns": round(proj_o_red_ns, 2),
-                 "total_comm_ns": round(comm_total_ns, 2)},
+        "comm": {"qkv_ag_ns": round(qkv_ag_ns, 2), "downproj_ar_ns": round(downproj_ar_ns, 2),
+                 "score_ar_ns": round(score_ar_ns, 2), "ocomp_ar_ns": round(ocomp_ar_ns, 2),
+                 "proj_o_reduce_ns": round(proj_o_red_ns, 2), "total_comm_ns": round(comm_total_ns, 2)},
         "data": results,
     }
 

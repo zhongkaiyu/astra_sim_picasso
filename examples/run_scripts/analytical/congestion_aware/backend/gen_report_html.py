@@ -41,7 +41,8 @@ MODELS = ["deepseek3", "qwen3-235b"]
 MTITLE = {"deepseek3": "DeepSeek-V3 (MLA)", "qwen3-235b": "Qwen3-235B (GQA)"}
 ORDER = [("gpu_gpu", "GPU+GPU (exp1)"), ("gpu_lpu", "GPU+LPU (exp1)"),
          ("duplex", "Duplex (exp4)"), ("helios", "Helios (exp4)"),
-         ("stratum", "Stratum (exp4)"), ("amma_lpu", "AMMA+LPU ours (exp1)")]
+         ("stratum", "Stratum (exp4)"), ("amma_lpu", "AMMA+LPU ours (exp1)"),
+         ("amma_lpu_ideal", "AMMA+LPU ideal (exp1)")]
 
 
 def tpot_table():
@@ -50,13 +51,13 @@ def tpot_table():
     rows = []
     for m in MODELS:
         for s, label in ORDER:
-            if s in ("gpu_gpu", "gpu_lpu", "amma_lpu"):
+            if s in ("gpu_gpu", "gpu_lpu", "amma_lpu", "amma_lpu_ideal"):
                 vals = [e1["data"][m][str(cl)][s]["tpot_us"] for cl in SEQS]
             else:
                 rm = {r["seq"]: r["tpot_us"] for r in e4["data"][s][m]["rows"]}
                 vals = [rm[cl] for cl in SEQS]
             tds = "".join(f"<td>{v:,.0f}</td>" for v in vals)
-            cls = ' class="ours"' if s == "amma_lpu" else (' class="new"' if s in ("duplex", "helios", "stratum") else "")
+            cls = ' class="ours"' if s in ("amma_lpu", "amma_lpu_ideal") else (' class="new"' if s in ("duplex", "helios", "stratum") else "")
             rows.append(f'<tr{cls}><td>{MTITLE[m]}</td><td>{label}</td>{tds}</tr>')
     head = "".join(f"<th>CL={x}</th>" for x in SEQL)
     return ('<table><thead><tr><th>Model</th><th>Setting</th>' + head +
@@ -232,16 +233,19 @@ arithmetic_intensity.md   # V4 CSA/HCA decode 计算强度 (AI=FLOPs/Bytes) 推�
 
 
 def section_exp4():
-    cfg = """<table><thead><tr><th>baseline</th><th>内存技术</th><th>mem BW/设备</th><th>算力/设备</th>
-<th>容量/设备</th><th>设备数 N (qwen3 / ds3)</th><th>NoC</th></tr></thead>
+    cfg = """<table><thead><tr><th>baseline</th><th>内存技术</th><th>mem BW/设备</th><th>算力/设备(反推)</th>
+<th>容量/设备</th><th>N / tp_lat / nodes (qwen3 · ds3)</th><th>NoC</th></tr></thead>
 <tbody>
-<tr class="new"><td>Duplex</td><td>HBM3 + 4×TSV (Logic-PIM)</td><td>13.4 TB/s</td><td>107 TFLOPS</td><td>80 GB</td><td>8 / 18</td><td>bank-bundle</td></tr>
-<tr class="new"><td>Helios</td><td>Hybrid-Bonding 4-die 3D-DRAM</td><td>16.4 TB/s</td><td>~500 (占位)</td><td>80 GB</td><td>8 / 18</td><td>4×4 mesh</td></tr>
-<tr class="new"><td>Stratum</td><td>Monolithic 3D DRAM (tiered)</td><td>28.4 TB/s*</td><td>~500 (占位)</td><td>32 GB/chip</td><td>15 / 44</td><td>双向 ring</td></tr>
+<tr class="new"><td>Duplex</td><td>HBM3 + 4×TSV (Logic-PIM)</td><td>13.4 TB/s</td><td>107 TFLOPS</td><td>80 GB</td><td>8/8/1 · 18/8/3</td><td>bank-bundle</td></tr>
+<tr class="new"><td>Helios</td><td>Hybrid-Bonding 4-die 3D-DRAM</td><td>16.4 TB/s</td><td>262 TFLOPS</td><td>80 GB</td><td>8/8/1 · 18/8/3</td><td>4×4 mesh</td></tr>
+<tr class="new"><td>Stratum</td><td>Monolithic 3D DRAM (tiered)</td><td>28.4 TB/s*</td><td>128 TFLOPS</td><td>32 GB/chip</td><td>15/8/2 · 44/8/6</td><td>双向 ring</td></tr>
 </tbody></table>
-<p style="font-size:12px">设备数 N = max(paper 规则, 容量可行)，逐模型（权重 FP16: qwen3-235B≈470GB, deepseek3≈1342GB）。
-聚合带宽 = per-device BW × N：Duplex 107/241 · Helios 131/295 · <b>Stratum 425/1248 TB/s</b>（小芯片→多颗→带宽最高）。
-* Stratum FFN 带宽 = tiering 命中率加权（p_hot=0.9 → 28.4 TB/s）；attention 用 25 TB/s（不享受 tiering）。全 FP16。</p>"""
+<p style="font-size:12px"><b>算力反推</b>（面积/功耗，非占位）：Helios 16 PE×512×16-MAC@1GHz=262；Stratum 64k MAC@1GHz=128（Table3 直给）；Duplex 5×21.3=107。
+<b>N=容量数</b>（max(paper,容量)，qwen3≈470GB/ds3≈1342GB）；<b>tp_lat=min(N,8)</b>=单 token 延迟用的 TP（scale-up node 封顶），多出设备走 EP/DP。
+<b>latency 聚合 BW = per-dev×tp_lat（≤8，非 ×N）</b>：Duplex 107 · Helios 131 · Stratum 200/227 TB/s。
+<b>>8 卡跨 node EP 走 NIC</b>（Duplex 400GB/s IB · Helios 8×200Gbps · Stratum cross-chip 900GB/s），nodes=⌈N/8⌉ → Stratum 小芯片 node 最多→EP 惩罚最重。
+排名 = <b>per-dev BW（mem 分量）× per-dev 算力（compute 分量）× EP-NIC 三因素权衡</b>：短 CL→Stratum、长 CL/qwen3→Helios。
+* Stratum FFN 带宽 = tiering 加权（p_hot=0.9 → 28.4 TB/s）；attention 25 TB/s。全 FP16。</p>"""
     return f"""
 <h2 id="exp4">4. exp4 — 新增 3 条 NMP baseline（本次实现）<span class="tag new">backend/baselines</span></h2>
 <p><b>范式</b>：三者 decode 时 attention 与 FFN <b>同址跑在一块近存设备上</b>，无跨池 NIC →
@@ -259,10 +263,14 @@ figures/rebuttal_figures/exp4_newbaseline/scripts/gen_nmp_baseline_data.py -> da
   NoC      : ffn_decode._allreduce_c2c (mesh/ring/bundle 参数)</pre>
 <h3>硬件参数 config</h3>
 {cfg}
-<h3>结果图（新生成：exp4 三条 + exp1 三条合并对比）</h3>
+<h3>结果图（新生成：exp4 三条 NMP + exp1 的 GPU/AMMA + <b>AMMA+LPU ideal</b> 合并对比）</h3>
 {img64("figures/rebuttal_figures/exp4_newbaseline/plots/exp4_tpot_compare.png")}
 {img64("figures/rebuttal_figures/exp4_newbaseline/plots/exp4_breakdown.png")}
-<h3>原始数据表格 — Decode TPOT (µs)，6 setting 合并</h3>
+<h3>Throughput-per-Watt（batch=1，tok/s/W）<span class="tag new">新增</span></h3>
+<p style="font-size:12px">系统功耗 = per-device W × N。per-device：Duplex 150（估算）· Helios 207（Fig.16b×16PE）· Stratum 145（整栈含DRAM）· AMMA = 16 NPU×78 + 16 LPU×388 = 7456W。
+<b>⚠ 功耗口径不齐（Helios per-PE DRAM 5.41W vs Stratum 整栈 DRAM 104W；LPU 388W 为占位），此图 illustrative，绝对值敏感。</b>详见 HW_CONFIG §8。</p>
+{img64("figures/rebuttal_figures/exp4_newbaseline/plots/exp4_throughput_per_w.png")}
+<h3>原始数据表格 — Decode TPOT (µs)，7 setting 合并（含 AMMA+LPU ideal = 理想跨池链路 300ns/235GB/s）</h3>
 {tpot_table()}
 <h3>原始数据表格 — exp4 三条 baseline 延时分量 (µs，整模 e2e)</h3>
 {breakdown_table()}
@@ -275,10 +283,11 @@ def section_caveats():
 <ul>
 <li><b>FFN util = 100% roofline（乐观上界）</b>：exp4 三条 NMP 与 exp1 LPU 同口径；GPU FFN 用实测 util derate。口径不对称，已在 meta 标 <code>ffn_util=100%_roofline_optimistic</code>。</li>
 <li><b>attention util 不对称</b>：attention 被 H100 实测 util derate（GQA→h100_rubin_utilization，MLA→h100_mla_profile），继承自 exp1/fig1，三条 baseline 沿用 → 公平。</li>
-<li><b>Helios/Stratum 算力为占位大值</b>：paper 未给干净 FP16 TFLOPS，decode mem-bound 故对算力不敏感。</li>
-<li><b>device 数各用 paper 原生</b>（Duplex=4 / Helios=8 / Stratum-L=6）→ 聚合带宽不对等（同 exp1 AMMA-vs-Rubin caveat）。</li>
+<li><b>算力用面积/功耗反推的真实值</b>（Helios 262 / Stratum 128 / Duplex 107 TFLOPS，非占位）：qkv/proj_o 恒 compute-bound、长 CL attention 与 MLA-absorbed 亦 compute-bound → 算力直接进 roofline，Stratum 低算力 128 在长 CL 落后。</li>
+<li><b>latency-TP 受 scale-up node 封顶 = min(N,8)</b>：N 是容量数，单 token 延迟只用一个 NVLink/cross-chip node；多出设备走 EP/DP（容量+吞吐，不缩短单 token）→ 延迟聚合带宽 = per-dev×8（非 ×N）。</li>
+<li><b>>8 卡跨 node EP 走 NIC</b>（Duplex 400GB/s IB · Helios 8×200Gbps · Stratum cross-chip 900GB/s）：EP all-to-all 成本 ∝ nodes=⌈N/8⌉ → Stratum 小芯片 node 最多（ds3 6 node）惩罚最重。量级敏感（1–1.5µs/跳）。</li>
 <li><b>Stratum tiering 按命中率加权</b>（p_hot=0.9）；仅 expert-read 段享受，近似应用到整段 MoE FFN（expert 占 FFN 字节 &gt;95%）。</li>
-<li><b>Duplex MLA 长 CL compute-bound</b>：真实 8:1 compute:BW（crossover OI=8），MLA-absorbed OI≈64–128 ≫ 8 → 长 CL attention 落 compute 边，模型如实暴露。</li>
+<li><b>长 CL ds3 瓶颈是算力不是近存带宽</b>：MLA-absorbed OI≈64–128 → compute-bound，gpu_lpu(Rubin FP8 高算力) 在 ds3 1M 反超所有 NMP（5047µs）。近存优势在长 CL ds3 被削弱。</li>
 <li><b>dtype</b>：exp4 三条 FP16，exp1 LPU/Rubin FP8（已在字节数体现）。</li>
 </ul>
 <p style="color:#888;font-size:12px">Generated by <code>backend/gen_report_html.py</code>. 数据源见各 section 的脚本依赖。</p>
